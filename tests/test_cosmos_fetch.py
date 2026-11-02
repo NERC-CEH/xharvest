@@ -73,8 +73,11 @@ def test_fetch_writes_one_file_and_sidecar_per_site(cosmos_api, tmp_path):
         assert retrieval.url.endswith(path.name.split("_")[0])
         assert retrieval.params["datetime"].startswith("2025-01-01T00:00:00Z")
         assert retrieval.agent.startswith("xharvest ")
-    assert read_sidecar(paths[0]).metadata == {"site_names": {"MOORH": "Moor House"}}
-    assert read_sidecar(paths[1]).metadata == {"site_names": {"ALIC1": "Alice Holt"}}
+    assert read_sidecar(paths[0]).metadata == {
+        "collection": "1D",
+        "site_names": {"MOORH": "Moor House"},
+    }
+    assert read_sidecar(paths[1]).metadata["site_names"] == {"ALIC1": "Alice Holt"}
 
 
 def test_fetch_skips_existing_files_unless_overwrite(cosmos_api, tmp_path):

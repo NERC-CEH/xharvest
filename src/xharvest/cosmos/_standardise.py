@@ -16,7 +16,6 @@ Examples:
 
 import json
 import re
-from collections import Counter
 from collections.abc import Iterable
 from datetime import timedelta
 from os import PathLike
@@ -29,7 +28,7 @@ import xarray as xr
 from .. import __version__
 from ..errors import ProviderError
 from ..provenance import history_line, is_sidecar, read_sidecar, utc_now
-from ._fetch import API_URL
+from ._fetch import API_URL, COLLECTIONS, PERIODS, Collection
 
 INSTITUTION = "UK Centre for Ecology & Hydrology"
 
@@ -62,30 +61,18 @@ def _duration(period: str) -> timedelta:
     return -delta if match["sign"] else delta
 
 
-def _axis_period(parameters: dict[str, Any]) -> str:
-    """The aggregation period most parameters share, which the time axis uses."""
-    periods = Counter(
-        p["measurementType"]["period"]
-        for p in parameters.values()
-        if p["measurementType"]["method"] != "instantaneous"
-    )
-    if not periods:
-        raise ProviderError("no aggregated COSMOS-UK parameters to infer a period")
-    return periods.most_common(1)[0][0]
-
-
-def _cell_methods(parameter: dict[str, Any], axis_period: str) -> str:
+def _cell_methods(parameter: dict[str, Any], axis_period: timedelta) -> str:
     method = parameter["measurementType"]["method"]
     if method not in _CELL_METHODS:
         raise ProviderError(f"unknown COSMOS-UK aggregation method {method!r}")
     cell_methods = f"time: {_CELL_METHODS[method]}"
     period = parameter["measurementType"]["period"]
-    if method != "instantaneous" and period != axis_period:
+    if method != "instantaneous" and abs(_duration(period)) != axis_period:
         cell_methods += f" (comment: over {period.lstrip('-')} within each period)"
     return cell_methods
 
 
-def _variable_attrs(name: str, parameter: dict[str, Any], axis_period: str):
+def _variable_attrs(name: str, parameter: dict[str, Any], axis_period: timedelta):
     try:
         units = parameter["unit"]["symbol"]["value"]
     except KeyError:
@@ -101,7 +88,7 @@ def _variable_attrs(name: str, parameter: dict[str, Any], axis_period: str):
 def _site_dataset(
     coverage: dict[str, Any],
     parameters: dict[str, Any],
-    axis_period: str,
+    axis_period: timedelta,
     site_names: dict[str, str],
 ) -> xr.Dataset:
     axes = coverage["domain"]["axes"]
@@ -127,6 +114,16 @@ def _site_dataset(
             "altitude": ("site", axes["z"]["values"][:1]),
         },
     )
+
+
+def _collection(path: Path, metadata: dict[str, Any]) -> Collection:
+    collection = metadata.get("collection")
+    if collection not in COLLECTIONS:
+        raise ValueError(
+            f"the sidecar for {path} does not name a COSMOS-UK collection; "
+            "fetch it again with overwrite=True"
+        )
+    return collection
 
 
 def _read(path: Path) -> dict[str, Any]:
@@ -157,7 +154,7 @@ def standardise(paths: Iterable[str | PathLike]) -> xr.Dataset:
 
     Raises:
         ValueError: If no files are given, they mix collections, or a sidecar
-            lacks a site name.
+            lacks the collection or a site name.
         FileNotFoundError: If a file has no provenance sidecar.
         ProviderError: If a file is not a COSMOS-UK response the connector can read.
     """
@@ -165,14 +162,15 @@ def standardise(paths: Iterable[str | PathLike]) -> xr.Dataset:
     if not paths:
         raise ValueError("no COSMOS-UK files to standardise")
 
-    sites, retrievals, licences, periods = [], [], set(), set()
+    sites, retrievals, licences, collections = [], [], set(), set()
     for path in paths:
         body = _read(path)
         retrieval = read_sidecar(path)
         retrievals.append(retrieval)
         licences.add(body["dct:license"])
-        axis_period = _axis_period(body["parameters"])
-        periods.add(axis_period)
+        collection = _collection(path, retrieval.metadata)
+        collections.add(collection)
+        axis_period = PERIODS[collection].length
         site_names = retrieval.metadata.get("site_names", {})
         for coverage in body["coverages"]:
             if coverage["dct:identifier"] not in site_names:
@@ -183,18 +181,21 @@ def standardise(paths: Iterable[str | PathLike]) -> xr.Dataset:
             sites.append(
                 _site_dataset(coverage, body["parameters"], axis_period, site_names)
             )
-    if len(periods) > 1:
+    if len(collections) > 1:
         raise ValueError(
-            "files mix COSMOS-UK collections (periods "
-            f"{', '.join(sorted(periods))}); standardise one collection at a time"
+            f"files mix COSMOS-UK collections ({', '.join(sorted(collections))}); "
+            "standardise one collection at a time"
         )
 
     ds = xr.concat(sites, dim="site", join="outer", combine_attrs="override")
     ds = ds.sortby("time")
 
-    period = _duration(periods.pop())
-    shifted = ds.time.values + np.timedelta64(period)
-    bounds = sorted([ds.time.values, shifted], key=lambda b: b[0])
+    period = PERIODS[collections.pop()]
+    step = np.timedelta64(period.length)
+    if period.stamp_ends:
+        bounds = [ds.time.values - step, ds.time.values]
+    else:
+        bounds = [ds.time.values, ds.time.values + step]
     ds = ds.assign_coords(time_bounds=(("time", "nv"), np.stack(bounds, axis=-1)))
     # One encoding for both, so time and its bounds share units as CF requires.
     ds.time.encoding["units"] = "minutes since 1970-01-01 00:00:00"

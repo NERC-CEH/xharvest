@@ -15,7 +15,7 @@ import json
 from collections.abc import Iterable
 from contextlib import AbstractContextManager, nullcontext
 from dataclasses import dataclass
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from os import PathLike
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
@@ -31,7 +31,21 @@ API_URL = "https://cosmos-api.ceh.ac.uk"
 
 Collection = Literal["1D", "30M"]
 """The API's collections: daily, and 30-minute."""
-COLLECTIONS: tuple[Collection, ...] = ("1D", "30M")
+
+
+@dataclass(frozen=True)
+class _Period:
+    length: timedelta
+    # Whether a stamp marks the end of its period rather than the start.
+    stamp_ends: bool
+
+
+# Settled by summing 30-minute values into daily ones; see the provider page.
+PERIODS: dict[Collection, _Period] = {
+    "1D": _Period(timedelta(days=1), stamp_ends=False),
+    "30M": _Period(timedelta(minutes=30), stamp_ends=True),
+}
+COLLECTIONS: tuple[Collection, ...] = tuple(PERIODS)
 
 _TIMEOUT = 120.0
 
@@ -160,8 +174,8 @@ def fetch(
     Each file is named `{site}_{collection}_{start}_{end}.json`, where a date is
     written `%Y%m%d` and a datetime `%Y%m%dT%H%M%S` in UTC. It has a provenance
     sidecar next to it (see `xharvest.provenance`), which also records the
-    site's name, since the data response omits it. Pass the returned paths to
-    `xharvest.cosmos.standardise`.
+    collection and the site's name, since the data response omits both. Pass
+    the returned paths to `xharvest.cosmos.standardise`.
 
     Args:
         site_ids: Site identifiers, e.g. `"ALIC1"` or `["ALIC1", "BUNNY"]`.
@@ -213,6 +227,9 @@ def fetch(
         names = {s.id: s.name for s in sites(collection, client=http)}
         for site_id, path in todo:
             content = _get(http, f"{url}/{site_id}", params)
-            metadata = {"site_names": {site_id: names.get(site_id, "")}}
+            metadata = {
+                "collection": collection,
+                "site_names": {site_id: names.get(site_id, "")},
+            }
             save(path, content, f"{url}/{site_id}", params, metadata)
     return paths

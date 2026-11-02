@@ -10,6 +10,29 @@ from xharvest.errors import ProviderError
 from xharvest.provenance import PROVENANCE_ATTRS, sidecar_path
 
 
+def _edit(path, change):
+    body = json.loads(path.read_text())
+    change(body)
+    path.write_text(json.dumps(body))
+
+
+def _keep_only(*names):
+    def change(body):
+        body["parameters"] = {k: v for k, v in body["parameters"].items() if k in names}
+        for coverage in body["coverages"]:
+            ranges = coverage["ranges"]
+            coverage["ranges"] = {k: v for k, v in ranges.items() if k in names}
+
+    return change
+
+
+def _set_collection(collection):
+    def change(body):
+        body["metadata"]["collection"] = collection
+
+    return change
+
+
 @pytest.fixture
 def ds(cosmos_raw):
     return standardise(cosmos_raw)
@@ -31,7 +54,7 @@ def test_site_names(ds):
 def test_requires_site_names_in_the_sidecar(cosmos_raw):
     sidecar = sidecar_path(cosmos_raw[0])
     body = json.loads(sidecar.read_text())
-    del body["metadata"]
+    del body["metadata"]["site_names"]
     sidecar.write_text(json.dumps(body))
     with pytest.raises(ValueError, match="no name for site ALIC1"):
         standardise(cosmos_raw)
@@ -104,10 +127,7 @@ def test_bad_duration(period):
 
 def test_half_hourly_bounds_end_at_the_stamp(cosmos_raw):
     path = cosmos_raw[0]
-    body = json.loads(path.read_text())
-    for parameter in body["parameters"].values():
-        parameter["measurementType"]["period"] = "-PT30M"
-    path.write_text(json.dumps(body))
+    _edit(sidecar_path(path), _set_collection("30M"))
     ds = standardise([path])
     first = ds.time_bounds.isel(time=0).values
     assert first[1] == ds.time.values[0]
@@ -153,12 +173,15 @@ def test_requires_some_files():
 
 
 def test_rejects_mixed_collections(cosmos_raw):
-    path = cosmos_raw[0]
-    body = json.loads(path.read_text())
-    for parameter in body["parameters"].values():
-        parameter["measurementType"]["period"] = "-PT30M"
-    path.write_text(json.dumps(body))
-    with pytest.raises(ValueError, match="mix COSMOS-UK collections"):
+    _edit(sidecar_path(cosmos_raw[0]), _set_collection("30M"))
+    with pytest.raises(ValueError, match=r"mix COSMOS-UK collections \(1D, 30M\)"):
+        standardise(cosmos_raw)
+
+
+@pytest.mark.parametrize("collection", [None, "1H"])
+def test_requires_the_collection_in_the_sidecar(cosmos_raw, collection):
+    _edit(sidecar_path(cosmos_raw[0]), _set_collection(collection))
+    with pytest.raises(ValueError, match="does not name a COSMOS-UK collection"):
         standardise(cosmos_raw)
 
 
@@ -181,14 +204,23 @@ def test_unreadable_parameter_metadata(cosmos_raw, change, message):
         standardise([path])
 
 
-def test_no_aggregated_parameters(cosmos_raw):
+@pytest.mark.parametrize("names", [("snow",), ("albedo",)])
+def test_the_period_comes_from_the_collection(cosmos_raw, names):
     path = cosmos_raw[0]
-    body = json.loads(path.read_text())
-    body["parameters"] = {"snow": body["parameters"]["snow"]}
-    body["coverages"][0]["ranges"] = {"snow": body["coverages"][0]["ranges"]["snow"]}
-    path.write_text(json.dumps(body))
-    with pytest.raises(ProviderError, match="infer a period"):
-        standardise([path])
+    _edit(path, _keep_only(*names))
+    ds = standardise([path])
+    first = ds.time_bounds.isel(time=0).values
+    assert (first[1] - first[0]) == np.timedelta64(1, "D")
+
+
+def test_sites_with_different_parameters(cosmos_raw):
+    alic, moorh = cosmos_raw
+    _edit(alic, _keep_only("cosmos_vwc"))
+    _edit(moorh, _keep_only("albedo", "snow"))
+    ds = standardise(cosmos_raw)
+    assert set(ds.data_vars) == {"cosmos_vwc", "albedo", "snow"}
+    assert ds.cosmos_vwc.sel(site="MOORH").isnull().all()
+    assert ds.snow.sel(site="ALIC1").isnull().all()
 
 
 def test_netcdf_round_trip(cosmos_raw, tmp_path):
