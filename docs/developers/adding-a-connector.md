@@ -19,7 +19,7 @@ A provider whose licence forbids committing fixtures, or whose client library wi
 ## Write it
 
 Each provider is a subpackage of `xharvest`; `xharvest.cosmos` is the reference.
-[Design decisions](decisions.md) explains why the package is shaped this way.
+The [design decisions](https://github.com/NERC-CEH/xharvest/tree/main/docs/adr) explain why the package is shaped this way.
 
 | Module | What it does | May import |
 |---|---|---|
@@ -34,13 +34,13 @@ Each provider is a subpackage of `xharvest`; `xharvest.cosmos` is the reference.
 ### Dependencies
 
 The provider's third-party dependencies go in an extra named after the subpackage, and in `all`.
-Import them inside the function that needs them, with [`require`](#xharvest._extras.require), so the subpackage imports without them.
+Import them inside the function that needs them, with `xharvest._extras.require`, so the subpackage imports without them.
 
 ### Provenance
 
 Standardisation cannot recover where or when a raw file came from, so capture it at fetch time:
 
-- write every raw file with [`provenance.save`](#xharvest.provenance), and skip a download only if `provenance.is_fetched` says so;
+- write every raw file with `xharvest.provenance.save`, and skip a download only if `provenance.is_fetched` says so;
 - put anything else `standardise` needs that the raw file omits, such as COSMOS-UK site names, in the sidecar's `metadata`;
 - give the standardised dataset the global attributes in `provenance.PROVENANCE_ATTRS`.
 
@@ -64,6 +64,8 @@ netCDF with:
 Tests must not touch the network or need credentials.
 
 - Commit a few days of real raw output under `tests/fixtures/<provider>/`, trimmed to what the tests need, with a `make_fixtures.py` that regenerates it.
+  Never hand-edit fixtures.
+  Regenerated data files should be byte-identical; if they are not, the provider has revised its data.
 - Let `fetch` accept a client (as `cosmos.fetch` takes an `httpx.Client`), and test it against a mock transport serving the fixtures.
 - Add the connector to `CONNECTORS` in `tests/test_contracts.py`, which checks the standardised output and the node contracts; a test fails until you do.
 - Put tests that call the real API in `test_<provider>_live.py`, marked `live`; `just test-live` runs them.
@@ -73,23 +75,11 @@ Tests must not touch the network or need credentials.
 Add a page under `docs/providers/`, to the `zensical.toml` nav, and to the provider tables in `README.md` and `docs/index.md`.
 Copy the structure of the [COSMOS-UK](../providers/cosmos-uk.md) page.
 Its "About the data" section must say what a timestamp means.
+Check claims like this against the data, not only the provider's docs, and record what was checked and how.
+COSMOS-UK's timestamp convention, for example, was settled by summing 30-minute values into daily ones.
 
 ## Before opening the pull request
 
 - [ ] `uv run just` passes, and `uv run just test-live` passes against the real API.
 - [ ] The provider page is in the nav and the provider tables.
 - [ ] Anything this connector settled that the next one should follow is added to this page.
-
-## Shared API
-
-::: xharvest.provenance
-    options:
-      heading_level: 3
-
-::: xharvest.errors
-    options:
-      heading_level: 3
-
-::: xharvest._extras.require
-    options:
-      heading_level: 3
