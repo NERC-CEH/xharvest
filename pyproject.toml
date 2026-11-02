@@ -1,0 +1,131 @@
+[build-system]
+requires = ["uv_build>=0.12.13,<0.13.0"]
+build-backend = "uv_build"
+
+[project]
+name = "conduit-data"
+version = "0.1.0"
+description = "Data connectors for conduit."
+authors = [
+    { name = "Joe Marsh Rossney", email = "17361029+jmarshrossney@users.noreply.github.com" }
+]
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.12"
+dependencies = []
+keywords = []
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+]
+
+[project.urls]
+Homepage = "https://nerc-ceh.github.io/conduit-data"
+Repository = "https://github.com/NERC-CEH/conduit-data"
+Documentation = "https://nerc-ceh.github.io/conduit-data"
+
+# These bounds are floors, not pins: `uv sync` already resolves to the newest
+# version each one allows, so raising them changes nothing for anyone. Do not
+# "freshen" them, by hand or by bot. They exist only to stop resolution
+# reaching for something ancient, and `[tool.uv] exclude-newer` below means a
+# floor above the version that existed a week ago fails resolution outright.
+# So these want to be low. Raise one only to reach a feature you need.
+[dependency-groups]
+dev = [
+    "pre-commit>=4.6.1",
+    "pyright>=1.1.411",
+    "ruff>=0.16.1",
+    "rust-just>=1.57.0",
+    {include-group = "docs"},
+    {include-group = "test"},
+]
+docs = [
+    "marimo>=0.23.16",
+    "marimo-md-export>=0.10.0",
+    "mkdocstrings-python>=2.0.5",
+    "zensical>=0.0.52",
+    {include-group = "examples"},
+]
+# Dependencies needed to *run* the example notebooks, but not to use the package.
+examples = []
+test = [
+    "coverage>=7.15.2",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+]
+
+[tool.pytest]
+testpaths = ["tests"]
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+include = ["src/", "tests/"]
+
+[tool.ruff]
+line-length = 88
+indent-width = 4
+target-version = "py312"
+
+[tool.ruff.lint]
+# Ruff broadened its default rule set in 0.16, so always select explicitly:
+# that way a version bump cannot change which rules apply.
+select = [
+    "E",   # pycodestyle errors
+    "D",   # pydocstyle
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "SIM", # flake8-simplify
+    "RUF", # ruff-specific rules
+    "PT",  # flake8-pytest-style
+    "I",   # isort
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Exempt tests from docstring requirements.
+"tests/**" = ["D", "E501"]
+# Marimo notebooks are generated dataflow descriptions, not hand-written
+# modules, so several rules encode assumptions that are false for them:
+#   B018    a bare trailing expression IS the cell's output mechanism.
+#   E501    long prose/URLs inside mo.md() cannot be rewrapped by ruff format,
+#           and a `# noqa` after the closing quotes flip-flops forever
+#           (marimo strips the two spaces, ruff format restores them).
+#   D100    notebooks are not modules and have no module docstring.
+#   D103    cell functions are machine-generated and undocumented.
+#   F841    exploratory cells leave unused variables around.
+#   RUF001  prose contains en dashes; RUF003 contains Greek letters.
+# Pre-emptive, and only active if "PL" is ever added to select above:
+#   PLR1711 ruff deletes the bare `return` that ends every cell and
+#           `marimo check --fix` re-adds it -- an infinite flip-flop.
+#   PLC0415 notebook imports live inside cells by design.
+"examples/**" = [
+    "B018",
+    "D100",
+    "D103",
+    "E501",
+    "F841",
+    "RUF001",
+    "RUF003",
+    "PLR1711",
+    "PLC0415",
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.uv]
+# Resolve against the index as it was a week ago, so a same-day release cannot
+# break a fresh `uv sync`. Note the corollary: a lower bound in
+# [dependency-groups] must be at or below the version that existed a week ago,
+# or resolution fails outright.
+exclude-newer = "1 week"
+# Exempt marimo-md-export from the cutoff: it is the one dependency here whose
+# releases are worth picking up the day they land, because the docs export
+# depends on it closely.
+exclude-newer-package = { marimo-md-export = false }

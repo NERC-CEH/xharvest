@@ -1,0 +1,14 @@
+# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
+# Commit this file: `copier update` reads it to replay your answers.
+_commit: v0.1.2
+_src_path: gh:jmarshrossney/python-package-template
+author_email: 17361029+jmarshrossney@users.noreply.github.com
+author_name: Joe Marsh Rossney
+copyright_holder: Joe Marsh Rossney
+github_owner: NERC-CEH
+package_name: conduit_data
+project_description: Data connectors for conduit
+project_name: conduit-data
+with_cli: false
+with_license: true
+with_pypi: false

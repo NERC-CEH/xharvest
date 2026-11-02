@@ -1,0 +1,39 @@
+name: docs
+
+on:
+  push:
+    branches: [main]
+  # Build (but don't deploy) on PRs, so broken docs fail before merge.
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v8.1.0
+      # `docs` does not include rust-just, so install `just` separately here.
+      - uses: extractions/setup-just@v4
+      - run: uv sync --group docs --locked
+      - run: uv run just docs
+      - uses: actions/upload-pages-artifact@v4
+        if: github.event_name == 'push'
+        with:
+          path: site
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
+        id: deployment
