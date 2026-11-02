@@ -184,3 +184,17 @@ def test_datetimes_are_requested_as_given():
     when = datetime(2025, 1, 1, 6)
     for end in (False, True):
         assert _fetch._query_time(when, "30M", end=end) == "2025-01-01T06:00:00Z"
+
+
+@pytest.mark.parametrize("error", ["ConnectError", "ReadTimeout"])
+def test_fetch_reports_an_unreachable_api(tmp_path, error):
+    import httpx
+
+    def unreachable(request):
+        raise getattr(httpx, error)("no route", request=request)
+
+    client = httpx.Client(transport=httpx.MockTransport(unreachable))
+    with pytest.raises(
+        ProviderError, match=f"could not reach the COSMOS-UK API: {error}"
+    ):
+        fetch("ALIC1", date(2025, 1, 1), date(2025, 1, 2), tmp_path, client=client)

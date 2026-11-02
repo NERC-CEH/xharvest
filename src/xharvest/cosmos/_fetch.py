@@ -88,7 +88,11 @@ def _check_collection(collection: str) -> None:
 
 
 def _get(client: "httpx.Client", url: str, params: dict[str, Any]) -> bytes:
-    response = client.get(url, params=params)
+    httpx = require("httpx", "cosmos")
+    try:
+        response = client.get(url, params=params)
+    except httpx.TransportError as err:
+        raise ProviderError(f"could not reach the COSMOS-UK API: {err!r}") from err
     if response.is_success:
         return response.content
     try:
@@ -120,7 +124,7 @@ def sites(
         The sites, in the order the API lists them.
 
     Raises:
-        ProviderError: If the API returns an error.
+        ProviderError: If the API cannot be reached or returns an error.
     """
     _check_collection(collection)
     with _client(client) as http:
@@ -213,9 +217,9 @@ def fetch(
         The paths of the data files, one per site, in the order given.
 
     Raises:
-        ProviderError: If the API rejects a request, e.g. for an unknown site or
-            parameter, or a range outside a site's record. The message is the
-            API's own.
+        ProviderError: If the API cannot be reached, or rejects a request, e.g.
+            for an unknown site or parameter, or a range outside a site's
+            record. The message is the API's own where it gives one.
         ValueError: If a file exists from a different request, e.g. with other
             parameters, and `overwrite` is not set.
     """

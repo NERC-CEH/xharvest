@@ -55,7 +55,8 @@ netCDF with:
 - a CF `units` attribute on every data variable, valid under `xarray_annotated.units.use_cf_units()`, and `cell_methods` where the provider says how values were aggregated;
 - the provenance attributes above.
 
-Raise `xharvest.errors.ProviderError` when a provider rejects a request or returns something the connector cannot read, with the provider's own message where it gives one.
+Raise `xharvest.errors.ProviderError` when a provider cannot be reached, rejects a request, or returns something the connector cannot read, with the provider's own message where it gives one.
+Catch the client library's transport errors (for httpx, `httpx.TransportError`, which includes timeouts) and re-raise them as `ProviderError`, so callers and the CLI handle one exception.
 
 ### Tests
 

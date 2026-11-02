@@ -2,7 +2,9 @@
 
 
 class ProviderError(RuntimeError):
-    """A provider rejected a request, or returned something a connector cannot read.
+    """A provider was unreachable, or its response unusable.
 
-    The message carries the provider's own explanation where it gives one.
+    Raised when a provider cannot be reached, rejects a request, or returns
+    something a connector cannot read. The message carries the provider's own
+    explanation where it gives one.
     """
