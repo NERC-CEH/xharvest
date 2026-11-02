@@ -103,7 +103,7 @@ link = "https://github.com/NERC-CEH"
 [project.markdown_extensions.md_in_html]
 [project.markdown_extensions.toc]
 permalink = true
-toc_depth = 2
+toc_depth = 3
 [project.markdown_extensions.pymdownx.arithmatex]
 # `generic = true` emits renderer-agnostic markup for KaTeX to pick up at
 # runtime -- see the `extra_javascript` comment above.
