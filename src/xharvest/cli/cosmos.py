@@ -1,6 +1,6 @@
 """`xharvest cosmos`: COSMOS-UK site data."""
 
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from typing import Annotated
 
@@ -17,6 +17,13 @@ app = typer.Typer(
 CollectionOption = Annotated[
     str, typer.Option(help="'1D' for daily data, '30M' for 30-minute data.")
 ]
+
+
+def _date_or_datetime(value: str) -> date:
+    # A bare date selects whole days, which a datetime at midnight would not.
+    if "T" in value or " " in value:
+        return datetime.fromisoformat(value)
+    return date.fromisoformat(value)
 
 
 def _fail(err: Exception) -> typer.Exit:
@@ -40,8 +47,22 @@ def sites(collection: CollectionOption = "1D") -> None:
 @app.command()
 def fetch(
     site_ids: Annotated[list[str], typer.Argument(help="Site identifiers.")],
-    start: Annotated[datetime, typer.Option(help="First timestamp (UTC).")],
-    end: Annotated[datetime, typer.Option(help="Last timestamp (UTC), inclusive.")],
+    start: Annotated[
+        date,
+        typer.Option(
+            parser=_date_or_datetime,
+            metavar="DATE|DATETIME",
+            help="First day, or first timestamp (UTC), to include.",
+        ),
+    ],
+    end: Annotated[
+        date,
+        typer.Option(
+            parser=_date_or_datetime,
+            metavar="DATE|DATETIME",
+            help="Last day, or last timestamp (UTC), to include.",
+        ),
+    ],
     out: Annotated[Path, typer.Option(help="Directory to write raw files to.")],
     parameter: Annotated[
         list[str] | None,

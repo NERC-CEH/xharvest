@@ -1,4 +1,5 @@
 from contextlib import nullcontext
+from datetime import date, datetime
 
 import pytest
 import xarray as xr
@@ -6,6 +7,7 @@ from typer.testing import CliRunner
 
 from xharvest.cli import main
 from xharvest.cli.app import app
+from xharvest.cli.cosmos import _date_or_datetime
 from xharvest.cosmos import _fetch
 
 runner = CliRunner()
@@ -78,3 +80,23 @@ def test_main_runs_the_app(monkeypatch):
     with pytest.raises(SystemExit) as exit_info:
         main()
     assert exit_info.value.code == 0
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("2025-01-01", date(2025, 1, 1)),
+        ("2025-01-01T06:00", datetime(2025, 1, 1, 6)),
+        ("2025-01-01 06:00", datetime(2025, 1, 1, 6)),
+    ],
+)
+def test_dates_stay_dates(value, expected):
+    parsed = _date_or_datetime(value)
+    assert parsed == expected
+    assert type(parsed) is type(expected)
+
+
+def test_bad_dates_are_rejected(mock_api, tmp_path):
+    args = ["cosmos", "fetch", "MOORH", "--start", "1 Jan", "--end", "2025-01-02"]
+    result = runner.invoke(app, [*args, "--out", str(tmp_path)])
+    assert result.exit_code == 2

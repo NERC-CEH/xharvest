@@ -165,3 +165,22 @@ def test_fetch_rejects_unknown_collection(tmp_path):
     start, end = date(2025, 1, 1), date(2025, 1, 2)
     with pytest.raises(ValueError, match="unknown COSMOS-UK collection '1H'"):
         fetch("ALIC1", start, end, tmp_path, collection="1H")  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize(
+    ("collection", "first", "last"),
+    [
+        ("1D", "2025-01-01T00:00:00Z", "2025-01-14T00:00:00Z"),
+        ("30M", "2025-01-01T00:30:00Z", "2025-01-15T00:00:00Z"),
+    ],
+)
+def test_dates_select_whole_days(collection, first, last):
+    start, end = date(2025, 1, 1), date(2025, 1, 14)
+    assert _fetch._query_time(start, collection, end=False) == first
+    assert _fetch._query_time(end, collection, end=True) == last
+
+
+def test_datetimes_are_requested_as_given():
+    when = datetime(2025, 1, 1, 6)
+    for end in (False, True):
+        assert _fetch._query_time(when, "30M", end=end) == "2025-01-01T06:00:00Z"

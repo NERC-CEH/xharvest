@@ -33,6 +33,8 @@ xharvest cosmos fetch ALIC1 MOORH --start 2025-01-01 --end 2025-03-31 --out data
 It skips a file that already holds the same request, and raises if the file holds a different one, for example with other parameters; pass `overwrite=True` (`--overwrite`) to download again.
 A file without a sidecar is from an interrupted download, and is downloaded again.
 The interval is closed: both `start` and `end` are included.
+Given as dates, they select whole GMT days, so `end=date(2025, 3, 31)` includes the 30-minute value stamped 00:00 on 1 April, which covers the last half hour of 31 March.
+Given as datetimes, they are taken as the stamps to request.
 Pass `parameters=[...]` (`--parameter`, repeated) to request only some parameters; the API lists the valid names if you give an invalid one.
 
 The 30-minute collection is about 48 times the size of the daily one.

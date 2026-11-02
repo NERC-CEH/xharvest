@@ -142,12 +142,25 @@ def sites(
     return result
 
 
-def _timestamp(value: date | datetime) -> str:
-    if not isinstance(value, datetime):
-        value = datetime(value.year, value.month, value.day)
+def _timestamp(value: datetime) -> str:
     if value.tzinfo is not None:
         value = value.astimezone(UTC).replace(tzinfo=None)
     return value.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _query_time(value: date | datetime, collection: Collection, *, end: bool) -> str:
+    """The stamp to request for a bound; a date selects the whole day."""
+    if isinstance(value, datetime):
+        return _timestamp(value)
+    # The first or last stamp whose period lies within the day.
+    midnight = datetime(value.year, value.month, value.day)
+    period = PERIODS[collection]
+    if not end:
+        first = midnight + period.length if period.stamp_ends else midnight
+        return _timestamp(first)
+    next_midnight = midnight + timedelta(days=1)
+    last = next_midnight if period.stamp_ends else next_midnight - period.length
+    return _timestamp(last)
 
 
 def _file_stamp(value: date | datetime) -> str:
@@ -180,9 +193,12 @@ def fetch(
     Args:
         site_ids: Site identifiers, e.g. `"ALIC1"` or `["ALIC1", "BUNNY"]`.
             `sites` lists them.
-        start: First timestamp to include. A `date` means midnight; a naive
-            `datetime` is taken as UTC.
-        end: Last timestamp to include, as for `start`. The interval is closed.
+        start: First timestamp to include; a naive `datetime` is taken as UTC.
+            A `date` includes every value whose period lies within that GMT day,
+            which for `30M` starts at the 00:30 stamp.
+        end: Last timestamp to include, as for `start`; the interval is closed.
+            A `date` includes the whole day, which for `30M` ends at the 00:00
+            stamp of the next day.
         out: Directory to write to; created if missing.
         parameters: Parameter names to request, e.g. `["cosmos_vwc", "precip"]`.
             Every parameter is requested if omitted.
@@ -208,7 +224,9 @@ def fetch(
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
 
-    params: dict[str, Any] = {"datetime": f"{_timestamp(start)}/{_timestamp(end)}"}
+    first = _query_time(start, collection, end=False)
+    last = _query_time(end, collection, end=True)
+    params: dict[str, Any] = {"datetime": f"{first}/{last}"}
     if parameters is not None:
         params["parameter-name"] = ",".join(parameters)
 
