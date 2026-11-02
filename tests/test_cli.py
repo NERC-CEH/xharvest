@@ -62,7 +62,6 @@ def test_fetch_then_standardise(mock_api, tmp_path):
 @pytest.mark.parametrize(
     "args",
     [
-        ["sites", "--collection", "1H"],
         ["fetch", "NOPE", "--start", "2025-01-01", "--end", "2025-01-02", "--out", "x"],
         ["standardise", "missing.json", "--out", "x.nc"],
     ],
@@ -100,3 +99,10 @@ def test_bad_dates_are_rejected(mock_api, tmp_path):
     args = ["cosmos", "fetch", "MOORH", "--start", "1 Jan", "--end", "2025-01-02"]
     result = runner.invoke(app, [*args, "--out", str(tmp_path)])
     assert result.exit_code == 2
+
+
+def test_unknown_collection_lists_the_choices(mock_api):
+    result = runner.invoke(app, ["cosmos", "sites", "--collection", "1H"])
+    assert result.exit_code == 2
+    assert "'1D', '30M'" in result.output
+    assert "1D|30M" in runner.invoke(app, ["cosmos", "sites", "--help"]).output

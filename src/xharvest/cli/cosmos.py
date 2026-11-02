@@ -7,6 +7,7 @@ from typing import Annotated
 import typer
 
 from .. import cosmos
+from ..cosmos import Collection
 from ..errors import ProviderError
 
 app = typer.Typer(
@@ -15,7 +16,7 @@ app = typer.Typer(
 )
 
 CollectionOption = Annotated[
-    str, typer.Option(help="'1D' for daily data, '30M' for 30-minute data.")
+    Collection, typer.Option(help="'1D' for daily data, '30M' for 30-minute data.")
 ]
 
 
@@ -35,7 +36,7 @@ def _fail(err: Exception) -> typer.Exit:
 def sites(collection: CollectionOption = "1D") -> None:
     """List the sites, with their identifiers and periods of record."""
     try:
-        found = cosmos.sites(collection)  # type: ignore[arg-type]
+        found = cosmos.sites(collection)
     except (ProviderError, ValueError) as err:
         raise _fail(err) from None
     for site in found:
@@ -81,7 +82,7 @@ def fetch(
             end,
             out,
             parameters=parameter,
-            collection=collection,  # type: ignore[arg-type]
+            collection=collection,
             overwrite=overwrite,
         )
     except (ProviderError, ValueError) as err:
