@@ -55,6 +55,32 @@ marimo edit examples/notebook.py
 
 Preview the site locally with `just docs-serve`.
 
+## Writing a connector
+
+Each provider is a subpackage of `conduit_data`.
+[ADR 1](docs/adr/0001-scope-and-design.md) explains why the package is shaped this way.
+
+| Layer | What it does | May import |
+|---|---|---|
+| fetch | `fetch(...) -> list[Path]`: downloads raw files to a directory, skipping any already present. A CLI subcommand wraps it, and adds nothing the Python API cannot do. | The provider's client library |
+| standardise | Converts raw files into the standardised output described below. | xarray |
+| nodes (optional) | Contract-annotated node functions for source-specific preparation, registered in the `conduit.modules` entry-point group. | `xarray-annotated`, `hamilton` |
+
+No module imports `conduit`.
+
+Standardised output is netCDF or Zarr with:
+
+- named dimensions, and at most one time dimension, whose coordinate is `datetime64` or cftime;
+- fill values decoded to NaN, and scale factors applied;
+- a CF `units` attribute on every data variable;
+- provenance attributes on the dataset: provider, dataset identifier or DOI, licence, request parameters, retrieval time.
+
+The provider's third-party dependencies go in an extra named after the subpackage, and in `all`.
+Import them lazily, and raise an error naming the extra if they are missing.
+
+Tests must not touch the network or need credentials.
+Test the standardise layer against a small committed fixture of raw provider output.
+
 ## Style
 
 - Ruff enforces formatting and lint; see `[tool.ruff]` in `pyproject.toml`.

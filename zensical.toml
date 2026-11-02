@@ -19,6 +19,9 @@ nav = [
   { "Getting started" = "getting-started.md" },
   { "Example" = "example.md" },
   { "API Reference" = "api.md" },
+  { "Decisions" = [
+    { "1. Scope and design" = "adr/0001-scope-and-design.md" },
+  ] },
 ]
 
 # Math rendering with KaTeX.
