@@ -147,8 +147,9 @@ def fetch(
     """Download data for one or more sites, one CoverageJSON file per site.
 
     Each file is named ``{site}_{collection}_{start:%Y%m%d}_{end:%Y%m%d}.json`` and
-    has a provenance sidecar next to it (see `conduit_data.provenance`). Pass the
-    returned paths to `conduit_data.cosmos.standardise`.
+    has a provenance sidecar next to it (see `conduit_data.provenance`), which also
+    records the site's name, since the data response omits it. Pass the returned
+    paths to `conduit_data.cosmos.standardise`.
 
     Args:
         site_ids: Site identifiers, e.g. ``"ALIC1"`` or ``["ALIC1", "BUNNY"]``.
@@ -173,8 +174,7 @@ def fetch(
             API's own.
     """
     _check_collection(collection)
-    if isinstance(site_ids, str):
-        site_ids = [site_ids]
+    site_ids = [site_ids] if isinstance(site_ids, str) else list(site_ids)
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
 
@@ -183,14 +183,20 @@ def fetch(
         params["parameter-name"] = ",".join(parameters)
 
     stamp = f"{_timestamp(start)[:10]}_{_timestamp(end)[:10]}".replace("-", "")
-    paths = []
+    paths = [out / f"{site_id}_{collection}_{stamp}.json" for site_id in site_ids]
+    todo = [
+        (site_id, path)
+        for site_id, path in zip(site_ids, paths, strict=True)
+        if overwrite or not path.exists()
+    ]
+    if not todo:
+        return paths
     with _client(client) as http:
-        for site_id in site_ids:
-            path = out / f"{site_id}_{collection}_{stamp}.json"
-            paths.append(path)
-            if path.exists() and not overwrite:
-                continue
+        # Data responses carry no site names, so look them up once.
+        names = {s.id: s.name for s in sites(collection, client=http)}
+        for site_id, path in todo:
             url = f"{API_URL}/collections/{collection}/locations/{site_id}"
             path.write_bytes(_get(http, url, params))
-            write_sidecar(path, url, params)
+            metadata = {"site_names": {site_id: names.get(site_id, "")}}
+            write_sidecar(path, url, params, metadata)
     return paths

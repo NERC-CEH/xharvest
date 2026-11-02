@@ -35,7 +35,7 @@ def test_fetch_requests_full_iso_datetimes(cosmos_api, tmp_path):
         parameters=["snow", "cosmos_vwc"],
         client=cosmos_api.client(),
     )
-    (request,) = cosmos_api.requests
+    (request,) = cosmos_api.data_requests
     assert request.url.path == "/collections/1D/locations/MOORH"
     assert request.url.params["datetime"] == (
         "2025-01-01T00:00:00Z/2025-01-14T12:00:00Z"
@@ -52,7 +52,7 @@ def test_fetch_converts_aware_datetimes_to_utc(cosmos_api, tmp_path):
         tmp_path,
         client=cosmos_api.client(),
     )
-    (request,) = cosmos_api.requests
+    (request,) = cosmos_api.data_requests
     assert request.url.params["datetime"].startswith("2025-01-01T00:00:00Z/")
     assert "parameter-name" not in request.url.params
 
@@ -76,19 +76,22 @@ def test_fetch_writes_one_file_and_sidecar_per_site(cosmos_api, tmp_path):
         assert retrieval.url.endswith(path.name.split("_")[0])
         assert retrieval.params["datetime"].startswith("2025-01-01T00:00:00Z")
         assert retrieval.agent.startswith("conduit-data ")
+    assert read_sidecar(paths[0]).metadata == {"site_names": {"MOORH": "Moor House"}}
+    assert read_sidecar(paths[1]).metadata == {"site_names": {"ALIC1": "Alice Holt"}}
 
 
 def test_fetch_skips_existing_files_unless_overwrite(cosmos_api, tmp_path):
     args = ("MOORH", date(2025, 1, 1), date(2025, 1, 14), tmp_path)
     (path,) = fetch(*args, client=cosmos_api.client())
     path.write_text("sentinel")
+    requests_so_far = len(cosmos_api.requests)
     fetch(*args, client=cosmos_api.client())
     assert path.read_text() == "sentinel"
-    assert len(cosmos_api.requests) == 1
+    assert len(cosmos_api.requests) == requests_so_far
 
     fetch(*args, overwrite=True, client=cosmos_api.client())
     assert path.read_text() != "sentinel"
-    assert len(cosmos_api.requests) == 2
+    assert len(cosmos_api.data_requests) == 2
 
 
 def test_fetch_raises_the_apis_message(cosmos_api, tmp_path):

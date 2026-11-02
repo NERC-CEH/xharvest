@@ -48,7 +48,7 @@ def test_fetch_then_standardise(mock_api, tmp_path):
     )
     assert result.exit_code == 0, result.output
     assert len(result.output.splitlines()) == 2
-    assert mock_api.requests[0].url.params["parameter-name"] == "snow,ta"
+    assert mock_api.data_requests[0].url.params["parameter-name"] == "snow,ta"
 
     out = tmp_path / "cosmos.nc"
     files = [str(p) for p in raw.iterdir()]

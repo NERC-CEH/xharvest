@@ -4,6 +4,11 @@
     "datetime": "2025-01-04T00:00:00Z/2025-01-17T00:00:00Z",
     "parameter-name": "albedo,cosmos_vwc,d86_75m,precip,snow,ta,tdt3_vwc"
   },
-  "retrieved": "2026-11-02T11:43:20Z",
-  "agent": "conduit-data 0.1.0"
+  "retrieved": "2026-11-02T12:25:13Z",
+  "agent": "conduit-data 0.1.0",
+  "metadata": {
+    "site_names": {
+      "ALIC1": "Alice Holt"
+    }
+  }
 }

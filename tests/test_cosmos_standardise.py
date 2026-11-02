@@ -23,6 +23,20 @@ def test_dims_and_coords(ds):
         assert ds[name].dims == ("time", "site")
 
 
+def test_site_names(ds):
+    assert list(ds.site_name.values) == ["Alice Holt", "Moor House"]
+    assert ds.site_name.dims == ("site",)
+
+
+def test_requires_site_names_in_the_sidecar(cosmos_raw):
+    sidecar = sidecar_path(cosmos_raw[0])
+    body = json.loads(sidecar.read_text())
+    del body["metadata"]
+    sidecar.write_text(json.dumps(body))
+    with pytest.raises(ValueError, match="no name for site ALIC1"):
+        standardise(cosmos_raw)
+
+
 def test_lat_lon_and_altitude(ds):
     alic = ds.sel(site="ALIC1")
     assert alic.lat.item() == pytest.approx(51.153551)

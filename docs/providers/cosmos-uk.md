@@ -28,7 +28,7 @@ conduit-data cosmos sites
 conduit-data cosmos fetch ALIC1 MOORH --start 2025-01-01 --end 2025-03-31 --out data/raw
 ```
 
-`fetch` writes one CoverageJSON file per site, named `{site}_{collection}_{start}_{end}.json`, with a `.meta.json` sidecar recording the request and when it was made.
+`fetch` writes one CoverageJSON file per site, named `{site}_{collection}_{start}_{end}.json`, with a `.meta.json` sidecar recording the request, when it was made, and the site's name, which the data response omits.
 It skips files that already exist; pass `overwrite=True` (`--overwrite`) to download again.
 The interval is closed: both `start` and `end` are included.
 Pass `parameters=[...]` (`--parameter`, repeated) to request only some parameters; the API lists the valid names if you give an invalid one.
@@ -55,6 +55,7 @@ The result has dims `(time, site)`:
 |---|---|---|
 | `time` | dim | UTC, as naive `datetime64` |
 | `site` | dim | Site identifier, e.g. `ALIC1` |
+| `site_name` | coord on `site` | e.g. `Alice Holt` |
 | `lat`, `lon` | coord on `site` | Degrees north and east |
 | `altitude` | coord on `site` | The API's `z`, in metres (EPSG:5703). It can differ from the altitude in the EIDC site metadata (Alice Holt: 80 m here, 74 m there). |
 | `time_bounds` | coord on `(time, nv)` | The period each value covers |

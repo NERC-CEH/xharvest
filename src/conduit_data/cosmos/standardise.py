@@ -1,11 +1,11 @@
 """Convert COSMOS-UK CoverageJSON into a standardised xarray Dataset.
 
-The result has dims ``(time, site)``, with ``lat``, ``lon`` and ``altitude``
-coordinates per site, and one variable per API parameter. Each variable keeps the
-API's units in a CF ``units`` attribute, and missing values become NaN; nothing
-else about the values changes. ``time_bounds`` records the period each value
-covers: a daily value stamped ``2025-01-01T00:00`` covers that GMT day, while a
-30-minute value covers the 30 minutes *ending* at its stamp.
+The result has dims ``(time, site)``, with ``site_name``, ``lat``, ``lon`` and
+``altitude`` coordinates per site, and one variable per API parameter. Each
+variable keeps the API's units in a CF ``units`` attribute, and missing values
+become NaN; nothing else about the values changes. ``time_bounds`` records the
+period each value covers: a daily value stamped ``2025-01-01T00:00`` covers that
+GMT day, while a 30-minute value covers the 30 minutes *ending* at its stamp.
 
 Example:
     >>> from pathlib import Path
@@ -99,7 +99,10 @@ def _variable_attrs(name: str, parameter: dict[str, Any], axis_period: str):
 
 
 def _site_dataset(
-    coverage: dict[str, Any], parameters: dict[str, Any], axis_period: str
+    coverage: dict[str, Any],
+    parameters: dict[str, Any],
+    axis_period: str,
+    site_names: dict[str, str],
 ) -> xr.Dataset:
     axes = coverage["domain"]["axes"]
     time = np.array([t.rstrip("Z") for t in axes["t"]["values"]], "datetime64[ns]")
@@ -118,6 +121,7 @@ def _site_dataset(
         coords={
             "time": time,
             "site": [coverage["dct:identifier"]],
+            "site_name": ("site", [site_names[coverage["dct:identifier"]]]),
             "lat": ("site", axes["y"]["values"][:1]),
             "lon": ("site", axes["x"]["values"][:1]),
             "altitude": ("site", axes["z"]["values"][:1]),
@@ -152,7 +156,8 @@ def standardise(paths: Iterable[str | PathLike]) -> xr.Dataset:
         site with a shorter record is NaN-padded.
 
     Raises:
-        ValueError: If no files are given, or they mix collections.
+        ValueError: If no files are given, they mix collections, or a sidecar
+            lacks a site name.
         FileNotFoundError: If a file has no provenance sidecar.
         ProviderError: If a file is not a COSMOS-UK response the connector can read.
     """
@@ -163,13 +168,21 @@ def standardise(paths: Iterable[str | PathLike]) -> xr.Dataset:
     sites, retrievals, licences, periods = [], [], set(), set()
     for path in paths:
         body = _read(path)
-        retrievals.append(read_sidecar(path))
+        retrieval = read_sidecar(path)
+        retrievals.append(retrieval)
         licences.add(body["dct:license"])
         axis_period = _axis_period(body["parameters"])
         periods.add(axis_period)
-        sites.extend(
-            _site_dataset(c, body["parameters"], axis_period) for c in body["coverages"]
-        )
+        site_names = retrieval.metadata.get("site_names", {})
+        for coverage in body["coverages"]:
+            if coverage["dct:identifier"] not in site_names:
+                raise ValueError(
+                    f"the sidecar for {path} has no name for site "
+                    f"{coverage['dct:identifier']}; fetch it again with overwrite=True"
+                )
+            sites.append(
+                _site_dataset(coverage, body["parameters"], axis_period, site_names)
+            )
     if len(periods) > 1:
         raise ValueError(
             "files mix COSMOS-UK collections (periods "
@@ -191,6 +204,7 @@ def standardise(paths: Iterable[str | PathLike]) -> xr.Dataset:
         bounds="time_bounds",
     )
     ds.site.attrs.update(long_name="COSMOS-UK site identifier", cf_role="timeseries_id")
+    ds.site_name.attrs.update(long_name="COSMOS-UK site name")
     ds.lat.attrs.update(standard_name="latitude", units="degrees_north")
     ds.lon.attrs.update(standard_name="longitude", units="degrees_east")
     ds.altitude.attrs.update(

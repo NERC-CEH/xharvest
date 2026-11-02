@@ -18,7 +18,7 @@ Example:
 """
 
 import json
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from os import PathLike
 from pathlib import Path
@@ -44,6 +44,8 @@ class Retrieval:
     retrieved: str
     #: The package and version that made the request.
     agent: str
+    #: Facts about the data the response itself omits, e.g. site names.
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 def utc_now() -> str:
@@ -62,13 +64,20 @@ def is_sidecar(path: str | PathLike) -> bool:
     return Path(path).name.endswith(SIDECAR_SUFFIX)
 
 
-def write_sidecar(path: str | PathLike, url: str, params: dict[str, Any]) -> Retrieval:
+def write_sidecar(
+    path: str | PathLike,
+    url: str,
+    params: dict[str, Any],
+    metadata: dict[str, Any] | None = None,
+) -> Retrieval:
     """Record a just-completed retrieval of ``path``.
 
     Args:
         path: The raw data file the response was written to.
         url: The URL requested, without the query string.
         params: The query parameters sent.
+        metadata: Facts about the data the response itself omits, for
+            standardisation to use.
 
     Returns:
         The retrieval written.
@@ -78,6 +87,7 @@ def write_sidecar(path: str | PathLike, url: str, params: dict[str, Any]) -> Ret
         params=params,
         retrieved=utc_now(),
         agent=f"conduit-data {__version__}",
+        metadata=metadata or {},
     )
     sidecar_path(path).write_text(json.dumps(asdict(retrieval), indent=2) + "\n")
     return retrieval

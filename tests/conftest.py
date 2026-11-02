@@ -45,6 +45,11 @@ class CosmosAPI:
             },
         )
 
+    @property
+    def data_requests(self) -> list[httpx.Request]:
+        """Requests for a site's data, leaving out the site list."""
+        return [r for r in self.requests if len(r.url.path.strip("/").split("/")) == 4]
+
     def client(self) -> httpx.Client:
         return httpx.Client(transport=httpx.MockTransport(self))
 
