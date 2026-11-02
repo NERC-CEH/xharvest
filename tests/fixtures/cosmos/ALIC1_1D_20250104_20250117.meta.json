@@ -1,0 +1,15 @@
+{
+  "url": "https://cosmos-api.ceh.ac.uk/collections/1D/locations/ALIC1",
+  "params": {
+    "datetime": "2025-01-04T00:00:00Z/2025-01-17T00:00:00Z",
+    "parameter-name": "albedo,cosmos_vwc,d86_75m,precip,snow,ta,tdt3_vwc"
+  },
+  "retrieved": "2026-11-02T15:31:32Z",
+  "agent": "xharvest 0.1.0",
+  "metadata": {
+    "collection": "1D",
+    "site_names": {
+      "ALIC1": "Alice Holt"
+    }
+  }
+}

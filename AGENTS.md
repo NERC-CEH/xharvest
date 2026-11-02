@@ -1,70 +1,15 @@
 # AGENTS.md
 
-## Project overview
+xharvest downloads environmental data from many providers and standardises it into netCDF that xarray and [conduit](https://github.com/NERC-CEH/conduit) read as-is.
+It is built so that conduit never has to download anything, yet it is useful without conduit: no module imports `conduit`, and conduit finds the node modules through its `conduit.modules` entry point.
+`docs/adr/` records why; `docs/adding-a-connector.md` holds the rules a connector follows.
+Alpha, with no external users: make breaking changes rather than compatibility shims.
 
-`conduit-data` — Data connectors for conduit
-
-## Source layout
-
-```
-src/conduit_data/
-  __init__.py      — public API (placeholder: `greet`)
-tests/             — one test file per module
-examples/          — marimo notebooks, exported into docs/ by `just docs`
-docs/              — hand-written Markdown + generated example.md
-site/              — built documentation output (gitignored)
-```
-
-## Commands
-
-All via `just`; prefix with `uv run` if `just` isn't on the PATH.
-
-| Command | What it does |
-|---|---|
-| `just` | lint → typecheck → test → check-examples → docs, in order |
-| `just lint` | `ruff format` + `marimo check --fix` + `ruff check --fix` + `marimo check --strict` |
-| `just lint-check` | Non-mutating variant for CI |
-| `just check-canonical` | Applies `marimo check --fix` and asserts the tree is clean |
-| `just check-examples` | `python examples/notebook.py` — the only gate that executes cells |
-| `just typecheck` | `pyright` |
-| `just test` | `pytest` |
-| `just test-cov` | `pytest` with coverage, `--cov-fail-under=90` |
-| `just doctest` | Doctests in `src/` |
-| `just docs` | Export notebooks, then `zensical build` |
-
-Setup: `uv sync`.
-
-## Toolchain
-
-uv (packaging), just (tasks), ruff (format + lint), pyright (types), pytest (tests), zensical + mkdocstrings (docs), marimo + marimo-md-export (example notebooks), pre-commit, GitHub Actions.
-
-## Conventions
-
-- Ruff `select` is explicit, never left to defaults — see the comment in `pyproject.toml`.
-- Docstrings are required in `src/` (google convention) and exempt in `tests/` and `examples/`.
-- `docs/example.md` and `docs/figures/` are **generated**; edit `examples/notebook.py` instead.
-- Tool versions are pinned in three places that must stay in step: `[dependency-groups] dev`, `.pre-commit-config.yaml` revs, and the `uv_build` bound in `[build-system]`.
-
-## This project was generated from a template
-
-The answers are in `.copier-answers.yml`. `copier update` pulls later template
-changes in; it uses that file to replay the original answers, so keep it
-committed and don't hand-edit it.
-
-## marimo ↔ ruff interaction (do not reorder `lint`)
-
-Verified against marimo 0.23.16 / ruff 0.16.1:
-
-- `marimo check --fix` must run **before** `ruff check --fix`. It prunes cell
-  return tuples, which can strand an import; ruff then reports the `F401`. The
-  reverse order needs two passes to reach a fixed point.
-- `marimo check` **without `--strict` exits 0** on runtime, formatting and WASM
-  findings — only a broken dependency graph fails it. Always pass `--strict`.
-- Plain `marimo check` reports *nothing* about non-canonical cell signatures, in
-  either mode. `check-canonical` is the only gate for that.
-- `marimo-md-export` prints an error but **exits 0** and still writes the
-  markdown when a cell raises, so `just docs` is not an execution gate.
-  `check-examples` is.
-- Never enable `PLR1711` for `examples/` — ruff deletes the bare `return`
-  ending each cell and `marimo check --fix` re-adds it, forever. Likewise
-  `E501`: a `# noqa` after the closing `"""` oscillates on whitespace.
+- **Verify what a provider's data means against the data, not only its docs.** COSMOS-UK's timestamp convention was settled by summing 30-minute values into daily ones, and its `/locations` GeoJSON turned out to list `[lat, lon]`. Record what was checked, and how, on the provider page.
+- **Standardise never converts units.** It keeps the provider's units and changes values only to decode fills and scale factors; conversion is `declare_units`' job in the consuming node. Do not add a node whose only purpose is a unit conversion.
+- **Provenance must be captured at fetch time**, in the sidecar: standardise cannot recover where or when a file came from. Anything else standardise needs that the raw file omits (e.g. COSMOS-UK site names) goes in the sidecar's `metadata` too.
+- **Fixtures are real provider output.** Regenerate them with `tests/fixtures/<provider>/make_fixtures.py` (it calls the live API); never hand-edit them. On regeneration the data files should be byte-identical; if they are not, the provider has revised its data, which is worth knowing. A provider's licence must allow committing them.
+- **`xarray-annotated` and conduit are developed by the same maintainer.** When contracts or conduit fall short, raise it upstream rather than working around it here. conduit is pinned to a commit in `[tool.uv.sources]`; move the pin deliberately.
+- **The CLI reference uses mkdocs-typer2's termynal output.** Its native output ignores `:command:` and reads only the first word of `:name:`, so it cannot render one provider's command group on its own.
+- **Tool versions are pinned in three places that must stay in step:** `[dependency-groups] dev`, the `.pre-commit-config.yaml` revs, and the `uv_build` bound in `[build-system]`.
+- **Never hand-edit `.copier-answers.yml`.** To change an answer, run `copier update --vcs-ref <current _commit> --data key=value`, then resolve every conflict to the project's side; the commit should touch only the answers file.

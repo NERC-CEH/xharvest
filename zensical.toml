@@ -2,25 +2,29 @@
 
 use_directory_urls = false
 
-site_name = "conduit-data"
-site_description = "Data connectors for conduit"
+site_name = "xharvest"
+site_description = "Harvest environmental data from many providers into standardised, xarray-ready netCDF."
 site_author = "Joe Marsh Rossney"
-site_url = "https://nerc-ceh.github.io/conduit-data"
+site_url = "https://nerc-ceh.github.io/xharvest"
 
-repo_name = "NERC-CEH/conduit-data"
-repo_url = "https://github.com/NERC-CEH/conduit-data"
+repo_name = "NERC-CEH/xharvest"
+repo_url = "https://github.com/NERC-CEH/xharvest"
 
 copyright = """
 Copyright &copy; 2026 Joe Marsh Rossney
 """
 
+# ADRs are for contributors, read on GitHub, so they are not built.
+exclude_docs = """
+adr/
+"""
+
 nav = [
   { "Home" = "index.md" },
   { "Getting started" = "getting-started.md" },
-  { "Example" = "example.md" },
-  { "API Reference" = "api.md" },
-  { "Decisions" = [
-    { "1. Scope and design" = "adr/0001-scope-and-design.md" },
+  { "Adding a connector" = "adding-a-connector.md" },
+  { "Providers" = [
+    { "COSMOS-UK" = "providers/cosmos-uk.md" },
   ] },
 ]
 
@@ -39,9 +43,12 @@ extra_javascript = [
     "_static/js/katex.js",
     "https://unpkg.com/katex@0/dist/katex.min.js",
     "https://unpkg.com/katex@0/dist/contrib/auto-render.min.js",
+    # Copied from the `termynal` package, for mkdocs-typer2's `:termynal:` output.
+    "assets/termynal.js",
 ]
 extra_css = [
     "https://unpkg.com/katex@0/dist/katex.min.css",
+    "assets/termynal.css",
 ]
 
 [project.theme]
@@ -93,6 +100,7 @@ link = "https://github.com/NERC-CEH"
 [project.markdown_extensions.md_in_html]
 [project.markdown_extensions.toc]
 permalink = true
+toc_depth = 3
 [project.markdown_extensions.pymdownx.arithmatex]
 # `generic = true` emits renderer-agnostic markup for KaTeX to pick up at
 # runtime -- see the `extra_javascript` comment above.
@@ -148,3 +156,8 @@ show_root_members_full_path = false
 show_source = false
 show_symbol_type_heading = true
 show_symbol_type_toc = true
+
+# mkdocs-typer2: renders the CLI reference on each provider page.
+[project.markdown_extensions."mkdocs_typer2.markdown:makeExtension"]
+pretty = false
+engine = "native"

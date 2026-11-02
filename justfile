@@ -1,28 +1,16 @@
-# Run the full check suite: lint, typecheck, test, run examples, docs.
+# Run the full check suite: lint, typecheck, test, docs.
 _:
-  @just lint typecheck test check-examples docs
+  @just lint typecheck test docs
 
-# Format and lint the package using ruff, and lint the examples using marimo.
+# Format and lint the package using ruff.
 lint:
   ruff format
-  marimo check --fix examples/
   ruff check --fix
-  marimo check --strict examples/
 
 # Variant of `lint` that doesn't cause any changes to files (for CI).
 lint-check:
   ruff format --check
   ruff check
-  marimo check --strict examples/
-
-# Assert the example notebooks are in marimo's canonical form.
-check-canonical:
-  marimo check --fix examples/
-  git diff --exit-code examples/
-
-# Confirm the example notebooks actually run.
-check-examples:
-  python examples/notebook.py
 
 # Run static type checker.
 typecheck:
@@ -32,23 +20,22 @@ typecheck:
 test:
   pytest
 
+# Run only the tests that call real provider APIs (network needed).
+test-live:
+  pytest -m live
+
 # Run tests with coverage report.
 test-cov:
-  pytest --cov=conduit_data --cov-report=term-missing --cov-fail-under=90
+  pytest --cov=xharvest --cov-report=term-missing --cov-fail-under=90
 
 # Run doctest examples embedded in source docstrings.
 doctest:
-  pytest --doctest-modules src/conduit_data
+  pytest --doctest-modules src/xharvest
 
-# Export the example notebooks, then build the documentation using Zensical.
-docs: docs-examples
+# Build the documentation using Zensical.
+docs:
   zensical build
 
-# Export the example notebooks to markdown with their rendered outputs.
-docs-examples:
-  marimo-md-export examples/notebook.py docs/example.md
-  ruff format examples/  # override marimo's reformatting
-
 # Serve the documentation locally with live reload.
-docs-serve: docs-examples
+docs-serve:
   zensical serve

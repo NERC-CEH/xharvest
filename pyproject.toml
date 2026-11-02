@@ -3,9 +3,9 @@ requires = ["uv_build>=0.12.13,<0.13.0"]
 build-backend = "uv_build"
 
 [project]
-name = "conduit-data"
+name = "xharvest"
 version = "0.1.0"
-description = "Data connectors for conduit."
+description = "Harvest environmental data from many providers into standardised, xarray-ready netCDF."
 authors = [
     { name = "Joe Marsh Rossney", email = "17361029+jmarshrossney@users.noreply.github.com" }
 ]
@@ -13,7 +13,13 @@ readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "netcdf4>=1.7.4",
+    "numpy>=2.4.2",
+    "typer>=0.24.1",
+    "xarray>=2026.2.0",
+    "xarray-annotated[cf]>=0.6.0",
+]
 keywords = []
 classifiers = [
   "Development Status :: 3 - Alpha",
@@ -24,9 +30,21 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://nerc-ceh.github.io/conduit-data"
-Repository = "https://github.com/NERC-CEH/conduit-data"
-Documentation = "https://nerc-ceh.github.io/conduit-data"
+Homepage = "https://nerc-ceh.github.io/xharvest"
+Repository = "https://github.com/NERC-CEH/xharvest"
+Documentation = "https://nerc-ceh.github.io/xharvest"
+
+[project.optional-dependencies]
+cosmos = [
+    "httpx>=0.28.1",
+]
+all = ["xharvest[cosmos]"]
+
+[project.scripts]
+xharvest = "xharvest.cli:main"
+
+[project.entry-points."conduit.modules"]
+cosmos = "xharvest.cosmos.nodes"
 
 # These bounds are floors, not pins: `uv sync` already resolves to the newest
 # version each one allows, so raising them changes nothing for anyone. Do not
@@ -44,15 +62,15 @@ dev = [
     {include-group = "test"},
 ]
 docs = [
-    "marimo>=0.23.16",
-    "marimo-md-export>=0.10.0",
+    "mkdocs-typer2[termynal]>=0.4.1",
     "mkdocstrings-python>=2.0.5",
     "zensical>=0.0.52",
-    {include-group = "examples"},
 ]
-# Dependencies needed to *run* the example notebooks, but not to use the package.
-examples = []
+# Tests cover every connector, so they need every extra, and conduit itself for the
+# end-to-end pipeline test.
 test = [
+    "conduit",
+    "xharvest[all]",
     "coverage>=7.15.2",
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
@@ -60,6 +78,9 @@ test = [
 
 [tool.pytest]
 testpaths = ["tests"]
+# Tests marked `live` call real provider APIs; run them with `just test-live`.
+addopts = ["-m", "not live"]
+markers = ["live: calls a real provider API over the network"]
 
 [tool.pyright]
 venvPath = "."
@@ -90,31 +111,6 @@ select = [
 [tool.ruff.lint.per-file-ignores]
 # Exempt tests from docstring requirements.
 "tests/**" = ["D", "E501"]
-# Marimo notebooks are generated dataflow descriptions, not hand-written
-# modules, so several rules encode assumptions that are false for them:
-#   B018    a bare trailing expression IS the cell's output mechanism.
-#   E501    long prose/URLs inside mo.md() cannot be rewrapped by ruff format,
-#           and a `# noqa` after the closing quotes flip-flops forever
-#           (marimo strips the two spaces, ruff format restores them).
-#   D100    notebooks are not modules and have no module docstring.
-#   D103    cell functions are machine-generated and undocumented.
-#   F841    exploratory cells leave unused variables around.
-#   RUF001  prose contains en dashes; RUF003 contains Greek letters.
-# Pre-emptive, and only active if "PL" is ever added to select above:
-#   PLR1711 ruff deletes the bare `return` that ends every cell and
-#           `marimo check --fix` re-adds it -- an infinite flip-flop.
-#   PLC0415 notebook imports live inside cells by design.
-"examples/**" = [
-    "B018",
-    "D100",
-    "D103",
-    "E501",
-    "F841",
-    "RUF001",
-    "RUF003",
-    "PLR1711",
-    "PLC0415",
-]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
@@ -125,7 +121,9 @@ convention = "google"
 # [dependency-groups] must be at or below the version that existed a week ago,
 # or resolution fails outright.
 exclude-newer = "1 week"
-# Exempt marimo-md-export from the cutoff: it is the one dependency here whose
-# releases are worth picking up the day they land, because the docs export
-# depends on it closely.
-exclude-newer-package = { marimo-md-export = false }
+# Exempt xarray-annotated from the cutoff: its releases are worth picking up the
+# day they land, because the contracts depend on it closely.
+exclude-newer-package = { xarray-annotated = false }
+
+[tool.uv.sources]
+conduit = { git = "https://github.com/NERC-CEH/conduit", rev = "8657eff048b065589c868e426587f6f8e12bf619" }

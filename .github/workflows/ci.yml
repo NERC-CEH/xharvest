@@ -15,7 +15,6 @@ jobs:
       # `dev` includes rust-just, so `just` is available via `uv run just`.
       - run: uv sync --group dev --locked
       - run: uv run just lint-check
-      - run: uv run just check-canonical
       - run: uv run just typecheck
 
   test:
@@ -30,5 +29,3 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: uv sync --group dev --locked
       - run: uv run just test-cov
-      # Neither linting nor the docs export fails on a notebook that raises.
-      - run: uv run just check-examples

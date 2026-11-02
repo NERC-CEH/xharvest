@@ -2,40 +2,38 @@
 
 ## Installation
 
-Install from the repository:
+Each provider's dependencies sit behind an install extra named after it:
 
 ```sh
-pip install git+https://github.com/NERC-CEH/conduit-data
+pip install "xharvest[cosmos] @ git+https://github.com/NERC-CEH/xharvest"
 ```
 
-Or, if you use [uv](https://docs.astral.sh/uv/), add it to a project:
+`all` installs every extra.
+With [uv](https://docs.astral.sh/uv/):
 
 ```sh
-uv add git+https://github.com/NERC-CEH/conduit-data
+uv add "xharvest[all] @ git+https://github.com/NERC-CEH/xharvest"
 ```
 
-## First steps
+## A first download
 
-The package exposes a single function:
+Fetch two weeks of daily COSMOS-UK data for one site, and standardise it:
 
 ```python
-from conduit_data import greet
+from datetime import date
+from xharvest import cosmos
 
-print(greet())  # Hello, world!
-print(greet("reader"))  # Hello, reader!
+raw = cosmos.fetch("ALIC1", date(2025, 1, 1), date(2025, 1, 14), "data/raw")
+ds = cosmos.standardise(raw)
+cosmos.to_netcdf(raw, "data/cosmos.nc")
 ```
 
-That's the whole interface. Replace this page with something useful once the
-package does something useful.
+The same from the command line:
 
-## Maths
+```sh
+xharvest cosmos fetch ALIC1 --start 2025-01-01 --end 2025-01-14 --out data/raw
+xharvest cosmos standardise data/raw/*.json --out data/cosmos.nc
+```
 
-KaTeX is wired up, so inline maths like $e^{i\pi} = -1$ and display maths
-
-$$
-\int_{-\infty}^{\infty} e^{-x^{2}} \, \mathrm{d}x = \sqrt{\pi}
-$$
-
-both render. This section exists so the docs build exercises the KaTeX
-configuration; delete it (and see `zensical.toml`) if this package's
-documentation has no maths in it.
+`data/cosmos.nc` is ready for a conduit `[inputs.*]` section.
+Each provider's page says what its standardised output contains and which conduit nodes it provides; start with [COSMOS-UK](providers/cosmos-uk.md).

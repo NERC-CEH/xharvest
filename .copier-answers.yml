@@ -6,9 +6,10 @@ author_email: 17361029+jmarshrossney@users.noreply.github.com
 author_name: Joe Marsh Rossney
 copyright_holder: Joe Marsh Rossney
 github_owner: NERC-CEH
-package_name: conduit_data
-project_description: Data connectors for conduit
-project_name: conduit-data
+package_name: xharvest
+project_description: Harvest environmental data from many providers into standardised,
+    xarray-ready netCDF.
+project_name: xharvest
 with_cli: false
 with_license: true
 with_pypi: false

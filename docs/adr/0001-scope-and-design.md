@@ -1,9 +1,9 @@
-# 1. Data connectors live in a separate package that does not depend on conduit
+## 1. Data connectors live in a separate package that does not depend on conduit
 
 - **Status:** accepted
 - **Date:** 2026-11-02
 
-## Context
+### Context
 
 Applying [conduit](https://github.com/NERC-CEH/conduit) usually involves three steps:
 
@@ -18,7 +18,7 @@ A blocked or sharded run would contact the provider once per shard, and a cache 
 Preparation is the opposite: pure xarray transforms whose typical bugs are mistakes in units, dims or time frequency.
 These are exactly what conduit's whole-DAG contract check catches before compute.
 
-## Decision
+### Decision
 
 Connectors for each provider live in this package, separate from conduit.
 Each connector has up to three layers:
@@ -31,7 +31,7 @@ No layer imports conduit, so the package is useful to anyone who just wants the 
 conduit finds the node modules through its `conduit.modules` entry point when both are installed.
 conduit itself never downloads anything, and does not depend on this package.
 
-## Consequences
+### Consequences
 
 - conduit stays free of network access and credentials, and of provider APIs that change underneath it.
 - Changes in provider APIs are absorbed here.
