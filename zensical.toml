@@ -14,16 +14,20 @@ copyright = """
 Copyright &copy; 2026 Joe Marsh Rossney
 """
 
+# ADRs are rendered through developers/decisions.md, which includes them all.
+exclude_docs = """
+adr/
+"""
+
 nav = [
   { "Home" = "index.md" },
   { "Getting started" = "getting-started.md" },
   { "Providers" = [
     { "COSMOS-UK" = "providers/cosmos-uk.md" },
   ] },
-  { "Example" = "example.md" },
-  { "API Reference" = "api.md" },
-  { "Decisions" = [
-    { "1. Scope and design" = "adr/0001-scope-and-design.md" },
+  { "For developers" = [
+    { "Adding a connector" = "developers/adding-a-connector.md" },
+    { "Design decisions" = "developers/decisions.md" },
   ] },
 ]
 
@@ -42,9 +46,12 @@ extra_javascript = [
     "_static/js/katex.js",
     "https://unpkg.com/katex@0/dist/katex.min.js",
     "https://unpkg.com/katex@0/dist/contrib/auto-render.min.js",
+    # Copied from the `termynal` package, for mkdocs-typer2's `:termynal:` output.
+    "assets/termynal.js",
 ]
 extra_css = [
     "https://unpkg.com/katex@0/dist/katex.min.css",
+    "assets/termynal.css",
 ]
 
 [project.theme]
@@ -115,6 +122,10 @@ pygments_lang_class = true
 [project.markdown_extensions.pymdownx.magiclink]
 [project.markdown_extensions.pymdownx.mark]
 [project.markdown_extensions.pymdownx.smartsymbols]
+# Lets one page include others, e.g. developers/decisions.md includes every ADR.
+[project.markdown_extensions.pymdownx.snippets]
+base_path = ["."]
+check_paths = true
 [project.markdown_extensions.pymdownx.superfences]
 custom_fences = [
   { name = "mermaid", class = "mermaid", format = "pymdownx.superfences.fence_code_format" }
@@ -151,3 +162,8 @@ show_root_members_full_path = false
 show_source = false
 show_symbol_type_heading = true
 show_symbol_type_toc = true
+
+# mkdocs-typer2: renders the CLI reference on each provider page.
+[project.markdown_extensions."mkdocs_typer2.markdown:makeExtension"]
+pretty = false
+engine = "native"

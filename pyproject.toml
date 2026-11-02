@@ -63,16 +63,12 @@ dev = [
     {include-group = "docs"},
     {include-group = "test"},
 ]
+# The CLI reference imports the typer app, so the docs need the cli extra.
 docs = [
-    "marimo>=0.23.16",
-    "marimo-md-export>=0.10.0",
+    "conduit-data[cli]",
+    "mkdocs-typer2[termynal]>=0.4.1",
     "mkdocstrings-python>=2.0.5",
     "zensical>=0.0.52",
-    {include-group = "examples"},
-]
-# Dependencies needed to *run* the example notebooks, but not to use the package.
-examples = [
-    "matplotlib>=3.10.0",
 ]
 # Tests cover every connector, so they need every extra, and conduit itself for the
 # end-to-end pipeline test.
@@ -119,31 +115,6 @@ select = [
 [tool.ruff.lint.per-file-ignores]
 # Exempt tests from docstring requirements.
 "tests/**" = ["D", "E501"]
-# Marimo notebooks are generated dataflow descriptions, not hand-written
-# modules, so several rules encode assumptions that are false for them:
-#   B018    a bare trailing expression IS the cell's output mechanism.
-#   E501    long prose/URLs inside mo.md() cannot be rewrapped by ruff format,
-#           and a `# noqa` after the closing quotes flip-flops forever
-#           (marimo strips the two spaces, ruff format restores them).
-#   D100    notebooks are not modules and have no module docstring.
-#   D103    cell functions are machine-generated and undocumented.
-#   F841    exploratory cells leave unused variables around.
-#   RUF001  prose contains en dashes; RUF003 contains Greek letters.
-# Pre-emptive, and only active if "PL" is ever added to select above:
-#   PLR1711 ruff deletes the bare `return` that ends every cell and
-#           `marimo check --fix` re-adds it -- an infinite flip-flop.
-#   PLC0415 notebook imports live inside cells by design.
-"examples/**" = [
-    "B018",
-    "D100",
-    "D103",
-    "E501",
-    "F841",
-    "RUF001",
-    "RUF003",
-    "PLR1711",
-    "PLC0415",
-]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
@@ -154,10 +125,9 @@ convention = "google"
 # [dependency-groups] must be at or below the version that existed a week ago,
 # or resolution fails outright.
 exclude-newer = "1 week"
-# Exempt marimo-md-export and xarray-annotated from the cutoff: their releases are
-# worth picking up the day they land, because the docs export and the contracts
-# depend on them closely.
-exclude-newer-package = { marimo-md-export = false, xarray-annotated = false }
+# Exempt xarray-annotated from the cutoff: its releases are worth picking up the
+# day they land, because the contracts depend on it closely.
+exclude-newer-package = { xarray-annotated = false }
 
 [tool.uv.sources]
 conduit = { git = "https://github.com/NERC-CEH/conduit", rev = "8657eff048b065589c868e426587f6f8e12bf619" }

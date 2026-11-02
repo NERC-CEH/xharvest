@@ -22,4 +22,5 @@ None of them needs conduit, so the package is just as useful for getting data in
 pip install "conduit-data[cosmos,cli] @ git+https://github.com/NERC-CEH/conduit-data"
 ```
 
-See [Getting started](getting-started.md) for a first download, the [example](example.md) for a worked notebook, and the [API reference](api.md) for the full interface.
+See [Getting started](getting-started.md) for a first download.
+Each provider page has its usage, Python API and CLI reference, and [For developers](developers/adding-a-connector.md) covers adding a provider.

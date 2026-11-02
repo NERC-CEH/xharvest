@@ -97,13 +97,8 @@ vars = ["cosmos_vwc", "snow"]
 [cosmos]
 ```
 
-`[cosmos]` provides:
-
-| Node | Inputs | Output |
-|---|---|---|
-| `cosmos_vwc_snow_masked` | `cosmos_vwc` (`%`, daily), `snow` (`1`, daily) | `cosmos_vwc`, NaN on snow days (`%`, daily) |
-
-The node names its inputs after the standardised variables, hence `suffix = ""`.
+`[cosmos]` provides `cosmos_vwc_snow_masked` (see [the reference](#nodes)).
+Its node names its inputs after the standardised variables, hence `suffix = ""`.
 A node that needs VWC as a fraction declares `Unit("m3 m-3")` on its input, and conduit converts from percent.
 
 ## Citing the data
@@ -112,3 +107,42 @@ The API serves live data with no DOI.
 For published work, cite the most recent quality-controlled release on the EIDC, for example:
 
 > Stanley, S., et al. (2026). Daily and sub-daily hydrometeorological and soil moisture data (2013-2025) [COSMOS-UK]. NERC EDS Environmental Information Data Centre. <https://doi.org/10.5285/dde10e2b-ee1a-4b2b-a247-176db2f7bb31>
+
+## Python API
+
+::: conduit_data.cosmos.sites
+    options:
+      heading_level: 3
+
+::: conduit_data.cosmos.Site
+    options:
+      heading_level: 3
+
+::: conduit_data.cosmos.fetch
+    options:
+      heading_level: 3
+
+::: conduit_data.cosmos.standardise
+    options:
+      heading_level: 3
+
+::: conduit_data.cosmos.to_netcdf
+    options:
+      heading_level: 3
+
+### Nodes
+
+::: conduit_data.cosmos.nodes.cosmos_vwc_snow_masked
+    options:
+      heading_level: 4
+
+## CLI
+
+::: mkdocs-typer2
+    :module: conduit_data.cli.app
+    :name: conduit-data
+    :command: cosmos
+    :termynal: true
+    :width: 80
+    :prompt: ❯
+    :subcommands: 1
