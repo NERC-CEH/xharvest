@@ -1,0 +1,9 @@
+{
+  "url": "https://cosmos-api.ceh.ac.uk/collections/1D/locations/ALIC1",
+  "params": {
+    "datetime": "2025-01-04T00:00:00Z/2025-01-17T00:00:00Z",
+    "parameter-name": "albedo,cosmos_vwc,d86_75m,precip,snow,ta,tdt3_vwc"
+  },
+  "retrieved": "2026-11-02T11:43:20Z",
+  "agent": "conduit-data 0.1.0"
+}

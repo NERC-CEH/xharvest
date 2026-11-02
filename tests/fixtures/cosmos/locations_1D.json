@@ -1,0 +1,230 @@
+{
+ "features": [
+  {
+   "geometry": {
+    "coordinates": [
+     51.153551,
+     -0.858232
+    ],
+    "type": "Point"
+   },
+   "id": "ALIC1",
+   "properties": {
+    "datetime": "2015-03-06T13:30:00Z/2026-11-01T00:00:00Z",
+    "edrqueryendpoint": "https://cosmos-api.ceh.ac.uk/collections/1D/locations/ALIC1",
+    "label": "Alice Holt",
+    "parameter-name": [
+     "albedo",
+     "cosmos_vwc",
+     "d86_75m",
+     "precip",
+     "snow",
+     "ta",
+     "tdt3_vwc"
+    ],
+    "siteInfo": {
+     "altitude": {
+      "description": "Altitude of the site in metres above sea level",
+      "units": {
+       "label": "metres above sea level",
+       "symbol": {
+        "type": "http://codes.wmo.int/grib2/codeflag/4.5/102",
+        "value": "mASL"
+       }
+      },
+      "value": 80.0
+     },
+     "bulk_density": {
+      "description": "Mass per unit volume derived from soil samples taken from the site",
+      "units": {
+       "label": "gram per cubic centimetre",
+       "symbol": {
+        "type": "http://www.ontology-of-units-of-measure.org/resource/om-2/gramPerCubicCentimetre",
+        "value": "g cm-3"
+       }
+      },
+      "value": 0.84
+     },
+     "bulk_density_sd": {
+      "description": "Standard deviation of bulk density across soil samples taken from site",
+      "units": {
+       "label": "gram per cubic centimetre",
+       "symbol": {
+        "type": "http://www.ontology-of-units-of-measure.org/resource/om-2/gramPerCubicCentimetre",
+        "value": "g cm-3"
+       }
+      },
+      "value": null
+     },
+     "land_cover": {
+      "description": "Main land cover as observed at the site",
+      "value": "Broadleaf woodland"
+     },
+     "lattice_water": {
+      "description": "Lattice and bound water. Water integrated into mineral structures within the soil",
+      "units": {
+       "label": "gram per gram",
+       "symbol": {
+        "type": "http://www.ontology-of-units-of-measure.org/resource/om-2/gramPerGram",
+        "value": "g g-1"
+       }
+      },
+      "value": 0.025
+     },
+     "lattice_water_sd": {
+      "description": "Standard deviation of lattice water across soil samples taken from site",
+      "units": {
+       "label": "gram per gram",
+       "symbol": {
+        "type": "http://www.ontology-of-units-of-measure.org/resource/om-2/gramPerGram",
+        "value": "g g-1"
+       }
+      },
+      "value": null
+     },
+     "soil_organic_carbon": {
+      "description": "Organic carbon content within dry soil mass, derived from soil samples taken from the site",
+      "units": {
+       "label": "gram per gram",
+       "symbol": {
+        "type": "http://www.ontology-of-units-of-measure.org/resource/om-2/gramPerGram",
+        "value": "g g-1"
+       }
+      },
+      "value": 0.042
+     },
+     "soil_organic_carbon_sd": {
+      "description": "Standard deviation of soil organic carbon across soil samples taken from site",
+      "units": {
+       "label": "gram per gram",
+       "symbol": {
+        "type": "http://www.ontology-of-units-of-measure.org/resource/om-2/gramPerGram",
+        "value": "g g-1"
+       }
+      },
+      "value": null
+     },
+     "soil_type": {
+      "description": "Informal soil type description derived from site inspection and soil sampling",
+      "value": "Mineral soil"
+     }
+    }
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     54.659417,
+     -2.4678
+    ],
+    "type": "Point"
+   },
+   "id": "MOORH",
+   "properties": {
+    "datetime": "2014-12-04T11:30:00Z/2026-11-01T00:00:00Z",
+    "edrqueryendpoint": "https://cosmos-api.ceh.ac.uk/collections/1D/locations/MOORH",
+    "label": "Moor House",
+    "parameter-name": [
+     "albedo",
+     "cosmos_vwc",
+     "d86_75m",
+     "precip",
+     "snow",
+     "ta",
+     "tdt3_vwc"
+    ],
+    "siteInfo": {
+     "altitude": {
+      "description": "Altitude of the site in metres above sea level",
+      "units": {
+       "label": "metres above sea level",
+       "symbol": {
+        "type": "http://codes.wmo.int/grib2/codeflag/4.5/102",
+        "value": "mASL"
+       }
+      },
+      "value": 565.0
+     },
+     "bulk_density": {
+      "description": "Mass per unit volume derived from soil samples taken from the site",
+      "units": {
+       "label": "gram per cubic centimetre",
+       "symbol": {
+        "type": "http://www.ontology-of-units-of-measure.org/resource/om-2/gramPerCubicCentimetre",
+        "value": "g cm-3"
+       }
+      },
+      "value": 0.61
+     },
+     "bulk_density_sd": {
+      "description": "Standard deviation of bulk density across soil samples taken from site",
+      "units": {
+       "label": "gram per cubic centimetre",
+       "symbol": {
+        "type": "http://www.ontology-of-units-of-measure.org/resource/om-2/gramPerCubicCentimetre",
+        "value": "g cm-3"
+       }
+      },
+      "value": 0.38
+     },
+     "land_cover": {
+      "description": "Main land cover as observed at the site",
+      "value": "Acid grassland"
+     },
+     "lattice_water": {
+      "description": "Lattice and bound water. Water integrated into mineral structures within the soil",
+      "units": {
+       "label": "gram per gram",
+       "symbol": {
+        "type": "http://www.ontology-of-units-of-measure.org/resource/om-2/gramPerGram",
+        "value": "g g-1"
+       }
+      },
+      "value": 0.014
+     },
+     "lattice_water_sd": {
+      "description": "Standard deviation of lattice water across soil samples taken from site",
+      "units": {
+       "label": "gram per gram",
+       "symbol": {
+        "type": "http://www.ontology-of-units-of-measure.org/resource/om-2/gramPerGram",
+        "value": "g g-1"
+       }
+      },
+      "value": 0.0025
+     },
+     "soil_organic_carbon": {
+      "description": "Organic carbon content within dry soil mass, derived from soil samples taken from the site",
+      "units": {
+       "label": "gram per gram",
+       "symbol": {
+        "type": "http://www.ontology-of-units-of-measure.org/resource/om-2/gramPerGram",
+        "value": "g g-1"
+       }
+      },
+      "value": 0.076
+     },
+     "soil_organic_carbon_sd": {
+      "description": "Standard deviation of soil organic carbon across soil samples taken from site",
+      "units": {
+       "label": "gram per gram",
+       "symbol": {
+        "type": "http://www.ontology-of-units-of-measure.org/resource/om-2/gramPerGram",
+        "value": "g g-1"
+       }
+      },
+      "value": 0.029
+     },
+     "soil_type": {
+      "description": "Informal soil type description derived from site inspection and soil sampling",
+      "value": "Mineral soil"
+     }
+    }
+   },
+   "type": "Feature"
+  }
+ ],
+ "timeStamp": "2026-11-02T11:43:20Z",
+ "type": "FeatureCollection"
+}
