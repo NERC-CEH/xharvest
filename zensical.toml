@@ -22,10 +22,10 @@ adr/
 nav = [
   { "Home" = "index.md" },
   { "Getting started" = "getting-started.md" },
+  { "Adding a connector" = "adding-a-connector.md" },
   { "Providers" = [
     { "COSMOS-UK" = "providers/cosmos-uk.md" },
   ] },
-  { "Adding a connector" = "adding-a-connector.md" },
 ]
 
 # Math rendering with KaTeX.
