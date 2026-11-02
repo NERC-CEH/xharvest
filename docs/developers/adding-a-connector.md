@@ -64,7 +64,7 @@ Tests must not touch the network or need credentials.
 
 - Commit a few days of real raw output under `tests/fixtures/<provider>/`, trimmed to what the tests need, with a `make_fixtures.py` that regenerates it.
 - Let `fetch` accept a client (as `cosmos.fetch` takes an `httpx.Client`), and test it against a mock transport serving the fixtures.
-- Add the connector to `CONNECTORS` in `tests/test_contracts.py`, which checks the standardised output and the node contracts.
+- Add the connector to `CONNECTORS` in `tests/test_contracts.py`, which checks the standardised output and the node contracts; a test fails until you do.
 - Put tests that call the real API in `test_<provider>_live.py`, marked `live`; `just test-live` runs them.
 
 ### Docs
@@ -84,7 +84,6 @@ Model it on [COSMOS-UK](../providers/cosmos-uk.md), with sections in this order:
 ## Before opening the pull request
 
 - [ ] `uv run just` passes, and `uv run just test-live` passes against the real API.
-- [ ] The connector is in `CONNECTORS` in `tests/test_contracts.py`.
 - [ ] The provider page is in the nav and the provider tables.
 - [ ] Anything this connector settled that the next one should follow is added to this page.
 

@@ -7,6 +7,7 @@ file as read back, since that is what conduit reads.
 
 import inspect
 from dataclasses import dataclass
+from pathlib import Path
 from types import ModuleType
 from typing import Any
 
@@ -37,6 +38,14 @@ class Connector:
 CONNECTORS = [
     Connector("cosmos", cosmos.to_netcdf, "cosmos_raw", cosmos_nodes),
 ]
+
+SRC = Path(__file__).parents[1] / "src" / "xharvest"
+
+
+def test_every_provider_is_in_connectors():
+    # A provider missing from CONNECTORS would skip every check below, silently.
+    providers = {p.parent.name for p in SRC.glob("*/_fetch.py")}
+    assert {c.name for c in CONNECTORS} == providers
 
 
 @pytest.fixture(params=CONNECTORS, ids=lambda c: c.name)
