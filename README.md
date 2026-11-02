@@ -29,17 +29,15 @@ See the [documentation](https://nerc-ceh.github.io/xharvest) for more.
 See [CONTRIBUTING.md](CONTRIBUTING.md). In short: `uv sync`, then `just`.
 
 ```
-just                  # lint, typecheck, test, check-examples, docs
-just lint             # ruff format, marimo check --fix, ruff check --fix, marimo --strict
+just                  # lint, typecheck, test, docs
+just lint             # ruff format, ruff check --fix
 just lint-check       # non-mutating variant, used by CI
-just check-canonical  # assert the notebooks are in marimo's canonical form
-just check-examples   # actually execute the example notebooks
 just typecheck        # pyright
 just test             # pytest
 just test-cov         # pytest with coverage, fails under 90%
 just test-live        # only the tests that call real provider APIs
 just doctest          # run the doctest examples in src/
-just docs             # export example notebooks, then zensical build
+just docs             # zensical build
 just docs-serve       # the same, with a live-reloading local server
 ```
 
