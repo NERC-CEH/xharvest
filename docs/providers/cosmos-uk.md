@@ -8,6 +8,7 @@
 | Install | `pip install conduit-data[cosmos]` |
 | Credentials | None |
 | Licence | [Open Government Licence v3](http://www.nationalarchives.gov.uk/doc/open-government-licence), as stated by the API |
+| Cite | [EIDC release](https://doi.org/10.5285/dde10e2b-ee1a-4b2b-a247-176db2f7bb31) (see [Citing the data](#citing-the-data)) |
 | Collections | `1D` (daily), `30M` (30-minute) |
 | conduit section | `[cosmos]` |
 
@@ -67,6 +68,8 @@ Sites are outer-joined on time, so a site is NaN-padded outside its own record.
 A parameter for a sensor a site does not have is kept, entirely NaN, so every site has the same variables.
 
 The global attributes record provenance: `institution`, `source`, `license`, and a `history` line for each download and for the standardisation.
+
+## About the data
 
 ### Timestamps
 

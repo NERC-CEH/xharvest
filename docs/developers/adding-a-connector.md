@@ -66,8 +66,15 @@ Tests must not touch the network or need credentials.
 ### Docs
 
 Add a page under `docs/providers/`, to the `zensical.toml` nav, and to the provider tables in `README.md` and `docs/index.md`.
-Model it on [COSMOS-UK](../providers/cosmos-uk.md): usage first, then the Python API and CLI references, generated with mkdocstrings and mkdocs-typer2.
-The page states the extra, the credentials needed, the licence and how to cite the data, the standardised output's variables and coordinates, what a timestamp means, and anything the provider's data does not say about itself.
+Model it on [COSMOS-UK](../providers/cosmos-uk.md), with sections in this order:
+
+1. an overview table: install, credentials, licence, how to cite, and the conduit section name;
+2. download;
+3. standardise, describing the output;
+4. about the data: what a timestamp means, and the provider's quirks and gaps;
+5. use in conduit;
+6. citing the data;
+7. the Python API and CLI references, generated with mkdocstrings and mkdocs-typer2.
 
 ## Before opening the pull request
 
