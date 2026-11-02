@@ -3,9 +3,9 @@ requires = ["uv_build>=0.12.13,<0.13.0"]
 build-backend = "uv_build"
 
 [project]
-name = "conduit-data"
+name = "xharvest"
 version = "0.1.0"
-description = "Data connectors for conduit and xarray."
+description = "Harvest environmental data from many providers into standardised, xarray-ready netCDF."
 authors = [
     { name = "Joe Marsh Rossney", email = "17361029+jmarshrossney@users.noreply.github.com" }
 ]
@@ -30,21 +30,21 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://nerc-ceh.github.io/conduit-data"
-Repository = "https://github.com/NERC-CEH/conduit-data"
-Documentation = "https://nerc-ceh.github.io/conduit-data"
+Homepage = "https://nerc-ceh.github.io/xharvest"
+Repository = "https://github.com/NERC-CEH/xharvest"
+Documentation = "https://nerc-ceh.github.io/xharvest"
 
 [project.optional-dependencies]
 cosmos = [
     "httpx>=0.28.1",
 ]
-all = ["conduit-data[cosmos]"]
+all = ["xharvest[cosmos]"]
 
 [project.scripts]
-conduit-data = "conduit_data.cli:main"
+xharvest = "xharvest.cli:main"
 
 [project.entry-points."conduit.modules"]
-cosmos = "conduit_data.cosmos.nodes"
+cosmos = "xharvest.cosmos.nodes"
 
 # These bounds are floors, not pins: `uv sync` already resolves to the newest
 # version each one allows, so raising them changes nothing for anyone. Do not
@@ -70,7 +70,7 @@ docs = [
 # end-to-end pipeline test.
 test = [
     "conduit",
-    "conduit-data[all]",
+    "xharvest[all]",
     "coverage>=7.15.2",
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",

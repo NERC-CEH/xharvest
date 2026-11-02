@@ -4,10 +4,10 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from conduit_data.cosmos import standardise, to_netcdf
-from conduit_data.cosmos.standardise import _duration
-from conduit_data.errors import ProviderError
-from conduit_data.provenance import PROVENANCE_ATTRS, sidecar_path
+from xharvest.cosmos import standardise, to_netcdf
+from xharvest.cosmos.standardise import _duration
+from xharvest.errors import ProviderError
+from xharvest.provenance import PROVENANCE_ATTRS, sidecar_path
 
 
 @pytest.fixture

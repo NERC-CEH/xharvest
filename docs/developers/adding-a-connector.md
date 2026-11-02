@@ -5,7 +5,7 @@ Adding one is a proposal, then a pull request.
 
 ## Propose it
 
-Open an issue on [NERC-CEH/conduit-data](https://github.com/NERC-CEH/conduit-data/issues) before writing code, saying:
+Open an issue on [NERC-CEH/xharvest](https://github.com/NERC-CEH/xharvest/issues) before writing code, saying:
 
 - **the provider and data**: the service, the datasets or variables, and who will use them;
 - **the licence**: whether it allows committing a few days of raw output as a test fixture, which every connector needs;
@@ -18,7 +18,7 @@ A provider whose licence forbids committing fixtures, or whose client library wi
 
 ## Write it
 
-Each provider is a subpackage of `conduit_data`; `conduit_data.cosmos` is the reference.
+Each provider is a subpackage of `xharvest`; `xharvest.cosmos` is the reference.
 [Design decisions](decisions.md) explains why the package is shaped this way.
 
 | Module | What it does | May import |
@@ -33,12 +33,12 @@ The CLI command group in `cli/` calls these functions and adds nothing the Pytho
 ### Dependencies
 
 The provider's third-party dependencies go in an extra named after the subpackage, and in `all`.
-Import them with `conduit_data._extras.require(module, extra)`, inside the function that needs them, so the subpackage imports without them and the error names the extra.
+Import them with `xharvest._extras.require(module, extra)`, inside the function that needs them, so the subpackage imports without them and the error names the extra.
 `tests/test_layout.py` rejects a module-level import of an extra's package.
 
 ### Provenance
 
-Raw provider files rarely record where or when they were downloaded, so `fetch` calls `conduit_data.provenance.write_sidecar` for every file it writes, and `standardise` reads the sidecars back.
+Raw provider files rarely record where or when they were downloaded, so `fetch` calls `xharvest.provenance.write_sidecar` for every file it writes, and `standardise` reads the sidecars back.
 A sidecar's `metadata` also holds anything standardisation needs that the raw file omits, such as COSMOS-UK site names.
 The standardised dataset carries the global attributes in `provenance.PROVENANCE_ATTRS`: `institution`, `source`, `license`, and `history`, with one line per download (`provenance.history_line`) and one for the standardisation.
 
@@ -52,7 +52,7 @@ netCDF with:
 - a CF `units` attribute on every data variable, valid under `xarray_annotated.units.use_cf_units()`, and `cell_methods` where the provider says how values were aggregated;
 - the provenance attributes above.
 
-Raise `conduit_data.errors.ProviderError` when a provider rejects a request or returns something the connector cannot read, with the provider's own message where it gives one.
+Raise `xharvest.errors.ProviderError` when a provider rejects a request or returns something the connector cannot read, with the provider's own message where it gives one.
 
 ### Tests
 
@@ -85,14 +85,14 @@ Model it on [COSMOS-UK](../providers/cosmos-uk.md), with sections in this order:
 
 ## Shared API
 
-::: conduit_data.provenance
+::: xharvest.provenance
     options:
       heading_level: 3
 
-::: conduit_data.errors
+::: xharvest.errors
     options:
       heading_level: 3
 
-::: conduit_data._extras.require
+::: xharvest._extras.require
     options:
       heading_level: 3

@@ -4,8 +4,8 @@
     "datetime": "2025-01-01T00:00:00Z/2025-01-14T00:00:00Z",
     "parameter-name": "albedo,cosmos_vwc,d86_75m,precip,snow,ta,tdt3_vwc"
   },
-  "retrieved": "2026-11-02T12:25:12Z",
-  "agent": "conduit-data 0.1.0",
+  "retrieved": "2026-11-02T13:48:38Z",
+  "agent": "xharvest 0.1.0",
   "metadata": {
     "site_names": {
       "MOORH": "Moor House"

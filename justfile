@@ -26,11 +26,11 @@ test-live:
 
 # Run tests with coverage report.
 test-cov:
-  pytest --cov=conduit_data --cov-report=term-missing --cov-fail-under=90
+  pytest --cov=xharvest --cov-report=term-missing --cov-fail-under=90
 
 # Run doctest examples embedded in source docstrings.
 doctest:
-  pytest --doctest-modules src/conduit_data
+  pytest --doctest-modules src/xharvest
 
 # Build the documentation using Zensical.
 docs:

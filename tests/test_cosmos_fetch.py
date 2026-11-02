@@ -4,9 +4,9 @@ from datetime import UTC, date, datetime, timedelta, timezone
 
 import pytest
 
-from conduit_data.cosmos import fetch, sites
-from conduit_data.errors import ProviderError
-from conduit_data.provenance import read_sidecar, sidecar_path
+from xharvest.cosmos import fetch, sites
+from xharvest.errors import ProviderError
+from xharvest.provenance import read_sidecar, sidecar_path
 
 
 def test_sites_reads_lat_lon_the_right_way_round(cosmos_api):
@@ -20,7 +20,7 @@ def test_sites_reads_lat_lon_the_right_way_round(cosmos_api):
 
 
 def test_lat_lon_reads_either_order():
-    fetch_module = importlib.import_module("conduit_data.cosmos.fetch")
+    fetch_module = importlib.import_module("xharvest.cosmos.fetch")
 
     assert fetch_module._lat_lon([-0.86, 51.15]) == (51.15, -0.86)
     assert fetch_module._lat_lon([51.15, -0.86]) == (51.15, -0.86)
@@ -75,7 +75,7 @@ def test_fetch_writes_one_file_and_sidecar_per_site(cosmos_api, tmp_path):
         retrieval = read_sidecar(path)
         assert retrieval.url.endswith(path.name.split("_")[0])
         assert retrieval.params["datetime"].startswith("2025-01-01T00:00:00Z")
-        assert retrieval.agent.startswith("conduit-data ")
+        assert retrieval.agent.startswith("xharvest ")
     assert read_sidecar(paths[0]).metadata == {"site_names": {"MOORH": "Moor House"}}
     assert read_sidecar(paths[1]).metadata == {"site_names": {"ALIC1": "Alice Holt"}}
 

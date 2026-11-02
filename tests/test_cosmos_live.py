@@ -4,7 +4,7 @@ from datetime import date
 
 import pytest
 
-from conduit_data import cosmos
+from xharvest import cosmos
 
 pytestmark = pytest.mark.live
 

@@ -1,4 +1,4 @@
-# conduit-data
+# xharvest
 
 Download environmental data from its providers, and standardise it into netCDF that [conduit](https://github.com/NERC-CEH/conduit) and xarray read as-is.
 
@@ -9,20 +9,20 @@ Download environmental data from its providers, and standardise it into netCDF t
 ## Installation
 
 ```sh
-pip install "conduit-data[cosmos] @ git+https://github.com/NERC-CEH/conduit-data"
+pip install "xharvest[cosmos] @ git+https://github.com/NERC-CEH/xharvest"
 ```
 
 ## Usage
 
 ```python
 from datetime import date
-from conduit_data import cosmos
+from xharvest import cosmos
 
 raw = cosmos.fetch("ALIC1", date(2025, 1, 1), date(2025, 1, 14), "data/raw")
 cosmos.to_netcdf(raw, "data/cosmos.nc")
 ```
 
-See the [documentation](https://nerc-ceh.github.io/conduit-data) for more.
+See the [documentation](https://nerc-ceh.github.io/xharvest) for more.
 
 ## Development
 

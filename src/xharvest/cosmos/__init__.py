@@ -7,14 +7,14 @@ are licensed under the Open Government Licence.
 - `sites` lists the sites, and `fetch` downloads raw CoverageJSON per site.
 - `standardise` combines raw files into a ``(time, site)`` Dataset, and
   `to_netcdf` writes it to a file conduit can read.
-- `conduit_data.cosmos.nodes` holds node functions that conduit finds under the
+- `xharvest.cosmos.nodes` holds node functions that conduit finds under the
   section name ``[cosmos]``.
 
-`fetch` and `sites` need the ``cosmos`` extra (``pip install conduit-data[cosmos]``).
+`fetch` and `sites` need the ``cosmos`` extra (``pip install xharvest[cosmos]``).
 
 Example:
     >>> from datetime import date
-    >>> from conduit_data import cosmos
+    >>> from xharvest import cosmos
     >>> raw = cosmos.fetch("ALIC1", date(2025, 1, 1), date(2025, 1, 31),
     ...                    "data/raw")  # doctest: +SKIP
     >>> cosmos.to_netcdf(raw, "data/cosmos.nc")  # doctest: +SKIP

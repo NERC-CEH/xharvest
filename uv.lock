@@ -174,94 +174,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "conduit-data"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "netcdf4" },
-    { name = "numpy" },
-    { name = "typer" },
-    { name = "xarray" },
-    { name = "xarray-annotated", extra = ["cf"] },
-]
-
-[package.optional-dependencies]
-all = [
-    { name = "httpx" },
-]
-cosmos = [
-    { name = "httpx" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "conduit" },
-    { name = "conduit-data", extra = ["all"] },
-    { name = "coverage" },
-    { name = "mkdocs-typer2", extra = ["termynal"] },
-    { name = "mkdocstrings-python" },
-    { name = "pre-commit" },
-    { name = "pyright" },
-    { name = "pytest" },
-    { name = "pytest-cov" },
-    { name = "ruff" },
-    { name = "rust-just" },
-    { name = "zensical" },
-]
-docs = [
-    { name = "mkdocs-typer2", extra = ["termynal"] },
-    { name = "mkdocstrings-python" },
-    { name = "zensical" },
-]
-test = [
-    { name = "conduit" },
-    { name = "conduit-data", extra = ["all"] },
-    { name = "coverage" },
-    { name = "pytest" },
-    { name = "pytest-cov" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "conduit-data", extras = ["cosmos"], marker = "extra == 'all'" },
-    { name = "httpx", marker = "extra == 'cosmos'", specifier = ">=0.28.1" },
-    { name = "netcdf4", specifier = ">=1.7.4" },
-    { name = "numpy", specifier = ">=2.4.2" },
-    { name = "typer", specifier = ">=0.24.1" },
-    { name = "xarray", specifier = ">=2026.2.0" },
-    { name = "xarray-annotated", extras = ["cf"], specifier = ">=0.6.0" },
-]
-provides-extras = ["cosmos", "all"]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "conduit", git = "https://github.com/NERC-CEH/conduit?rev=8657eff048b065589c868e426587f6f8e12bf619" },
-    { name = "conduit-data", extras = ["all"] },
-    { name = "coverage", specifier = ">=7.15.2" },
-    { name = "mkdocs-typer2", extras = ["termynal"], specifier = ">=0.4.1" },
-    { name = "mkdocstrings-python", specifier = ">=2.0.5" },
-    { name = "pre-commit", specifier = ">=4.6.1" },
-    { name = "pyright", specifier = ">=1.1.411" },
-    { name = "pytest", specifier = ">=9.1.1" },
-    { name = "pytest-cov", specifier = ">=7.1.0" },
-    { name = "ruff", specifier = ">=0.16.1" },
-    { name = "rust-just", specifier = ">=1.57.0" },
-    { name = "zensical", specifier = ">=0.0.52" },
-]
-docs = [
-    { name = "mkdocs-typer2", extras = ["termynal"], specifier = ">=0.4.1" },
-    { name = "mkdocstrings-python", specifier = ">=2.0.5" },
-    { name = "zensical", specifier = ">=0.0.52" },
-]
-test = [
-    { name = "conduit", git = "https://github.com/NERC-CEH/conduit?rev=8657eff048b065589c868e426587f6f8e12bf619" },
-    { name = "conduit-data", extras = ["all"] },
-    { name = "coverage", specifier = ">=7.15.2" },
-    { name = "pytest", specifier = ">=9.1.1" },
-    { name = "pytest-cov", specifier = ">=7.1.0" },
-]
-
-[[package]]
 name = "coverage"
 version = "7.17.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1857,6 +1769,94 @@ wheels = [
 [package.optional-dependencies]
 cf = [
     { name = "cf-xarray" },
+]
+
+[[package]]
+name = "xharvest"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "netcdf4" },
+    { name = "numpy" },
+    { name = "typer" },
+    { name = "xarray" },
+    { name = "xarray-annotated", extra = ["cf"] },
+]
+
+[package.optional-dependencies]
+all = [
+    { name = "httpx" },
+]
+cosmos = [
+    { name = "httpx" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "conduit" },
+    { name = "coverage" },
+    { name = "mkdocs-typer2", extra = ["termynal"] },
+    { name = "mkdocstrings-python" },
+    { name = "pre-commit" },
+    { name = "pyright" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
+    { name = "ruff" },
+    { name = "rust-just" },
+    { name = "xharvest", extra = ["all"] },
+    { name = "zensical" },
+]
+docs = [
+    { name = "mkdocs-typer2", extra = ["termynal"] },
+    { name = "mkdocstrings-python" },
+    { name = "zensical" },
+]
+test = [
+    { name = "conduit" },
+    { name = "coverage" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
+    { name = "xharvest", extra = ["all"] },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "httpx", marker = "extra == 'cosmos'", specifier = ">=0.28.1" },
+    { name = "netcdf4", specifier = ">=1.7.4" },
+    { name = "numpy", specifier = ">=2.4.2" },
+    { name = "typer", specifier = ">=0.24.1" },
+    { name = "xarray", specifier = ">=2026.2.0" },
+    { name = "xarray-annotated", extras = ["cf"], specifier = ">=0.6.0" },
+    { name = "xharvest", extras = ["cosmos"], marker = "extra == 'all'" },
+]
+provides-extras = ["cosmos", "all"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "conduit", git = "https://github.com/NERC-CEH/conduit?rev=8657eff048b065589c868e426587f6f8e12bf619" },
+    { name = "coverage", specifier = ">=7.15.2" },
+    { name = "mkdocs-typer2", extras = ["termynal"], specifier = ">=0.4.1" },
+    { name = "mkdocstrings-python", specifier = ">=2.0.5" },
+    { name = "pre-commit", specifier = ">=4.6.1" },
+    { name = "pyright", specifier = ">=1.1.411" },
+    { name = "pytest", specifier = ">=9.1.1" },
+    { name = "pytest-cov", specifier = ">=7.1.0" },
+    { name = "ruff", specifier = ">=0.16.1" },
+    { name = "rust-just", specifier = ">=1.57.0" },
+    { name = "xharvest", extras = ["all"] },
+    { name = "zensical", specifier = ">=0.0.52" },
+]
+docs = [
+    { name = "mkdocs-typer2", extras = ["termynal"], specifier = ">=0.4.1" },
+    { name = "mkdocstrings-python", specifier = ">=2.0.5" },
+    { name = "zensical", specifier = ">=0.0.52" },
+]
+test = [
+    { name = "conduit", git = "https://github.com/NERC-CEH/conduit?rev=8657eff048b065589c868e426587f6f8e12bf619" },
+    { name = "coverage", specifier = ">=7.15.2" },
+    { name = "pytest", specifier = ">=9.1.1" },
+    { name = "pytest-cov", specifier = ">=7.1.0" },
+    { name = "xharvest", extras = ["all"] },
 ]
 
 [[package]]

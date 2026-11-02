@@ -6,7 +6,7 @@ sidecar, and skips files already present.
 
 Example:
     >>> from datetime import date
-    >>> from conduit_data.cosmos import fetch
+    >>> from xharvest.cosmos import fetch
     >>> paths = fetch(["ALIC1", "BUNNY"], date(2025, 1, 1), date(2025, 1, 31),
     ...               "data/cosmos")  # doctest: +SKIP
 """
@@ -147,9 +147,9 @@ def fetch(
     """Download data for one or more sites, one CoverageJSON file per site.
 
     Each file is named ``{site}_{collection}_{start:%Y%m%d}_{end:%Y%m%d}.json`` and
-    has a provenance sidecar next to it (see `conduit_data.provenance`), which also
+    has a provenance sidecar next to it (see `xharvest.provenance`), which also
     records the site's name, since the data response omits it. Pass the returned
-    paths to `conduit_data.cosmos.standardise`.
+    paths to `xharvest.cosmos.standardise`.
 
     Args:
         site_ids: Site identifiers, e.g. ``"ALIC1"`` or ``["ALIC1", "BUNNY"]``.

@@ -1,6 +1,6 @@
 import pytest
 
-from conduit_data.provenance import (
+from xharvest.provenance import (
     Retrieval,
     history_line,
     is_sidecar,

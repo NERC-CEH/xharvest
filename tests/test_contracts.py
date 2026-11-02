@@ -20,9 +20,9 @@ from xarray_annotated.units import (
     use_cf_units,
 )
 
-from conduit_data import cosmos
-from conduit_data.cosmos import nodes as cosmos_nodes
-from conduit_data.provenance import PROVENANCE_ATTRS
+from xharvest import cosmos
+from xharvest.cosmos import nodes as cosmos_nodes
+from xharvest.provenance import PROVENANCE_ATTRS
 
 
 @dataclass

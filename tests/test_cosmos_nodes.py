@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from conduit_data.cosmos import standardise
-from conduit_data.cosmos.nodes import cosmos_vwc_snow_masked
+from xharvest.cosmos import standardise
+from xharvest.cosmos.nodes import cosmos_vwc_snow_masked
 
 
 def test_masks_snow_days_only(cosmos_raw):

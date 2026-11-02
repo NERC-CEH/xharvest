@@ -1,4 +1,4 @@
-"""The top-level ``conduit-data`` command and its provider groups."""
+"""The top-level ``xharvest`` command and its provider groups."""
 
 import typer
 

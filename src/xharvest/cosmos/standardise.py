@@ -9,7 +9,7 @@ GMT day, while a 30-minute value covers the 30 minutes *ending* at its stamp.
 
 Example:
     >>> from pathlib import Path
-    >>> from conduit_data.cosmos import to_netcdf
+    >>> from xharvest.cosmos import to_netcdf
     >>> to_netcdf(Path("data/cosmos").glob("*_1D_*.json"),
     ...           "data/cosmos_1D.nc")  # doctest: +SKIP
 """
@@ -147,7 +147,7 @@ def standardise(paths: Iterable[str | PathLike]) -> xr.Dataset:
     """Combine raw COSMOS-UK files into one standardised Dataset.
 
     Args:
-        paths: CoverageJSON files written by `conduit_data.cosmos.fetch`, all from
+        paths: CoverageJSON files written by `xharvest.cosmos.fetch`, all from
             the same collection. Provenance sidecars among them are skipped, so a
             glob over the download directory works.
 
@@ -214,7 +214,7 @@ def standardise(paths: Iterable[str | PathLike]) -> xr.Dataset:
     )
 
     history = sorted(history_line(r) for r in retrievals)
-    history.append(f"{utc_now()} standardised (conduit-data {__version__})")
+    history.append(f"{utc_now()} standardised (xharvest {__version__})")
     ds.attrs = {
         "title": "COSMOS-UK site data",
         "featureType": "timeSeries",

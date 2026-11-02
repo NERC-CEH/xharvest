@@ -1,11 +1,11 @@
 # COSMOS-UK
 
 [COSMOS-UK](https://cosmos.ceh.ac.uk) is the UK Centre for Ecology & Hydrology's network of cosmic-ray soil moisture sites, with co-located meteorological and soil measurements.
-`conduit_data.cosmos` downloads site data from the [COSMOS-UK API](https://cosmos-api.ceh.ac.uk) and standardises it for conduit and xarray.
+`xharvest.cosmos` downloads site data from the [COSMOS-UK API](https://cosmos-api.ceh.ac.uk) and standardises it for conduit and xarray.
 
 | | |
 |---|---|
-| Install | `pip install conduit-data[cosmos]` |
+| Install | `pip install xharvest[cosmos]` |
 | Credentials | None |
 | Licence | [Open Government Licence v3](http://www.nationalarchives.gov.uk/doc/open-government-licence), as stated by the API |
 | Cite | [EIDC release](https://doi.org/10.5285/dde10e2b-ee1a-4b2b-a247-176db2f7bb31) (see [Citing the data](#citing-the-data)) |
@@ -16,7 +16,7 @@
 
 ```python
 from datetime import date
-from conduit_data import cosmos
+from xharvest import cosmos
 
 cosmos.sites()  # identifiers, names, locations and periods of record
 raw = cosmos.fetch(["ALIC1", "MOORH"], date(2025, 1, 1), date(2025, 3, 31), "data/raw")
@@ -25,8 +25,8 @@ raw = cosmos.fetch(["ALIC1", "MOORH"], date(2025, 1, 1), date(2025, 3, 31), "dat
 or from the command line:
 
 ```sh
-conduit-data cosmos sites
-conduit-data cosmos fetch ALIC1 MOORH --start 2025-01-01 --end 2025-03-31 --out data/raw
+xharvest cosmos sites
+xharvest cosmos fetch ALIC1 MOORH --start 2025-01-01 --end 2025-03-31 --out data/raw
 ```
 
 `fetch` writes one CoverageJSON file per site, named `{site}_{collection}_{start}_{end}.json`, with a `.meta.json` sidecar recording the request, when it was made, and the site's name, which the data response omits.
@@ -44,7 +44,7 @@ cosmos.to_netcdf(raw, "data/cosmos.nc")
 ```
 
 ```sh
-conduit-data cosmos standardise data/raw/*_1D_*.json --out data/cosmos.nc
+xharvest cosmos standardise data/raw/*_1D_*.json --out data/cosmos.nc
 ```
 
 Sidecars among the paths are skipped, so a glob over the download directory works.
@@ -113,37 +113,37 @@ For published work, cite the most recent quality-controlled release on the EIDC,
 
 ## Python API
 
-::: conduit_data.cosmos.sites
+::: xharvest.cosmos.sites
     options:
       heading_level: 3
 
-::: conduit_data.cosmos.Site
+::: xharvest.cosmos.Site
     options:
       heading_level: 3
 
-::: conduit_data.cosmos.fetch
+::: xharvest.cosmos.fetch
     options:
       heading_level: 3
 
-::: conduit_data.cosmos.standardise
+::: xharvest.cosmos.standardise
     options:
       heading_level: 3
 
-::: conduit_data.cosmos.to_netcdf
+::: xharvest.cosmos.to_netcdf
     options:
       heading_level: 3
 
 ### Nodes
 
-::: conduit_data.cosmos.nodes.cosmos_vwc_snow_masked
+::: xharvest.cosmos.nodes.cosmos_vwc_snow_masked
     options:
       heading_level: 4
 
 ## CLI
 
 ::: mkdocs-typer2
-    :module: conduit_data.cli.app
-    :name: conduit-data
+    :module: xharvest.cli.app
+    :name: xharvest
     :command: cosmos
     :termynal: true
     :width: 80

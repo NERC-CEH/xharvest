@@ -1,7 +1,7 @@
 """conduit node functions for COSMOS-UK data.
 
 conduit finds this module under the config section ``[cosmos]`` once
-``conduit-data`` is installed. The functions name their inputs after the
+``xharvest`` is installed. The functions name their inputs after the
 standardised variables, so read the standardised file with ``suffix = ""``:
 
 ```toml

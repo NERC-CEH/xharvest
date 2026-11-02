@@ -5,10 +5,10 @@ from pathlib import Path
 
 import pytest
 
-SRC = Path(__file__).parents[1] / "src" / "conduit_data"
+SRC = Path(__file__).parents[1] / "src" / "xharvest"
 MODULES = sorted(SRC.rglob("*.py"))
 
-# Imported only through `conduit_data._extras.require`, never at module level.
+# Imported only through `xharvest._extras.require`, never at module level.
 EXTRAS = {"httpx"}
 
 

@@ -22,5 +22,5 @@ def require(module: str, extra: str) -> ModuleType:
     except ImportError as err:
         raise ImportError(
             f"{module!r} is not installed; install it with "
-            f"`pip install conduit-data[{extra}]`"
+            f"`pip install xharvest[{extra}]`"
         ) from err

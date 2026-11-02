@@ -1,4 +1,4 @@
-# conduit-data
+# xharvest
 
 Download environmental data from its providers, and standardise it into netCDF that [conduit](https://github.com/NERC-CEH/conduit) and xarray read as-is.
 
@@ -19,7 +19,7 @@ None of them needs conduit, so the package is just as useful for getting data in
 ## Installation
 
 ```sh
-pip install "conduit-data[cosmos] @ git+https://github.com/NERC-CEH/conduit-data"
+pip install "xharvest[cosmos] @ git+https://github.com/NERC-CEH/xharvest"
 ```
 
 See [Getting started](getting-started.md) for a first download.

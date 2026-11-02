@@ -5,10 +5,10 @@ import pytest
 import xarray as xr
 from typer.testing import CliRunner
 
-from conduit_data.cli import main
-from conduit_data.cli.app import app
+from xharvest.cli import main
+from xharvest.cli.app import app
 
-fetch_module = importlib.import_module("conduit_data.cosmos.fetch")
+fetch_module = importlib.import_module("xharvest.cosmos.fetch")
 runner = CliRunner()
 
 
@@ -75,7 +75,7 @@ def test_errors_exit_cleanly(mock_api, tmp_path, monkeypatch, args):
 
 
 def test_main_runs_the_app(monkeypatch):
-    monkeypatch.setattr("sys.argv", ["conduit-data", "--help"])
+    monkeypatch.setattr("sys.argv", ["xharvest", "--help"])
     with pytest.raises(SystemExit) as exit_info:
         main()
     assert exit_info.value.code == 0

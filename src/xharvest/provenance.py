@@ -86,7 +86,7 @@ def write_sidecar(
         url=url,
         params=params,
         retrieved=utc_now(),
-        agent=f"conduit-data {__version__}",
+        agent=f"xharvest {__version__}",
         metadata=metadata or {},
     )
     sidecar_path(path).write_text(json.dumps(asdict(retrieval), indent=2) + "\n")

@@ -2,20 +2,20 @@
 
 ## Project overview
 
-`conduit-data` — data connectors for conduit and xarray.
+`xharvest` — harvests environmental data from many providers into standardised, xarray-ready netCDF, for xarray and conduit.
 `docs/adr/` says why the package is shaped as it is, and `docs/developers/adding-a-connector.md` holds the rules a connector follows.
 `tests/test_layout.py` and `tests/test_contracts.py` enforce most of them.
 
 ## Source layout
 
 ```
-src/conduit_data/
+src/xharvest/
   __init__.py      — package docstring and version
   _extras.py       — `require`: lazy import naming the install extra
   errors.py        — ProviderError
   provenance.py    — fetch sidecars, and the provenance attributes they become
   cosmos/          — COSMOS-UK: fetch.py, standardise.py, nodes.py
-  cli/             — `conduit-data` (typer); commands only call the library
+  cli/             — `xharvest` (typer); commands only call the library
 tests/
   fixtures/<provider>/  — trimmed real responses, with the make_fixtures.py that regenerates them
   test_contracts.py     — the shared harness every connector is added to

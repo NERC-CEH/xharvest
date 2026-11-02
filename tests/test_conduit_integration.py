@@ -12,7 +12,7 @@ import pytest
 
 conduit = pytest.importorskip("conduit")
 
-from conduit_data.cosmos import standardise, to_netcdf  # noqa: E402
+from xharvest.cosmos import standardise, to_netcdf  # noqa: E402
 
 CONSUMER = """
 from typing import Annotated
@@ -62,8 +62,8 @@ def config(cosmos_raw, tmp_path):
 def test_dry_run_finds_the_registered_module(config):
     report = conduit.dry_run(config)
     detail = report.stages[0].detail
-    assert "[cosmos] provided by conduit-data" in detail
-    assert "conduit_data.cosmos.nodes" in detail
+    assert "[cosmos] provided by xharvest" in detail
+    assert "xharvest.cosmos.nodes" in detail
 
 
 def test_run(config, cosmos_raw):
