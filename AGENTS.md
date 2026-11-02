@@ -1,65 +1,15 @@
 # AGENTS.md
 
-## Project overview
+xharvest downloads environmental data from many providers and standardises it into netCDF that xarray and [conduit](https://github.com/NERC-CEH/conduit) read as-is.
+It is built so that conduit never has to download anything, yet it is useful without conduit: no module imports `conduit`, and conduit finds the node modules through its `conduit.modules` entry point.
+`docs/adr/` records why; `docs/developers/adding-a-connector.md` holds the rules a connector follows.
+Alpha, with no external users: make breaking changes rather than compatibility shims.
 
-`xharvest` — harvests environmental data from many providers into standardised, xarray-ready netCDF, for xarray and conduit.
-`docs/adr/` says why the package is shaped as it is, and `docs/developers/adding-a-connector.md` holds the rules a connector follows.
-`tests/test_layout.py` and `tests/test_contracts.py` enforce most of them.
-
-## Source layout
-
-```
-src/xharvest/
-  __init__.py      — package docstring and version
-  _extras.py       — `require`: lazy import naming the install extra
-  errors.py        — ProviderError
-  provenance.py    — fetch sidecars, and the provenance attributes they become
-  cosmos/          — COSMOS-UK: fetch.py, standardise.py, nodes.py
-  cli/             — `xharvest` (typer); commands only call the library
-tests/
-  fixtures/<provider>/  — trimmed real responses, with the make_fixtures.py that regenerates them
-  test_contracts.py     — the shared harness every connector is added to
-  test_layout.py        — import rules
-docs/
-  providers/       — one page per provider: usage, then generated Python API and CLI references
-  developers/      — adding a connector; decisions.md includes every ADR in adr/
-  adr/             — architecture decision records, excluded from the build as pages of their own
-site/              — built documentation output (gitignored)
-```
-
-- Tests never touch the network. Tests marked `live` call real APIs and run only with `just test-live`.
-- `conduit` is a test dependency only, pinned to a commit in `[tool.uv.sources]`; no module in `src/` may import it.
-
-## Commands
-
-All via `just`; prefix with `uv run` if `just` isn't on the PATH.
-
-| Command | What it does |
-|---|---|
-| `just` | lint → typecheck → test → docs, in order |
-| `just lint` | `ruff format` + `ruff check --fix` |
-| `just lint-check` | Non-mutating variant for CI |
-| `just typecheck` | `pyright` |
-| `just test` | `pytest` |
-| `just test-live` | Only the tests that call real provider APIs |
-| `just test-cov` | `pytest` with coverage, `--cov-fail-under=90` |
-| `just doctest` | Doctests in `src/` |
-| `just docs` | `zensical build` |
-
-Setup: `uv sync`.
-
-## Toolchain
-
-uv (packaging), just (tasks), ruff (format + lint), pyright (types), pytest (tests), zensical + mkdocstrings + mkdocs-typer2 (docs), pre-commit, GitHub Actions.
-
-## Conventions
-
-- Ruff `select` is explicit, never left to defaults — see the comment in `pyproject.toml`.
-- Docstrings are required in `src/` (google convention) and exempt in `tests/`. They render into the provider pages.
-- Tool versions are pinned in three places that must stay in step: `[dependency-groups] dev`, `.pre-commit-config.yaml` revs, and the `uv_build` bound in `[build-system]`.
-
-## This project was generated from a template
-
-The answers are in `.copier-answers.yml`. `copier update` pulls later template
-changes in; it uses that file to replay the original answers, so keep it
-committed and don't hand-edit it.
+- **Verify what a provider's data means against the data, not only its docs.** COSMOS-UK's timestamp convention was settled by summing 30-minute values into daily ones, and its `/locations` GeoJSON turned out to list `[lat, lon]`. Record what was checked, and how, on the provider page.
+- **Standardise never converts units.** It keeps the provider's units and changes values only to decode fills and scale factors; conversion is `declare_units`' job in the consuming node. Do not add a node whose only purpose is a unit conversion.
+- **Provenance must be captured at fetch time**, in the sidecar: standardise cannot recover where or when a file came from. Anything else standardise needs that the raw file omits (e.g. COSMOS-UK site names) goes in the sidecar's `metadata` too.
+- **Fixtures are real provider output.** Regenerate them with `tests/fixtures/<provider>/make_fixtures.py` (it calls the live API); never hand-edit them. On regeneration the data files should be byte-identical; if they are not, the provider has revised its data, which is worth knowing. A provider's licence must allow committing them.
+- **`xarray-annotated` and conduit are developed by the same maintainer.** When contracts or conduit fall short, raise it upstream rather than working around it here. conduit is pinned to a commit in `[tool.uv.sources]`; move the pin deliberately.
+- **The CLI reference uses mkdocs-typer2's termynal output.** Its native output ignores `:command:` and reads only the first word of `:name:`, so it cannot render one provider's command group on its own.
+- **Tool versions are pinned in three places that must stay in step:** `[dependency-groups] dev`, the `.pre-commit-config.yaml` revs, and the `uv_build` bound in `[build-system]`.
+- **Never hand-edit `.copier-answers.yml`.** To change an answer, run `copier update --vcs-ref <current _commit> --data key=value`, then resolve every conflict to the project's side; the commit should touch only the answers file.
