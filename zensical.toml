@@ -25,9 +25,7 @@ nav = [
   { "Providers" = [
     { "COSMOS-UK" = "providers/cosmos-uk.md" },
   ] },
-  { "For developers" = [
-    { "Adding a connector" = "developers/adding-a-connector.md" },
-  ] },
+  { "Adding a connector" = "adding-a-connector.md" },
 ]
 
 # Math rendering with KaTeX.

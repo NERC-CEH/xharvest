@@ -2,7 +2,7 @@
 
 xharvest downloads environmental data from many providers and standardises it into netCDF that xarray and [conduit](https://github.com/NERC-CEH/conduit) read as-is.
 It is built so that conduit never has to download anything, yet it is useful without conduit: no module imports `conduit`, and conduit finds the node modules through its `conduit.modules` entry point.
-`docs/adr/` records why; `docs/developers/adding-a-connector.md` holds the rules a connector follows.
+`docs/adr/` records why; `docs/adding-a-connector.md` holds the rules a connector follows.
 Alpha, with no external users: make breaking changes rather than compatibility shims.
 
 - **Verify what a provider's data means against the data, not only its docs.** COSMOS-UK's timestamp convention was settled by summing 30-minute values into daily ones, and its `/locations` GeoJSON turned out to list `[lat, lon]`. Record what was checked, and how, on the provider page.

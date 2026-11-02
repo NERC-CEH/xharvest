@@ -2,6 +2,7 @@
 
 A connector downloads one provider's data, standardises it, and optionally provides conduit nodes for preparing it.
 Adding one is a proposal, then a pull request.
+[CONTRIBUTING.md](https://github.com/NERC-CEH/xharvest/blob/main/CONTRIBUTING.md) covers what applies to every contribution: setting up, running the checks, and keeping pinned tools in step.
 
 ## Propose it
 
@@ -73,7 +74,7 @@ Tests must not touch the network or need credentials.
 ### Docs
 
 Add a page under `docs/providers/`, to the `zensical.toml` nav, and to the provider tables in `README.md` and `docs/index.md`.
-Copy the structure of the [COSMOS-UK](../providers/cosmos-uk.md) page.
+Copy the structure of the [COSMOS-UK](providers/cosmos-uk.md) page.
 Its "About the data" section must say what a timestamp means.
 Check claims like this against the data, not only the provider's docs, and record what was checked and how.
 COSMOS-UK's timestamp convention, for example, was settled by summing 30-minute values into daily ones.

@@ -3,7 +3,7 @@
 Contributions are welcome.
 Please open a Pull Request against the `main` branch.
 
-- To add a provider, read [Adding a connector](docs/developers/adding-a-connector.md) first: it starts with opening an issue.
+- To add a provider, read [Adding a connector](docs/adding-a-connector.md) first: it starts with opening an issue.
 - [`docs/adr/`](docs/adr/) records the design decisions and why they were made; read them before proposing a change to the package's shape.
 - xharvest is alpha, with no external users: make breaking changes rather than adding compatibility shims.
 

@@ -23,4 +23,4 @@ pip install "xharvest[cosmos] @ git+https://github.com/NERC-CEH/xharvest"
 ```
 
 See [Getting started](getting-started.md) for a first download.
-Each provider page has its usage, Python API and CLI reference, and [For developers](developers/adding-a-connector.md) covers adding a provider.
+Each provider page has its usage, Python API and CLI reference, and [Adding a connector](adding-a-connector.md) covers adding a provider.
