@@ -231,3 +231,49 @@ def test_netcdf_round_trip(cosmos_raw, tmp_path):
         assert got.cosmos_vwc.attrs["units"] == "%"
         assert got.time.encoding["units"] == got.time_bounds.encoding["units"]
         assert "time_bounds" in got.coords
+
+
+def _piece(src, dest, start, stop, change=None):
+    """Write the slice [start, stop) of a raw file, with a copy of its sidecar."""
+    body = json.loads(src.read_text())
+    coverage = body["coverages"][0]
+    axis = coverage["domain"]["axes"]["t"]
+    axis["values"] = axis["values"][start:stop]
+    for values in coverage["ranges"].values():
+        values["values"] = values["values"][start:stop]
+        values["shape"] = [stop - start]
+    if change:
+        change(coverage)
+    dest.parent.mkdir(exist_ok=True)
+    dest.write_text(json.dumps(body))
+    sidecar_path(dest).write_text(sidecar_path(src).read_text())
+    return dest
+
+
+@pytest.fixture
+def moorh(cosmos_raw):
+    return next(p for p in cosmos_raw if p.name.startswith("MOORH"))
+
+
+@pytest.mark.parametrize(("first", "second"), [((0, 7), (7, 14)), ((0, 9), (5, 14))])
+def test_pieces_of_one_site_combine(moorh, tmp_path, first, second):
+    pieces = [
+        _piece(moorh, tmp_path / "pieces" / "a.json", *first),
+        _piece(moorh, tmp_path / "pieces" / "b.json", *second),
+    ]
+    whole = standardise([moorh])
+    combined = standardise(pieces)
+    assert list(combined.site.values) == ["MOORH"]
+    xr.testing.assert_identical(combined.drop_attrs(), whole.drop_attrs())
+
+
+def test_pieces_that_disagree_raise(moorh, tmp_path):
+    def revise(coverage):
+        coverage["ranges"]["ta"]["values"][0] += 1
+
+    pieces = [
+        _piece(moorh, tmp_path / "pieces" / "a.json", 0, 9),
+        _piece(moorh, tmp_path / "pieces" / "b.json", 5, 14, revise),
+    ]
+    with pytest.raises(ValueError, match="files for site MOORH disagree"):
+        standardise(pieces)

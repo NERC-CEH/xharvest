@@ -39,6 +39,7 @@ Pass `parameters=[...]` (`--parameter`, repeated) to request only some parameter
 
 The 30-minute collection is about 48 times the size of the daily one.
 `fetch` makes one request per site whatever the range, so request long 30-minute records in pieces.
+`standardise` joins the pieces of each site into one record; where pieces overlap, they must agree.
 
 ## Standardise
 

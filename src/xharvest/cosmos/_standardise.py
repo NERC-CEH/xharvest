@@ -126,6 +126,25 @@ def _collection(path: Path, metadata: dict[str, Any]) -> Collection:
     return collection
 
 
+def _combine_pieces(site: str, pieces: list[xr.Dataset]) -> xr.Dataset:
+    """Join one site's record from files covering different periods.
+
+    Where pieces overlap, they must agree wherever both have a value.
+    """
+    if len(pieces) == 1:
+        return pieces[0]
+    try:
+        return xr.merge(
+            pieces, compat="no_conflicts", join="outer", combine_attrs="override"
+        )
+    except xr.MergeError as err:
+        raise ValueError(
+            f"files for site {site} disagree where they overlap, so the provider "
+            "revised its data between the downloads; remove the older file, or "
+            f"fetch the overlap again with overwrite=True ({err})"
+        ) from None
+
+
 def _read(path: Path) -> dict[str, Any]:
     try:
         body = json.loads(path.read_text())
@@ -149,12 +168,14 @@ def standardise(paths: Iterable[str | PathLike]) -> xr.Dataset:
             glob over the download directory works.
 
     Returns:
-        A Dataset with dims `(time, site)`. Sites are outer-joined on time, so a
-        site with a shorter record is NaN-padded.
+        A Dataset with dims `(time, site)`. Files for one site that cover
+        different periods are joined into one record. Sites are outer-joined on
+        time, so a site with a shorter record is NaN-padded.
 
     Raises:
-        ValueError: If no files are given, they mix collections, or a sidecar
-            lacks the collection or a site name.
+        ValueError: If no files are given, they mix collections, a sidecar
+            lacks the collection or a site name, or two files for one site
+            disagree where they overlap.
         FileNotFoundError: If a file has no provenance sidecar.
         ProviderError: If a file is not a COSMOS-UK response the connector can read.
     """
@@ -162,7 +183,8 @@ def standardise(paths: Iterable[str | PathLike]) -> xr.Dataset:
     if not paths:
         raise ValueError("no COSMOS-UK files to standardise")
 
-    sites, retrievals, licences, collections = [], [], set(), set()
+    pieces: dict[str, list[xr.Dataset]] = {}
+    retrievals, licences, collections = [], set(), set()
     for path in paths:
         body = _read(path)
         retrieval = read_sidecar(path)
@@ -178,15 +200,15 @@ def standardise(paths: Iterable[str | PathLike]) -> xr.Dataset:
                     f"the sidecar for {path} has no name for site "
                     f"{coverage['dct:identifier']}; fetch it again with overwrite=True"
                 )
-            sites.append(
-                _site_dataset(coverage, body["parameters"], axis_period, site_names)
-            )
+            piece = _site_dataset(coverage, body["parameters"], axis_period, site_names)
+            pieces.setdefault(coverage["dct:identifier"], []).append(piece)
     if len(collections) > 1:
         raise ValueError(
             f"files mix COSMOS-UK collections ({', '.join(sorted(collections))}); "
             "standardise one collection at a time"
         )
 
+    sites = [_combine_pieces(site, site_pieces) for site, site_pieces in pieces.items()]
     ds = xr.concat(sites, dim="site", join="outer", combine_attrs="override")
     ds = ds.sortby("time")
 
