@@ -3,7 +3,7 @@
 use_directory_urls = false
 
 site_name = "conduit-data"
-site_description = "Data connectors for conduit"
+site_description = "Data connectors for conduit and xarray"
 site_author = "Joe Marsh Rossney"
 site_url = "https://nerc-ceh.github.io/conduit-data"
 
@@ -17,6 +17,9 @@ Copyright &copy; 2026 Joe Marsh Rossney
 nav = [
   { "Home" = "index.md" },
   { "Getting started" = "getting-started.md" },
+  { "Providers" = [
+    { "COSMOS-UK" = "providers/cosmos-uk.md" },
+  ] },
   { "Example" = "example.md" },
   { "API Reference" = "api.md" },
   { "Decisions" = [

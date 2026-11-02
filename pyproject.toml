@@ -5,7 +5,7 @@ build-backend = "uv_build"
 [project]
 name = "conduit-data"
 version = "0.1.0"
-description = "Data connectors for conduit."
+description = "Data connectors for conduit and xarray."
 authors = [
     { name = "Joe Marsh Rossney", email = "17361029+jmarshrossney@users.noreply.github.com" }
 ]
@@ -71,7 +71,9 @@ docs = [
     {include-group = "examples"},
 ]
 # Dependencies needed to *run* the example notebooks, but not to use the package.
-examples = []
+examples = [
+    "matplotlib>=3.10.0",
+]
 # Tests cover every connector, so they need every extra, and conduit itself for the
 # end-to-end pipeline test.
 test = [
