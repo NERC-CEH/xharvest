@@ -39,7 +39,9 @@ Import them with `xharvest._extras.require(module, extra)`, inside the function 
 
 ### Provenance
 
-Raw provider files rarely record where or when they were downloaded, so `fetch` calls `xharvest.provenance.write_sidecar` for every file it writes, and `standardise` reads the sidecars back.
+Raw provider files rarely record where or when they were downloaded, so `fetch` writes every file with `xharvest.provenance.save`, which writes a sidecar beside it, and `standardise` reads the sidecars back.
+`save` writes both files atomically, sidecar last, so a file without a sidecar is from an interrupted download.
+`fetch` skips a file only if `provenance.is_fetched` says it holds the same request; that raises if the file holds a different one.
 A sidecar's `metadata` also holds anything standardisation needs that the raw file omits, such as COSMOS-UK site names.
 The standardised dataset carries the global attributes in `provenance.PROVENANCE_ATTRS`: `institution`, `source`, `license`, and `history`, with one line per download (`provenance.history_line`) and one for the standardisation.
 

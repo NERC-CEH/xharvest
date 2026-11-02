@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from .._extras import require
 from ..errors import ProviderError
-from ..provenance import write_sidecar
+from ..provenance import is_fetched, save
 
 if TYPE_CHECKING:
     import httpx
@@ -136,6 +136,14 @@ def _timestamp(value: date | datetime) -> str:
     return value.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def _file_stamp(value: date | datetime) -> str:
+    # Dates name a file by day; datetimes keep the time, so requests that differ
+    # only in time of day do not share a file.
+    if isinstance(value, datetime):
+        return _timestamp(value)[:19].replace("-", "").replace(":", "")
+    return value.strftime("%Y%m%d")
+
+
 def fetch(
     site_ids: str | Iterable[str],
     start: date | datetime,
@@ -149,10 +157,11 @@ def fetch(
 ) -> list[Path]:
     """Download data for one or more sites, one CoverageJSON file per site.
 
-    Each file is named `{site}_{collection}_{start:%Y%m%d}_{end:%Y%m%d}.json` and
-    has a provenance sidecar next to it (see `xharvest.provenance`), which also
-    records the site's name, since the data response omits it. Pass the returned
-    paths to `xharvest.cosmos.standardise`.
+    Each file is named `{site}_{collection}_{start}_{end}.json`, where a date is
+    written `%Y%m%d` and a datetime `%Y%m%dT%H%M%S` in UTC. It has a provenance
+    sidecar next to it (see `xharvest.provenance`), which also records the
+    site's name, since the data response omits it. Pass the returned paths to
+    `xharvest.cosmos.standardise`.
 
     Args:
         site_ids: Site identifiers, e.g. `"ALIC1"` or `["ALIC1", "BUNNY"]`.
@@ -164,7 +173,9 @@ def fetch(
         parameters: Parameter names to request, e.g. `["cosmos_vwc", "precip"]`.
             Every parameter is requested if omitted.
         collection: `"1D"` for daily data, `"30M"` for 30-minute data.
-        overwrite: Download again even if a file already exists.
+        overwrite: Download again even if a file already exists. Without it, a
+            file is skipped if its sidecar records the same request, and
+            downloaded again if it has no sidecar (an interrupted download).
         client: An `httpx.Client` to use, e.g. one with a mock transport for
             testing. A new one is created if omitted.
 
@@ -175,6 +186,8 @@ def fetch(
         ProviderError: If the API rejects a request, e.g. for an unknown site or
             parameter, or a range outside a site's record. The message is the
             API's own.
+        ValueError: If a file exists from a different request, e.g. with other
+            parameters, and `overwrite` is not set.
     """
     _check_collection(collection)
     site_ids = [site_ids] if isinstance(site_ids, str) else list(site_ids)
@@ -185,12 +198,13 @@ def fetch(
     if parameters is not None:
         params["parameter-name"] = ",".join(parameters)
 
-    stamp = f"{_timestamp(start)[:10]}_{_timestamp(end)[:10]}".replace("-", "")
+    stamp = f"{_file_stamp(start)}_{_file_stamp(end)}"
+    url = f"{API_URL}/collections/{collection}/locations"
     paths = [out / f"{site_id}_{collection}_{stamp}.json" for site_id in site_ids]
     todo = [
         (site_id, path)
         for site_id, path in zip(site_ids, paths, strict=True)
-        if overwrite or not path.exists()
+        if overwrite or not is_fetched(path, f"{url}/{site_id}", params)
     ]
     if not todo:
         return paths
@@ -198,8 +212,7 @@ def fetch(
         # Data responses carry no site names, so look them up once.
         names = {s.id: s.name for s in sites(collection, client=http)}
         for site_id, path in todo:
-            url = f"{API_URL}/collections/{collection}/locations/{site_id}"
-            path.write_bytes(_get(http, url, params))
+            content = _get(http, f"{url}/{site_id}", params)
             metadata = {"site_names": {site_id: names.get(site_id, "")}}
-            write_sidecar(path, url, params, metadata)
+            save(path, content, f"{url}/{site_id}", params, metadata)
     return paths

@@ -30,7 +30,8 @@ xharvest cosmos fetch ALIC1 MOORH --start 2025-01-01 --end 2025-03-31 --out data
 ```
 
 `fetch` writes one CoverageJSON file per site, named `{site}_{collection}_{start}_{end}.json`, with a `.meta.json` sidecar recording the request, when it was made, and the site's name, which the data response omits.
-It skips files that already exist; pass `overwrite=True` (`--overwrite`) to download again.
+It skips a file that already holds the same request, and raises if the file holds a different one, for example with other parameters; pass `overwrite=True` (`--overwrite`) to download again.
+A file without a sidecar is from an interrupted download, and is downloaded again.
 The interval is closed: both `start` and `end` are included.
 Pass `parameters=[...]` (`--parameter`, repeated) to request only some parameters; the API lists the valid names if you give an invalid one.
 

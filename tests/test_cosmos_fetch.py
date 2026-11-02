@@ -91,6 +91,40 @@ def test_fetch_skips_existing_files_unless_overwrite(cosmos_api, tmp_path):
     assert len(cosmos_api.data_requests) == 2
 
 
+def test_fetch_refuses_to_reuse_a_file_from_another_request(cosmos_api, tmp_path):
+    args = ("MOORH", date(2025, 1, 1), date(2025, 1, 14), tmp_path)
+    fetch(*args, parameters=["snow"], client=cosmos_api.client())
+    with pytest.raises(ValueError, match="holds a different request"):
+        fetch(*args, client=cosmos_api.client())
+    assert len(cosmos_api.data_requests) == 1
+    fetch(*args, overwrite=True, client=cosmos_api.client())
+    assert (
+        "parameter-name"
+        not in read_sidecar(tmp_path / "MOORH_1D_20250101_20250114.json").params
+    )
+
+
+def test_fetch_downloads_again_after_an_interrupted_download(cosmos_api, tmp_path):
+    args = ("MOORH", date(2025, 1, 1), date(2025, 1, 14), tmp_path)
+    (path,) = fetch(*args, client=cosmos_api.client())
+    sidecar_path(path).unlink()
+    path.write_text("truncated")
+    fetch(*args, client=cosmos_api.client())
+    assert len(cosmos_api.data_requests) == 2
+    assert json.loads(path.read_text())["type"] == "CoverageCollection"
+
+
+def test_fetch_names_files_by_time_when_given_datetimes(cosmos_api, tmp_path):
+    (path,) = fetch(
+        "MOORH",
+        datetime(2025, 1, 1, 6),
+        datetime(2025, 1, 2, 12, 30),
+        tmp_path,
+        client=cosmos_api.client(),
+    )
+    assert path.name == "MOORH_1D_20250101T060000_20250102T123000.json"
+
+
 def test_fetch_raises_the_apis_message(cosmos_api, tmp_path):
     with pytest.raises(ProviderError, match=r"400: Invalid location ID\(s\)"):
         fetch(
@@ -100,7 +134,6 @@ def test_fetch_raises_the_apis_message(cosmos_api, tmp_path):
             tmp_path,
             client=cosmos_api.client(),
         )
-    assert not sidecar_path(tmp_path / "NOPE_1D_20250101_20250102.json").exists()
     assert not list(tmp_path.iterdir())
 
 
