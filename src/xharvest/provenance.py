@@ -5,13 +5,13 @@ was made, because raw provider files rarely record either. Standardisation reads
 the sidecar and writes the provenance onto the dataset as CF/ACDD global
 attributes:
 
-- ``institution``: who produces the data;
-- ``source``: the service the data came from;
-- ``license``: the licence the provider states;
-- ``history``: one line per retrieval and one for standardisation, each starting
+- `institution`: who produces the data;
+- `source`: the service the data came from;
+- `license`: the licence the provider states;
+- `history`: one line per retrieval and one for standardisation, each starting
   with a UTC timestamp.
 
-Example:
+Examples:
     >>> from pathlib import Path
     >>> sidecar_path(Path("ALIC1_1D_20250101_20250105.json"))
     PosixPath('ALIC1_1D_20250101_20250105.meta.json')
@@ -26,25 +26,28 @@ from typing import Any
 
 from . import __version__
 
-#: Global attributes every standardised dataset carries.
 PROVENANCE_ATTRS = ("institution", "source", "license", "history")
+"""Global attributes every standardised dataset carries."""
 
 SIDECAR_SUFFIX = ".meta.json"
 
 
 @dataclass(frozen=True)
 class Retrieval:
-    """One request to a provider, as recorded in a sidecar."""
+    """One request to a provider, as recorded in a sidecar.
 
-    #: The URL requested, without the query string.
+    Attributes:
+        url: The URL requested, without the query string.
+        params: The query parameters sent.
+        retrieved: When the response was received, as an ISO 8601 UTC timestamp.
+        agent: The package and version that made the request.
+        metadata: Facts about the data the response itself omits, e.g. site names.
+    """
+
     url: str
-    #: The query parameters sent.
     params: dict[str, Any]
-    #: When the response was received, as an ISO 8601 UTC timestamp.
     retrieved: str
-    #: The package and version that made the request.
     agent: str
-    #: Facts about the data the response itself omits, e.g. site names.
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
@@ -60,7 +63,7 @@ def sidecar_path(path: str | PathLike) -> Path:
 
 
 def is_sidecar(path: str | PathLike) -> bool:
-    """Whether ``path`` names a sidecar rather than a raw data file."""
+    """Whether `path` names a sidecar rather than a raw data file."""
     return Path(path).name.endswith(SIDECAR_SUFFIX)
 
 
@@ -70,7 +73,7 @@ def write_sidecar(
     params: dict[str, Any],
     metadata: dict[str, Any] | None = None,
 ) -> Retrieval:
-    """Record a just-completed retrieval of ``path``.
+    """Record a just-completed retrieval of `path`.
 
     Args:
         path: The raw data file the response was written to.
@@ -94,7 +97,7 @@ def write_sidecar(
 
 
 def read_sidecar(path: str | PathLike) -> Retrieval:
-    """Read the retrieval recorded for the raw data file ``path``.
+    """Read the retrieval recorded for the raw data file `path`.
 
     Raises:
         FileNotFoundError: If the file has no sidecar, e.g. because it was not
@@ -110,7 +113,7 @@ def read_sidecar(path: str | PathLike) -> Retrieval:
 
 
 def history_line(retrieval: Retrieval) -> str:
-    """Describe a retrieval as one line of a CF ``history`` attribute."""
+    """Describe a retrieval as one line of a CF `history` attribute."""
     query = "&".join(f"{k}={v}" for k, v in retrieval.params.items())
     url = f"{retrieval.url}?{query}" if query else retrieval.url
     return f"{retrieval.retrieved} retrieved {url} ({retrieval.agent})"

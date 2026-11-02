@@ -1,4 +1,4 @@
-"""``xharvest cosmos``: COSMOS-UK site data."""
+"""`xharvest cosmos`: COSMOS-UK site data."""
 
 from datetime import datetime
 from pathlib import Path

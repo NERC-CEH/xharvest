@@ -5,7 +5,7 @@ import pytest
 import xarray as xr
 
 from xharvest.cosmos import standardise, to_netcdf
-from xharvest.cosmos.standardise import _duration
+from xharvest.cosmos._standardise import _duration
 from xharvest.errors import ProviderError
 from xharvest.provenance import PROVENANCE_ATTRS, sidecar_path
 

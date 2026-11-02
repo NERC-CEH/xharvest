@@ -1,13 +1,13 @@
 """Convert COSMOS-UK CoverageJSON into a standardised xarray Dataset.
 
-The result has dims ``(time, site)``, with ``site_name``, ``lat``, ``lon`` and
-``altitude`` coordinates per site, and one variable per API parameter. Each
-variable keeps the API's units in a CF ``units`` attribute, and missing values
-become NaN; nothing else about the values changes. ``time_bounds`` records the
-period each value covers: a daily value stamped ``2025-01-01T00:00`` covers that
+The result has dims `(time, site)`, with `site_name`, `lat`, `lon` and
+`altitude` coordinates per site, and one variable per API parameter. Each
+variable keeps the API's units in a CF `units` attribute, and missing values
+become NaN; nothing else about the values changes. `time_bounds` records the
+period each value covers: a daily value stamped `2025-01-01T00:00` covers that
 GMT day, while a 30-minute value covers the 30 minutes *ending* at its stamp.
 
-Example:
+Examples:
     >>> from pathlib import Path
     >>> from xharvest.cosmos import to_netcdf
     >>> to_netcdf(Path("data/cosmos").glob("*_1D_*.json"),
@@ -29,7 +29,7 @@ import xarray as xr
 from .. import __version__
 from ..errors import ProviderError
 from ..provenance import history_line, is_sidecar, read_sidecar, utc_now
-from .fetch import API_URL
+from ._fetch import API_URL
 
 INSTITUTION = "UK Centre for Ecology & Hydrology"
 
@@ -47,9 +47,9 @@ _DURATION = re.compile(
 
 
 def _duration(period: str) -> timedelta:
-    """Parse the ISO 8601 durations the API uses, e.g. ``PT1D`` or ``-PT30M``.
+    """Parse the ISO 8601 durations the API uses, e.g. `PT1D` or `-PT30M`.
 
-    The API writes one day as ``PT1D``, with a stray ``T``, so a ``D`` component
+    The API writes one day as `PT1D`, with a stray `T`, so a `D` component
     is accepted on either side of it.
     """
     match = _DURATION.match(period.replace("PT1D", "P1D"))
@@ -152,7 +152,7 @@ def standardise(paths: Iterable[str | PathLike]) -> xr.Dataset:
             glob over the download directory works.
 
     Returns:
-        A Dataset with dims ``(time, site)``. Sites are outer-joined on time, so a
+        A Dataset with dims `(time, site)`. Sites are outer-joined on time, so a
         site with a shorter record is NaN-padded.
 
     Raises:

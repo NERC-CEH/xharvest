@@ -1,10 +1,9 @@
-import importlib
 import json
 from datetime import UTC, date, datetime, timedelta, timezone
 
 import pytest
 
-from xharvest.cosmos import fetch, sites
+from xharvest.cosmos import _fetch, fetch, sites
 from xharvest.errors import ProviderError
 from xharvest.provenance import read_sidecar, sidecar_path
 
@@ -20,10 +19,8 @@ def test_sites_reads_lat_lon_the_right_way_round(cosmos_api):
 
 
 def test_lat_lon_reads_either_order():
-    fetch_module = importlib.import_module("xharvest.cosmos.fetch")
-
-    assert fetch_module._lat_lon([-0.86, 51.15]) == (51.15, -0.86)
-    assert fetch_module._lat_lon([51.15, -0.86]) == (51.15, -0.86)
+    assert _fetch._lat_lon([-0.86, 51.15]) == (51.15, -0.86)
+    assert _fetch._lat_lon([51.15, -0.86]) == (51.15, -0.86)
 
 
 def test_fetch_requests_full_iso_datetimes(cosmos_api, tmp_path):

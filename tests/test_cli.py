@@ -1,4 +1,3 @@
-import importlib
 from contextlib import nullcontext
 
 import pytest
@@ -7,15 +6,15 @@ from typer.testing import CliRunner
 
 from xharvest.cli import main
 from xharvest.cli.app import app
+from xharvest.cosmos import _fetch
 
-fetch_module = importlib.import_module("xharvest.cosmos.fetch")
 runner = CliRunner()
 
 
 @pytest.fixture
 def mock_api(monkeypatch, cosmos_api):
     client = cosmos_api.client()
-    monkeypatch.setattr(fetch_module, "_client", lambda _: nullcontext(client))
+    monkeypatch.setattr(_fetch, "_client", lambda _: nullcontext(client))
     return cosmos_api
 
 

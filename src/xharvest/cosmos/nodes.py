@@ -1,20 +1,7 @@
-"""conduit node functions for COSMOS-UK data.
+"""Nodes that conduit finds under the config section `[cosmos]`.
 
-conduit finds this module under the config section ``[cosmos]`` once
-``xharvest`` is installed. The functions name their inputs after the
-standardised variables, so read the standardised file with ``suffix = ""``:
-
-```toml
-[inputs.cosmos]
-path = "data/cosmos.nc"
-suffix = ""
-vars = ["cosmos_vwc", "snow"]
-
-[cosmos]
-```
-
-Converting volumetric water content from percent to a fraction needs no node: a
-consumer that declares ``Unit("m3 m-3")`` gets the conversion from conduit.
+They name their inputs after the standardised variables, so conduit must read the
+standardised file with `suffix = ""`.
 """
 
 from typing import Annotated
@@ -36,7 +23,7 @@ def cosmos_vwc_snow_masked(cosmos_vwc: DailyPercent, snow: DailyFlag) -> DailyPe
 
     Snow on the ground inflates the neutron signal, so on snow days COSMOS-UK
     reports a VWC estimated from the counts before the snow. Use this node where
-    only VWC derived from that day's counts will do; use ``cosmos_vwc`` to keep
-    the estimates. Days where ``snow`` is missing are kept.
+    only VWC derived from that day's counts will do; use `cosmos_vwc` to keep
+    the estimates. Days where `snow` is missing are kept.
     """
     return cosmos_vwc.where(snow != 1)

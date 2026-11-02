@@ -82,27 +82,12 @@ Under this reading, the 30-minute precipitation summed over each day matches the
 
 When there is snow on the ground the neutron counts no longer reflect soil moisture alone.
 On those days (`snow == 1`), COSMOS-UK reports a `cosmos_vwc` estimated from the counts before the snow, which shows up as a constant run of values.
-Use the `cosmos_vwc_snow_masked` node to drop them.
+Use the [`cosmos_vwc_snow_masked`](#xharvest.cosmos.nodes.cosmos_vwc_snow_masked) node to drop them.
 
 ### What the API does not provide
 
 The EIDC release of the same data has per-value flags (missing, infilled, estimated, unchecked) and quality-control flags.
 The API has neither, so a value from the API may be infilled or estimated without saying so.
-
-## Use in conduit
-
-```toml
-[inputs.cosmos]
-path = "data/cosmos.nc"
-suffix = ""
-vars = ["cosmos_vwc", "snow"]
-
-[cosmos]
-```
-
-`[cosmos]` provides `cosmos_vwc_snow_masked` (see [the reference](#nodes)).
-Its node names its inputs after the standardised variables, hence `suffix = ""`.
-A node that needs VWC as a fraction declares `Unit("m3 m-3")` on its input, and conduit converts from percent.
 
 ## Citing the data
 
@@ -110,6 +95,46 @@ The API serves live data with no DOI.
 For published work, cite the most recent quality-controlled release on the EIDC, for example:
 
 > Stanley, S., et al. (2026). Daily and sub-daily hydrometeorological and soil moisture data (2013-2025) [COSMOS-UK]. NERC EDS Environmental Information Data Centre. <https://doi.org/10.5285/dde10e2b-ee1a-4b2b-a247-176db2f7bb31>
+
+## CLI
+
+::: mkdocs-typer2
+    :module: xharvest.cli.app
+    :name: xharvest
+    :command: cosmos
+    :termynal: true
+    :width: 80
+    :prompt: ❯
+
+### `xharvest cosmos sites` { #xharvest-cosmos-sites data-toc-label="sites" }
+
+::: mkdocs-typer2
+    :module: xharvest.cli.app
+    :name: xharvest
+    :command: cosmos sites
+    :termynal: true
+    :width: 80
+    :prompt: ❯
+
+### `xharvest cosmos fetch` { #xharvest-cosmos-fetch data-toc-label="fetch" }
+
+::: mkdocs-typer2
+    :module: xharvest.cli.app
+    :name: xharvest
+    :command: cosmos fetch
+    :termynal: true
+    :width: 80
+    :prompt: ❯
+
+### `xharvest cosmos standardise` { #xharvest-cosmos-standardise data-toc-label="standardise" }
+
+::: mkdocs-typer2
+    :module: xharvest.cli.app
+    :name: xharvest
+    :command: cosmos standardise
+    :termynal: true
+    :width: 80
+    :prompt: ❯
 
 ## Python API
 
@@ -125,6 +150,10 @@ For published work, cite the most recent quality-controlled release on the EIDC,
     options:
       heading_level: 3
 
+::: xharvest.cosmos.Collection
+    options:
+      heading_level: 3
+
 ::: xharvest.cosmos.standardise
     options:
       heading_level: 3
@@ -133,19 +162,22 @@ For published work, cite the most recent quality-controlled release on the EIDC,
     options:
       heading_level: 3
 
-### Nodes
+## Conduit nodes
+
+conduit finds these nodes under the config section `[cosmos]` once xharvest is installed.
+They name their inputs after the standardised variables, so read the standardised file with `suffix = ""`:
+
+```toml
+[inputs.cosmos]
+path = "data/cosmos.nc"
+suffix = ""
+vars = ["cosmos_vwc", "snow"]
+
+[cosmos]
+```
+
+Converting volumetric water content from percent to a fraction needs no node: a consumer that declares `Unit("m3 m-3")` gets the conversion from conduit.
 
 ::: xharvest.cosmos.nodes.cosmos_vwc_snow_masked
     options:
-      heading_level: 4
-
-## CLI
-
-::: mkdocs-typer2
-    :module: xharvest.cli.app
-    :name: xharvest
-    :command: cosmos
-    :termynal: true
-    :width: 80
-    :prompt: ❯
-    :subcommands: 1
+      heading_level: 3

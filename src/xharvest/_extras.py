@@ -5,11 +5,11 @@ from types import ModuleType
 
 
 def require(module: str, extra: str) -> ModuleType:
-    """Import ``module``, or explain which extra provides it.
+    """Import `module`, or explain which extra provides it.
 
     Args:
-        module: The module to import, e.g. ``"httpx"``.
-        extra: The install extra that provides it, e.g. ``"cosmos"``.
+        module: The module to import, e.g. `"httpx"`.
+        extra: The install extra that provides it, e.g. `"cosmos"`.
 
     Returns:
         The imported module.

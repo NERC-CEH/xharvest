@@ -23,11 +23,12 @@ Each provider is a subpackage of `xharvest`; `xharvest.cosmos` is the reference.
 
 | Module | What it does | May import |
 |---|---|---|
-| `fetch.py` | `fetch(...) -> list[Path]`: downloads raw files to a directory, skipping any already present. | The provider's client library, through `require` |
-| `standardise.py` | `standardise(paths) -> xr.Dataset`, and `to_netcdf(paths, out)`. | xarray |
+| `_fetch.py` | `fetch(...) -> list[Path]`: downloads raw files to a directory, skipping any already present. | The provider's client library, through `require` |
+| `_standardise.py` | `standardise(paths) -> xr.Dataset`, and `to_netcdf(paths, out)`. | xarray |
 | `nodes.py` (optional) | Contract-annotated node functions for source-specific preparation, registered in the `conduit.modules` entry-point group. | `xarray-annotated`, `hamilton` |
 
-No module imports `conduit`, and `fetch.py` and `standardise.py` import neither `xarray-annotated` nor `hamilton`; `tests/test_layout.py` checks both.
+The subpackage's `__init__.py` re-exports the public functions and types, and lists them in `__all__`; that list is the public API, and the provider page documents each name in it.
+No module imports `conduit`, and `_fetch.py` and `_standardise.py` import neither `xarray-annotated` nor `hamilton`; `tests/test_layout.py` checks both.
 The CLI command group in `cli/` calls these functions and adds nothing the Python API cannot do.
 
 ### Dependencies
@@ -72,9 +73,10 @@ Model it on [COSMOS-UK](../providers/cosmos-uk.md), with sections in this order:
 2. download;
 3. standardise, describing the output;
 4. about the data: what a timestamp means, and the provider's quirks and gaps;
-5. use in conduit;
-6. citing the data;
-7. the Python API and CLI references, generated with mkdocstrings and mkdocs-typer2.
+5. citing the data;
+6. the CLI reference: the command group's help, then a heading and a mkdocs-typer2 block per command;
+7. the Python API reference: one mkdocstrings block per name in `__all__`, in reading order;
+8. conduit nodes, if there is a `nodes.py`: how conduit reads the output, then one mkdocstrings block per node.
 
 ## Before opening the pull request
 

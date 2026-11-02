@@ -7,7 +7,7 @@ contract-annotated node functions for preparation specific to the source, which
 conduit finds through its `conduit.modules` entry point.
 
 Third-party dependencies of each provider sit behind an install extra named after
-it, e.g. ``pip install xharvest[cosmos]``.
+it, e.g. `pip install xharvest[cosmos]`.
 """
 
 from importlib.metadata import version

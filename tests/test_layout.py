@@ -50,7 +50,7 @@ def test_nothing_imports_conduit(path):
 
 @pytest.mark.parametrize(
     "path",
-    [p for p in MODULES if p.stem in {"fetch", "standardise"}],
+    [p for p in MODULES if p.stem in {"_fetch", "_standardise"}],
     ids=_id,
 )
 def test_fetch_and_standardise_need_no_contracts(path):
@@ -64,4 +64,4 @@ def test_extras_are_imported_lazily(path):
 
 def test_there_are_fetch_and_standardise_modules():
     stems = {p.stem for p in MODULES}
-    assert {"fetch", "standardise"} <= stems
+    assert {"_fetch", "_standardise"} <= stems

@@ -4,7 +4,7 @@ The API (https://cosmos-api.ceh.ac.uk) is an OGC EDR service that needs no
 credentials. `fetch` writes one CoverageJSON file per site, each with a provenance
 sidecar, and skips files already present.
 
-Example:
+Examples:
     >>> from datetime import date
     >>> from xharvest.cosmos import fetch
     >>> paths = fetch(["ALIC1", "BUNNY"], date(2025, 1, 1), date(2025, 1, 31),
@@ -29,8 +29,8 @@ if TYPE_CHECKING:
 
 API_URL = "https://cosmos-api.ceh.ac.uk"
 
-#: The API's collections: daily, and 30-minute.
 Collection = Literal["1D", "30M"]
+"""The API's collections: daily, and 30-minute."""
 COLLECTIONS: tuple[Collection, ...] = ("1D", "30M")
 
 _TIMEOUT = 120.0
@@ -38,17 +38,20 @@ _TIMEOUT = 120.0
 
 @dataclass(frozen=True)
 class Site:
-    """A COSMOS-UK site."""
+    """A COSMOS-UK site.
 
-    #: The site identifier, e.g. ``"ALIC1"``.
+    Attributes:
+        id: The site identifier, e.g. `"ALIC1"`.
+        name: The site name, e.g. `"Alice Holt"`.
+        lat: Latitude, in degrees north (WGS 84).
+        lon: Longitude, in degrees east (WGS 84).
+        period: The period with data, as an ISO 8601 interval.
+    """
+
     id: str
-    #: The site name, e.g. ``"Alice Holt"``.
     name: str
-    #: Latitude, in degrees north (WGS 84).
     lat: float
-    #: Longitude, in degrees east (WGS 84).
     lon: float
-    #: The period with data, as an ISO 8601 interval.
     period: str
 
 
@@ -92,10 +95,10 @@ def _lat_lon(coordinates: list[float]) -> tuple[float, float]:
 def sites(
     collection: Collection = "1D", *, client: "httpx.Client | None" = None
 ) -> list[Site]:
-    """List the sites with data in ``collection``.
+    """List the sites with data in `collection`.
 
     Args:
-        collection: ``"1D"`` for daily data, ``"30M"`` for 30-minute data.
+        collection: `"1D"` for daily data, `"30M"` for 30-minute data.
         client: An `httpx.Client` to use, e.g. one with a mock transport for
             testing. A new one is created if omitted.
 
@@ -146,21 +149,21 @@ def fetch(
 ) -> list[Path]:
     """Download data for one or more sites, one CoverageJSON file per site.
 
-    Each file is named ``{site}_{collection}_{start:%Y%m%d}_{end:%Y%m%d}.json`` and
+    Each file is named `{site}_{collection}_{start:%Y%m%d}_{end:%Y%m%d}.json` and
     has a provenance sidecar next to it (see `xharvest.provenance`), which also
     records the site's name, since the data response omits it. Pass the returned
     paths to `xharvest.cosmos.standardise`.
 
     Args:
-        site_ids: Site identifiers, e.g. ``"ALIC1"`` or ``["ALIC1", "BUNNY"]``.
+        site_ids: Site identifiers, e.g. `"ALIC1"` or `["ALIC1", "BUNNY"]`.
             `sites` lists them.
         start: First timestamp to include. A `date` means midnight; a naive
             `datetime` is taken as UTC.
-        end: Last timestamp to include, as for ``start``. The interval is closed.
+        end: Last timestamp to include, as for `start`. The interval is closed.
         out: Directory to write to; created if missing.
-        parameters: Parameter names to request, e.g. ``["cosmos_vwc", "precip"]``.
+        parameters: Parameter names to request, e.g. `["cosmos_vwc", "precip"]`.
             Every parameter is requested if omitted.
-        collection: ``"1D"`` for daily data, ``"30M"`` for 30-minute data.
+        collection: `"1D"` for daily data, `"30M"` for 30-minute data.
         overwrite: Download again even if a file already exists.
         client: An `httpx.Client` to use, e.g. one with a mock transport for
             testing. A new one is created if omitted.

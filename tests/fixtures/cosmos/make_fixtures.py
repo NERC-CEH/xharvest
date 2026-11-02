@@ -19,7 +19,8 @@ from pathlib import Path
 
 import httpx
 
-from xharvest.cosmos import API_URL, fetch
+from xharvest.cosmos import fetch
+from xharvest.cosmos._fetch import API_URL
 
 HERE = Path(__file__).parent
 SITES = {
