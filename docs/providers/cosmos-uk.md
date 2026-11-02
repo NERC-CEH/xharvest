@@ -29,17 +29,11 @@ xharvest cosmos sites
 xharvest cosmos fetch ALIC1 MOORH --start 2025-01-01 --end 2025-03-31 --out data/raw
 ```
 
-`fetch` writes one CoverageJSON file per site, named `{site}_{collection}_{start}_{end}.json`, with a `.meta.json` sidecar recording the request, when it was made, and the site's name, which the data response omits.
-It skips a file that already holds the same request, and raises if the file holds a different one, for example with other parameters; pass `overwrite=True` (`--overwrite`) to download again.
-A file without a sidecar is from an interrupted download, and is downloaded again.
-The interval is closed: both `start` and `end` are included.
-Given as dates, they select whole GMT days, so `end=date(2025, 3, 31)` includes the 30-minute value stamped 00:00 on 1 April, which covers the last half hour of 31 March.
-Given as datetimes, they are taken as the stamps to request.
-Pass `parameters=[...]` (`--parameter`, repeated) to request only some parameters; the API lists the valid names if you give an invalid one.
-
-The 30-minute collection is about 48 times the size of the daily one.
-`fetch` makes one request per site whatever the range, so request long 30-minute records in pieces.
-`standardise` joins the pieces of each site into one record; where pieces overlap, they must agree.
+- `fetch` writes one CoverageJSON file per site, with a `.meta.json` provenance sidecar.
+- A file that already holds the same request is skipped; pass `overwrite=True` (`--overwrite`) to download again.
+- `start` and `end` are both included; dates select whole GMT days.
+- `parameters=[...]` (`--parameter`, repeated) requests only some parameters.
+- 30-minute data is about 48 times the size of daily data, and `fetch` makes one request per site, so fetch long 30-minute records in pieces; `standardise` joins them.
 
 ## Standardise
 
@@ -52,7 +46,7 @@ xharvest cosmos standardise data/raw/*_1D_*.json --out data/cosmos.nc
 ```
 
 Sidecars among the paths are skipped, so a glob over the download directory works.
-Files from different collections cannot be combined; standardise each collection into its own file.
+Standardise each collection into its own file.
 
 The result has dims `(time, site)`:
 
@@ -62,16 +56,13 @@ The result has dims `(time, site)`:
 | `site` | dim | Site identifier, e.g. `ALIC1` |
 | `site_name` | coord on `site` | e.g. `Alice Holt` |
 | `lat`, `lon` | coord on `site` | Degrees north and east |
-| `altitude` | coord on `site` | The API's `z`, in metres (EPSG:5703). It can differ from the altitude in the EIDC site metadata (Alice Holt: 80 m here, 74 m there). |
+| `altitude` | coord on `site` | The API's `z`, in metres (EPSG:5703) |
 | `time_bounds` | coord on `(time, nv)` | The period each value covers |
 | one per parameter | data, on `(time, site)` | `units`, `long_name`, `description` and `cell_methods` from the API |
 
-Values are the API's own, in the API's units: volumetric water content is in `%`, radiation in `MJ m-2 day-1`.
-Missing values become NaN.
-Sites are outer-joined on time, so a site is NaN-padded outside its own record.
-A parameter for a sensor a site does not have is kept, entirely NaN, so every site has the same variables.
-
-The global attributes record provenance: `institution`, `source`, `license`, and a `history` line for each download and for the standardisation.
+- Values and units are the API's own, e.g. volumetric water content in `%`.
+- Missing values become NaN, including outside a site's record and for sensors a site lacks, so every site has the same variables.
+- Global attributes record provenance: `institution`, `source`, `license` and `history`.
 
 ## About the data
 
@@ -79,7 +70,6 @@ The global attributes record provenance: `institution`, `source`, `license`, and
 
 A **daily** value stamped `2025-01-01T00:00` covers the GMT day 2025-01-01.
 A **30-minute** value covers the 30 minutes *ending* at its stamp, so `12:30` covers `12:00`–`12:30`.
-`time_bounds` records both.
 Under this reading, the 30-minute precipitation summed over each day matches the daily totals to within rounding.
 
 ### Snow days
@@ -110,35 +100,7 @@ For published work, cite the most recent quality-controlled release on the EIDC,
     :width: 80
     :prompt: ❯
 
-### `xharvest cosmos sites` { #xharvest-cosmos-sites data-toc-label="sites" }
-
-::: mkdocs-typer2
-    :module: xharvest.cli.app
-    :name: xharvest
-    :command: cosmos sites
-    :termynal: true
-    :width: 80
-    :prompt: ❯
-
-### `xharvest cosmos fetch` { #xharvest-cosmos-fetch data-toc-label="fetch" }
-
-::: mkdocs-typer2
-    :module: xharvest.cli.app
-    :name: xharvest
-    :command: cosmos fetch
-    :termynal: true
-    :width: 80
-    :prompt: ❯
-
-### `xharvest cosmos standardise` { #xharvest-cosmos-standardise data-toc-label="standardise" }
-
-::: mkdocs-typer2
-    :module: xharvest.cli.app
-    :name: xharvest
-    :command: cosmos standardise
-    :termynal: true
-    :width: 80
-    :prompt: ❯
+Run `xharvest cosmos <command> --help` for a command's options; they mirror the Python API below.
 
 ## Python API
 
@@ -179,8 +141,6 @@ vars = ["cosmos_vwc", "snow"]
 
 [cosmos]
 ```
-
-Converting volumetric water content from percent to a fraction needs no node: a consumer that declares `Unit("m3 m-3")` gets the conversion from conduit.
 
 ::: xharvest.cosmos.nodes.cosmos_vwc_snow_masked
     options:
