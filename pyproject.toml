@@ -13,7 +13,12 @@ readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "netcdf4>=1.7.4",
+    "numpy>=2.4.2",
+    "xarray>=2026.2.0",
+    "xarray-annotated[cf]>=0.6.0",
+]
 keywords = []
 classifiers = [
   "Development Status :: 3 - Alpha",
@@ -27,6 +32,21 @@ classifiers = [
 Homepage = "https://nerc-ceh.github.io/conduit-data"
 Repository = "https://github.com/NERC-CEH/conduit-data"
 Documentation = "https://nerc-ceh.github.io/conduit-data"
+
+[project.optional-dependencies]
+cosmos = [
+    "httpx>=0.28.1",
+]
+cli = [
+    "typer>=0.24.1",
+]
+all = ["conduit-data[cosmos,cli]"]
+
+[project.scripts]
+conduit-data = "conduit_data.cli:main"
+
+[project.entry-points."conduit.modules"]
+cosmos = "conduit_data.cosmos.nodes"
 
 # These bounds are floors, not pins: `uv sync` already resolves to the newest
 # version each one allows, so raising them changes nothing for anyone. Do not
@@ -52,7 +72,11 @@ docs = [
 ]
 # Dependencies needed to *run* the example notebooks, but not to use the package.
 examples = []
+# Tests cover every connector, so they need every extra, and conduit itself for the
+# end-to-end pipeline test.
 test = [
+    "conduit",
+    "conduit-data[all]",
     "coverage>=7.15.2",
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
@@ -60,6 +84,9 @@ test = [
 
 [tool.pytest]
 testpaths = ["tests"]
+# Tests marked `live` call real provider APIs; run them with `just test-live`.
+addopts = ["-m", "not live"]
+markers = ["live: calls a real provider API over the network"]
 
 [tool.pyright]
 venvPath = "."
@@ -125,7 +152,10 @@ convention = "google"
 # [dependency-groups] must be at or below the version that existed a week ago,
 # or resolution fails outright.
 exclude-newer = "1 week"
-# Exempt marimo-md-export from the cutoff: it is the one dependency here whose
-# releases are worth picking up the day they land, because the docs export
-# depends on it closely.
-exclude-newer-package = { marimo-md-export = false }
+# Exempt marimo-md-export and xarray-annotated from the cutoff: their releases are
+# worth picking up the day they land, because the docs export and the contracts
+# depend on them closely.
+exclude-newer-package = { marimo-md-export = false, xarray-annotated = false }
+
+[tool.uv.sources]
+conduit = { git = "https://github.com/NERC-CEH/conduit", rev = "8657eff048b065589c868e426587f6f8e12bf619" }

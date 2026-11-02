@@ -1,27 +1,17 @@
-"""Data connectors for conduit.
+"""Data connectors for conduit and xarray.
 
-This module is a placeholder. Replace it with your own — the point of the
-placeholder is to give the project a real public API, so that the linter, the
-type checker, the test suite and the API reference all have something to act on
-from the first commit.
+Each provider is a subpackage, for example `conduit_data.cosmos` for COSMOS-UK.
+A connector downloads raw provider files (`fetch`) and converts them into
+standardised netCDF that conduit reads as-is (`standardise`). Some also provide
+contract-annotated node functions for preparation specific to the source, which
+conduit finds through its `conduit.modules` entry point.
+
+Third-party dependencies of each provider sit behind an install extra named after
+it, e.g. ``pip install conduit-data[cosmos]``.
 """
 
-__all__ = ["greet"]
+from importlib.metadata import version
 
+__version__ = version("conduit-data")
 
-def greet(name: str = "world") -> str:
-    """Build a friendly greeting.
-
-    Args:
-        name: Who to greet.
-
-    Returns:
-        The greeting.
-
-    Examples:
-        >>> greet()
-        'Hello, world!'
-        >>> greet("conduit_data")
-        'Hello, conduit_data!'
-    """
-    return f"Hello, {name}!"
+__all__ = ["__version__"]

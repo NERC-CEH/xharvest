@@ -32,6 +32,10 @@ typecheck:
 test:
   pytest
 
+# Run only the tests that call real provider APIs (network needed).
+test-live:
+  pytest -m live
+
 # Run tests with coverage report.
 test-cov:
   pytest --cov=conduit_data --cov-report=term-missing --cov-fail-under=90
