@@ -15,7 +15,7 @@ src/conduit_data/
   errors.py        — ProviderError
   provenance.py    — fetch sidecars, and the provenance attributes they become
   cosmos/          — COSMOS-UK: fetch.py, standardise.py, nodes.py
-  cli/             — `conduit-data` (typer, behind the `cli` extra)
+  cli/             — `conduit-data` (typer); commands only call the library
 tests/
   fixtures/<provider>/  — trimmed real responses, with the make_fixtures.py that regenerates them
   test_contracts.py     — the shared harness every connector is added to

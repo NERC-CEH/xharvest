@@ -9,9 +9,7 @@ SRC = Path(__file__).parents[1] / "src" / "conduit_data"
 MODULES = sorted(SRC.rglob("*.py"))
 
 # Imported only through `conduit_data._extras.require`, never at module level.
-EXTRAS = {"httpx", "typer"}
-# The CLI is only imported once `main` has checked typer is installed.
-EXTRAS_ALLOWED_IN = {SRC / "cli" / "app.py", SRC / "cli" / "cosmos.py"}
+EXTRAS = {"httpx"}
 
 
 def _is_type_checking_block(node: ast.AST) -> bool:
@@ -59,9 +57,7 @@ def test_fetch_and_standardise_need_no_contracts(path):
     assert not _imports(path) & {"xarray_annotated", "hamilton"}
 
 
-@pytest.mark.parametrize(
-    "path", [p for p in MODULES if p not in EXTRAS_ALLOWED_IN], ids=_id
-)
+@pytest.mark.parametrize("path", MODULES, ids=_id)
 def test_extras_are_imported_lazily(path):
     assert not _imports(path) & EXTRAS
 

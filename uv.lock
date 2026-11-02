@@ -180,6 +180,7 @@ source = { editable = "." }
 dependencies = [
     { name = "netcdf4" },
     { name = "numpy" },
+    { name = "typer" },
     { name = "xarray" },
     { name = "xarray-annotated", extra = ["cf"] },
 ]
@@ -187,10 +188,6 @@ dependencies = [
 [package.optional-dependencies]
 all = [
     { name = "httpx" },
-    { name = "typer" },
-]
-cli = [
-    { name = "typer" },
 ]
 cosmos = [
     { name = "httpx" },
@@ -199,7 +196,7 @@ cosmos = [
 [package.dev-dependencies]
 dev = [
     { name = "conduit" },
-    { name = "conduit-data", extra = ["all", "cli"] },
+    { name = "conduit-data", extra = ["all"] },
     { name = "coverage" },
     { name = "mkdocs-typer2", extra = ["termynal"] },
     { name = "mkdocstrings-python" },
@@ -212,7 +209,6 @@ dev = [
     { name = "zensical" },
 ]
 docs = [
-    { name = "conduit-data", extra = ["cli"] },
     { name = "mkdocs-typer2", extra = ["termynal"] },
     { name = "mkdocstrings-python" },
     { name = "zensical" },
@@ -227,21 +223,20 @@ test = [
 
 [package.metadata]
 requires-dist = [
-    { name = "conduit-data", extras = ["cosmos", "cli"], marker = "extra == 'all'" },
+    { name = "conduit-data", extras = ["cosmos"], marker = "extra == 'all'" },
     { name = "httpx", marker = "extra == 'cosmos'", specifier = ">=0.28.1" },
     { name = "netcdf4", specifier = ">=1.7.4" },
     { name = "numpy", specifier = ">=2.4.2" },
-    { name = "typer", marker = "extra == 'cli'", specifier = ">=0.24.1" },
+    { name = "typer", specifier = ">=0.24.1" },
     { name = "xarray", specifier = ">=2026.2.0" },
     { name = "xarray-annotated", extras = ["cf"], specifier = ">=0.6.0" },
 ]
-provides-extras = ["cosmos", "cli", "all"]
+provides-extras = ["cosmos", "all"]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "conduit", git = "https://github.com/NERC-CEH/conduit?rev=8657eff048b065589c868e426587f6f8e12bf619" },
     { name = "conduit-data", extras = ["all"] },
-    { name = "conduit-data", extras = ["cli"] },
     { name = "coverage", specifier = ">=7.15.2" },
     { name = "mkdocs-typer2", extras = ["termynal"], specifier = ">=0.4.1" },
     { name = "mkdocstrings-python", specifier = ">=2.0.5" },
@@ -254,7 +249,6 @@ dev = [
     { name = "zensical", specifier = ">=0.0.52" },
 ]
 docs = [
-    { name = "conduit-data", extras = ["cli"] },
     { name = "mkdocs-typer2", extras = ["termynal"], specifier = ">=0.4.1" },
     { name = "mkdocstrings-python", specifier = ">=2.0.5" },
     { name = "zensical", specifier = ">=0.0.52" },

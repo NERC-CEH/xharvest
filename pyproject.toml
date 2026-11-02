@@ -16,6 +16,7 @@ requires-python = ">=3.12"
 dependencies = [
     "netcdf4>=1.7.4",
     "numpy>=2.4.2",
+    "typer>=0.24.1",
     "xarray>=2026.2.0",
     "xarray-annotated[cf]>=0.6.0",
 ]
@@ -37,10 +38,7 @@ Documentation = "https://nerc-ceh.github.io/conduit-data"
 cosmos = [
     "httpx>=0.28.1",
 ]
-cli = [
-    "typer>=0.24.1",
-]
-all = ["conduit-data[cosmos,cli]"]
+all = ["conduit-data[cosmos]"]
 
 [project.scripts]
 conduit-data = "conduit_data.cli:main"
@@ -63,9 +61,7 @@ dev = [
     {include-group = "docs"},
     {include-group = "test"},
 ]
-# The CLI reference imports the typer app, so the docs need the cli extra.
 docs = [
-    "conduit-data[cli]",
     "mkdocs-typer2[termynal]>=0.4.1",
     "mkdocstrings-python>=2.0.5",
     "zensical>=0.0.52",

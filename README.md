@@ -9,7 +9,7 @@ Download environmental data from its providers, and standardise it into netCDF t
 ## Installation
 
 ```sh
-pip install "conduit-data[cosmos,cli] @ git+https://github.com/NERC-CEH/conduit-data"
+pip install "conduit-data[cosmos] @ git+https://github.com/NERC-CEH/conduit-data"
 ```
 
 ## Usage

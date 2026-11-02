@@ -21,7 +21,7 @@ cosmos.sites()  # identifiers, names, locations and periods of record
 raw = cosmos.fetch(["ALIC1", "MOORH"], date(2025, 1, 1), date(2025, 3, 31), "data/raw")
 ```
 
-or from the command line (needs the `cli` extra too):
+or from the command line:
 
 ```sh
 conduit-data cosmos sites

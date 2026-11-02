@@ -2,10 +2,10 @@
 
 ## Installation
 
-Each provider's dependencies sit behind an install extra named after it, and the command-line interface behind `cli`:
+Each provider's dependencies sit behind an install extra named after it:
 
 ```sh
-pip install "conduit-data[cosmos,cli] @ git+https://github.com/NERC-CEH/conduit-data"
+pip install "conduit-data[cosmos] @ git+https://github.com/NERC-CEH/conduit-data"
 ```
 
 `all` installs every extra.

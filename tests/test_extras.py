@@ -24,11 +24,3 @@ def test_cosmos_imports_without_httpx_but_fetch_needs_it(monkeypatch, tmp_path):
     cosmos = importlib.import_module("conduit_data.cosmos")
     with pytest.raises(ImportError, match=r"conduit-data\[cosmos\]"):
         cosmos.fetch("ALIC1", date(2025, 1, 1), date(2025, 1, 2), tmp_path)
-
-
-def test_cli_without_typer(monkeypatch):
-    monkeypatch.setitem(sys.modules, "typer", None)
-    from conduit_data.cli import main
-
-    with pytest.raises(ImportError, match=r"conduit-data\[cli\]"):
-        main()
