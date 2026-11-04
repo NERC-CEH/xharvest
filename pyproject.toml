@@ -127,5 +127,3 @@ exclude-newer-package = { xarray-annotated = false }
 
 [tool.uv.sources]
 conduit = { git = "https://github.com/NERC-CEH/conduit", rev = "8657eff048b065589c868e426587f6f8e12bf619" }
-# Head of xarray-annotated#21. Remove once 0.7.0 is on PyPI.
-xarray-annotated = { git = "https://github.com/jmarshrossney/xarray-annotated", rev = "56858d39146d409e8dd6885b20d921a56fc4caa2" }
