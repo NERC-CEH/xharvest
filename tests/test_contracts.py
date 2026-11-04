@@ -16,7 +16,7 @@ import pytest
 import xarray as xr
 import xarray_annotated as xra
 from xarray_annotated.temporal import check_freq
-from xarray_annotated.units import assert_valid_unit, units_equal, use_cf_units
+from xarray_annotated.units import assert_valid_unit, check_units, use_cf_units
 
 from xharvest import cosmos
 from xharvest.cosmos import nodes as cosmos_nodes
@@ -129,9 +129,6 @@ def test_node_inputs_match_standardised_output(standardised):
                 continue
             unit, freq = declared[param].unit, declared[param].freq
             if unit is not None:
-                # A compatible but different unit raises when the node is called.
-                assert units_equal(ds[param].attrs["units"], unit), (
-                    f"{fn.__name__}({param}): {ds[param].attrs['units']} vs {unit.unit}"
-                )
+                check_units(ds[param], unit, param, qualname=fn.__name__)
             if freq is not None:
                 check_freq(ds[param], freq, param)
