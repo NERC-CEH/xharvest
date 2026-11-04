@@ -46,6 +46,8 @@ xharvest cosmos standardise data/raw/*_1D_*.json --out data/cosmos.nc
 ```
 
 Sidecars among the paths are skipped, so a glob over the download directory works.
+Files from separate periods can be joined, such as January 2025 and January 2026, and the gap between them stays a gap: `time` holds only what was fetched, rather than NaN for the months nobody asked for.
+A node that depends on regular spacing declares `Freq`, and raises on such a file.
 Standardise each collection into its own file.
 
 The result has dims `(time, site)`:
@@ -77,6 +79,7 @@ Under this reading, the 30-minute precipitation summed over each day matches the
 When there is snow on the ground the neutron counts no longer reflect soil moisture alone.
 On those days (`snow == 1`), COSMOS-UK reports a `cosmos_vwc` estimated from the counts before the snow, which shows up as a constant run of values.
 Use the [`cosmos_vwc_snow_masked`](#xharvest.cosmos.nodes.cosmos_vwc_snow_masked) node to drop them.
+The node only applies to daily data: the 30-minute collection has neither `snow` nor `cosmos_vwc`, checked against the parameters returned for ALIC1 on 2025-01-04.
 
 ### What the API does not provide
 
@@ -140,6 +143,28 @@ suffix = ""
 vars = ["cosmos_vwc", "snow"]
 
 [cosmos]
+```
+
+These nodes keep the API's units, and a node declaring a different unit for its input raises rather than converts.
+A node that wants another unit declares `%` and converts in its body:
+
+```python
+from typing import Annotated
+
+import xarray as xr
+import xarray_annotated as xra
+from xarray_annotated import Unit
+from xarray_annotated.units import use_cf_units
+
+use_cf_units()
+
+Percent = Annotated[xr.DataArray, Unit("%")]
+Fraction = Annotated[xr.DataArray, Unit("m3 m-3")]
+
+
+@xra.enforce
+def vwc_fraction(cosmos_vwc_snow_masked: Percent) -> Fraction:
+    return xra.units.convert(cosmos_vwc_snow_masked, "m3 m-3")
 ```
 
 ::: xharvest.cosmos.nodes.cosmos_vwc_snow_masked
