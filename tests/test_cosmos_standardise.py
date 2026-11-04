@@ -267,6 +267,18 @@ def test_pieces_of_one_site_combine(moorh, tmp_path, first, second):
     xr.testing.assert_identical(combined.drop_attrs(), whole.drop_attrs())
 
 
+def test_pieces_with_a_gap_between_them_keep_it(moorh, tmp_path):
+    pieces = [
+        _piece(moorh, tmp_path / "pieces" / "a.json", 0, 4),
+        _piece(moorh, tmp_path / "pieces" / "b.json", 9, 14),
+    ]
+    whole = standardise([moorh])
+    out = to_netcdf(pieces, tmp_path / "out" / "cosmos.nc")
+    with xr.open_dataset(out) as got:
+        expected = whole.isel(time=[*range(4), *range(9, 14)])
+        xr.testing.assert_identical(got.drop_attrs(), expected.drop_attrs())
+
+
 def test_pieces_that_disagree_raise(moorh, tmp_path):
     def revise(coverage):
         coverage["ranges"]["ta"]["values"][0] += 1

@@ -22,3 +22,9 @@ def test_keeps_days_with_missing_snow(cosmos_raw):
     assert masked.isel(time=0).item() == pytest.approx(
         ds.cosmos_vwc.isel(time=0).item()
     )
+
+
+def test_accepts_a_gap_in_the_time_axis(cosmos_raw):
+    ds = standardise(cosmos_raw).sel(site="MOORH").isel(time=[0, 1, 2, 8, 9, 10])
+    masked = cosmos_vwc_snow_masked(ds.cosmos_vwc, ds.snow)
+    assert masked.time.equals(ds.time)
