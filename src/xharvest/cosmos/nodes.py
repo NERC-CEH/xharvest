@@ -7,8 +7,9 @@ standardised file with `suffix = ""`.
 from typing import Annotated
 
 import xarray as xr
-from xarray_annotated.temporal import Freq, declare_freq
-from xarray_annotated.units import Unit, declare_units, use_cf_units
+import xarray_annotated as xra
+from xarray_annotated import Freq, Unit
+from xarray_annotated.units import use_cf_units
 
 use_cf_units()
 
@@ -16,8 +17,7 @@ DailyPercent = Annotated[xr.DataArray, Unit("%"), Freq("D")]
 DailyFlag = Annotated[xr.DataArray, Unit("1"), Freq("D")]
 
 
-@declare_units
-@declare_freq
+@xra.enforce
 def cosmos_vwc_snow_masked(cosmos_vwc: DailyPercent, snow: DailyFlag) -> DailyPercent:
     """Daily COSMOS volumetric water content, NaN on snow days.
 

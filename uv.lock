@@ -1753,17 +1753,13 @@ wheels = [
 
 [[package]]
 name = "xarray-annotated"
-version = "0.6.0"
-source = { registry = "https://pypi.org/simple" }
+version = "0.7.0"
+source = { git = "https://github.com/jmarshrossney/xarray-annotated?rev=56858d39146d409e8dd6885b20d921a56fc4caa2#56858d39146d409e8dd6885b20d921a56fc4caa2" }
 dependencies = [
     { name = "pandas" },
     { name = "pint" },
     { name = "pint-xarray" },
     { name = "xarray" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/18/e9/e416f4cc2cb7541fbf801b6e19c74ed84c4fa150417205235dff2a4f161d/xarray_annotated-0.6.0.tar.gz", hash = "sha256:0ecf243deb956a5e6b7b0a9c8cc537651e069d4b0460fd198509bcee3d1af7d0", size = 43778, upload-time = "2026-08-10T14:50:37.435Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/a2/70/e6467c9c202388ba172a4432bec47029345f216806e6753e540e3407f1a9/xarray_annotated-0.6.0-py3-none-any.whl", hash = "sha256:7d68c7b81185ac012539eec1f5dcdb7c026cefaae6526ed05929efd874851626", size = 55776, upload-time = "2026-08-10T14:50:36.396Z" },
 ]
 
 [package.optional-dependencies]
@@ -1826,7 +1822,7 @@ requires-dist = [
     { name = "numpy", specifier = ">=2.4.2" },
     { name = "typer", specifier = ">=0.24.1" },
     { name = "xarray", specifier = ">=2026.2.0" },
-    { name = "xarray-annotated", extras = ["cf"], specifier = ">=0.6.0" },
+    { name = "xarray-annotated", extras = ["cf"], git = "https://github.com/jmarshrossney/xarray-annotated?rev=56858d39146d409e8dd6885b20d921a56fc4caa2" },
     { name = "xharvest", extras = ["cosmos"], marker = "extra == 'all'" },
 ]
 provides-extras = ["cosmos", "all"]

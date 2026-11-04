@@ -14,13 +14,9 @@ from typing import Any
 import numpy as np
 import pytest
 import xarray as xr
-from xarray_annotated.temporal import check_freq, freq_from_signature
-from xarray_annotated.units import (
-    assert_valid_unit,
-    units_compatible,
-    units_from_signature,
-    use_cf_units,
-)
+import xarray_annotated as xra
+from xarray_annotated.temporal import check_freq
+from xarray_annotated.units import assert_valid_unit, units_equal, use_cf_units
 
 from xharvest import cosmos
 from xharvest.cosmos import nodes as cosmos_nodes
@@ -124,18 +120,18 @@ def test_node_inputs_match_standardised_output(standardised):
     assert functions
     nodes = {fn.__name__ for fn in functions}
     for fn in functions:
-        units, _ = units_from_signature(fn)
-        freqs, _ = freq_from_signature(fn)
+        declared, _ = xra.declarations_from_signature(fn)
         for param in inspect.signature(fn).parameters:
             assert param in ds or param in nodes, (
                 f"{fn.__name__}({param}): neither a standardised variable nor a node"
             )
-            if param not in ds:
+            if param not in ds or param not in declared:
                 continue
-            if param in units:
-                assert units_compatible(ds[param].attrs["units"], units[param]), (
-                    f"{fn.__name__}({param}): {ds[param].attrs['units']} vs "
-                    f"{units[param]}"
+            unit, freq = declared[param].unit, declared[param].freq
+            if unit is not None:
+                # A compatible but different unit raises when the node is called.
+                assert units_equal(ds[param].attrs["units"], unit), (
+                    f"{fn.__name__}({param}): {ds[param].attrs['units']} vs {unit.unit}"
                 )
-            if param in freqs:
-                check_freq(ds[param], freqs[param], param, on_mismatch="error")
+            if freq is not None:
+                check_freq(ds[param], freq, param)
