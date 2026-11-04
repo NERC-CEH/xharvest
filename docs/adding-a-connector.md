@@ -51,7 +51,7 @@ netCDF with:
 
 - named dimensions, and at most one time dimension, whose coordinate is `datetime64`, in UTC;
 - a `time_bounds` coordinate (`time` carries `bounds = "time_bounds"`) whenever values aggregate over a period, because providers differ on whether a stamp marks its period's start or end;
-- fill values decoded to NaN, and scale factors applied, but units left as the provider gives them: unit conversion is conduit's job;
+- fill values decoded to NaN, and scale factors applied, but units left as the provider gives them: unit conversion is the consuming node's job;
 - a CF `units` attribute on every data variable, valid under `xarray_annotated.units.use_cf_units()`, and `cell_methods` where the provider says how values were aggregated;
 - the provenance attributes above.
 

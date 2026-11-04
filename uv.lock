@@ -1753,7 +1753,7 @@ wheels = [
 
 [[package]]
 name = "xarray-annotated"
-version = "0.6.0"
+version = "0.7.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pandas" },
@@ -1761,9 +1761,9 @@ dependencies = [
     { name = "pint-xarray" },
     { name = "xarray" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/18/e9/e416f4cc2cb7541fbf801b6e19c74ed84c4fa150417205235dff2a4f161d/xarray_annotated-0.6.0.tar.gz", hash = "sha256:0ecf243deb956a5e6b7b0a9c8cc537651e069d4b0460fd198509bcee3d1af7d0", size = 43778, upload-time = "2026-08-10T14:50:37.435Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b3/46/341eb4d1cb0a3ee671feb8423218cc4ff2143d8b8cf2f9024c43931585ea/xarray_annotated-0.7.0.tar.gz", hash = "sha256:65b7912e0917e425553055542a5ec73c669430cec04503059f655a507b83d1e1", size = 36030, upload-time = "2026-11-04T21:32:59.424Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a2/70/e6467c9c202388ba172a4432bec47029345f216806e6753e540e3407f1a9/xarray_annotated-0.6.0-py3-none-any.whl", hash = "sha256:7d68c7b81185ac012539eec1f5dcdb7c026cefaae6526ed05929efd874851626", size = 55776, upload-time = "2026-08-10T14:50:36.396Z" },
+    { url = "https://files.pythonhosted.org/packages/15/51/ec438cfc5a1a860fbb250da88e736cedd50334097b5d2cb4eddf01c07adc/xarray_annotated-0.7.0-py3-none-any.whl", hash = "sha256:dcce9af3149aaeb571966862b7e55bb245c82ee36deb86159c8a6c989ab81cc4", size = 43502, upload-time = "2026-11-04T21:32:58.444Z" },
 ]
 
 [package.optional-dependencies]
@@ -1826,7 +1826,7 @@ requires-dist = [
     { name = "numpy", specifier = ">=2.4.2" },
     { name = "typer", specifier = ">=0.24.1" },
     { name = "xarray", specifier = ">=2026.2.0" },
-    { name = "xarray-annotated", extras = ["cf"], specifier = ">=0.6.0" },
+    { name = "xarray-annotated", extras = ["cf"], specifier = ">=0.7.0" },
     { name = "xharvest", extras = ["cosmos"], marker = "extra == 'all'" },
 ]
 provides-extras = ["cosmos", "all"]
