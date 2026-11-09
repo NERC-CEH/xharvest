@@ -1,6 +1,6 @@
 # Adding a connector
 
-A connector downloads one provider's data, standardises it, and optionally provides conduit nodes for preparing it.
+A connector downloads one provider's data, standardises it, and optionally provides catena nodes for preparing it.
 Adding one is a proposal, then a pull request.
 [CONTRIBUTING.md](https://github.com/NERC-CEH/xharvest/blob/main/CONTRIBUTING.md) covers what applies to every contribution: setting up, running the checks, and keeping pinned tools in step.
 
@@ -26,7 +26,7 @@ The [design decisions](https://github.com/NERC-CEH/xharvest/tree/main/docs/adr) 
 |---|---|---|
 | `_fetch.py` | `fetch(...) -> list[Path]`: downloads raw files to a directory, skipping any already present. | The provider's client library, through `require` |
 | `_standardise.py` | `standardise(paths) -> xr.Dataset`, and `to_netcdf(paths, out)`. | xarray |
-| `nodes.py` (optional) | Contract-annotated node functions for source-specific preparation, registered in the `conduit.modules` entry-point group. | `xarray-annotated`, `hamilton` |
+| `nodes.py` (optional) | Contract-annotated node functions for source-specific preparation, registered in the `catena.modules` entry-point group. | `xarray-annotated`, `hamilton` |
 
 - `__init__.py` lists the public API in `__all__`; the provider page documents each name in it.
 - The CLI command group in `cli/` calls these functions and adds nothing the Python API cannot do.

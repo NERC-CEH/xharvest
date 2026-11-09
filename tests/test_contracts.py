@@ -2,7 +2,7 @@
 
 Add a connector to ``CONNECTORS`` with its `to_netcdf` function, a fixture of raw
 provider output, and its node module, if it has one. The checks run on the netCDF
-file as read back, since that is what conduit reads.
+file as read back, since that is what catena reads.
 """
 
 import inspect

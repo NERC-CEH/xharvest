@@ -1,6 +1,6 @@
-"""Nodes that conduit finds under the config section `[cosmos]`.
+"""Nodes that catena finds under the config section `[cosmos]`.
 
-They name their inputs after the standardised variables, so conduit must read the
+They name their inputs after the standardised variables, so catena must read the
 standardised file with `suffix = ""`.
 """
 
@@ -17,7 +17,7 @@ Percent = Annotated[xr.DataArray, Unit("%")]
 Flag = Annotated[xr.DataArray, Unit("1")]
 
 
-@xra.enforce
+@xra.check_annotations
 def cosmos_vwc_snow_masked(cosmos_vwc: Percent, snow: Flag) -> Percent:
     """Daily COSMOS volumetric water content, NaN on snow days.
 

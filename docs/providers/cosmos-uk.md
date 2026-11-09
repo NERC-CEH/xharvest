@@ -1,7 +1,7 @@
 # COSMOS-UK
 
 [COSMOS-UK](https://cosmos.ceh.ac.uk) is the UK Centre for Ecology & Hydrology's network of cosmic-ray soil moisture sites, with co-located meteorological and soil measurements.
-`xharvest.cosmos` downloads site data from the [COSMOS-UK API](https://cosmos-api.ceh.ac.uk) and standardises it for conduit and xarray.
+`xharvest.cosmos` downloads site data from the [COSMOS-UK API](https://cosmos-api.ceh.ac.uk) and standardises it for catena and xarray.
 
 | | |
 |---|---|
@@ -10,7 +10,7 @@
 | Licence | [Open Government Licence v3](http://www.nationalarchives.gov.uk/doc/open-government-licence), as stated by the API |
 | Cite | [EIDC release](https://doi.org/10.5285/dde10e2b-ee1a-4b2b-a247-176db2f7bb31) (see [Citing the data](#citing-the-data)) |
 | Collections | `1D` (daily), `30M` (30-minute) |
-| conduit section | `[cosmos]` |
+| catena section | `[cosmos]` |
 
 ## Download
 
@@ -131,9 +131,9 @@ Run `xharvest cosmos <command> --help` for a command's options; they mirror the 
     options:
       heading_level: 3
 
-## Conduit nodes
+## Catena nodes
 
-conduit finds these nodes under the config section `[cosmos]` once xharvest is installed.
+catena finds these nodes under the config section `[cosmos]` once xharvest is installed.
 They name their inputs after the standardised variables, so read the standardised file with `suffix = ""`:
 
 ```toml
@@ -162,7 +162,7 @@ Percent = Annotated[xr.DataArray, Unit("%")]
 Fraction = Annotated[xr.DataArray, Unit("m3 m-3")]
 
 
-@xra.enforce
+@xra.check_annotations
 def vwc_fraction(cosmos_vwc_snow_masked: Percent) -> Fraction:
     return xra.units.convert(cosmos_vwc_snow_masked, "m3 m-3")
 ```

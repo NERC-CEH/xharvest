@@ -18,7 +18,7 @@ dependencies = [
     "numpy>=2.4.2",
     "typer>=0.24.1",
     "xarray>=2026.2.0",
-    "xarray-annotated[cf]>=0.7.0",
+    "xarray-annotated[cf]>=0.9.0rc1",
 ]
 keywords = []
 classifiers = [
@@ -43,7 +43,7 @@ all = ["xharvest[cosmos]"]
 [project.scripts]
 xharvest = "xharvest.cli:main"
 
-[project.entry-points."conduit.modules"]
+[project.entry-points."catena.modules"]
 cosmos = "xharvest.cosmos.nodes"
 
 # These bounds are floors, not pins: `uv sync` already resolves to the newest
@@ -66,10 +66,10 @@ docs = [
     "mkdocstrings-python>=2.0.5",
     "zensical>=0.0.52",
 ]
-# Tests cover every connector, so they need every extra, and conduit itself for the
+# Tests cover every connector, so they need every extra, and catena itself for the
 # end-to-end pipeline test.
 test = [
-    "conduit",
+    "ukceh-catena",
     "xharvest[all]",
     "coverage>=7.15.2",
     "pytest>=9.1.1",
@@ -126,4 +126,4 @@ exclude-newer = "1 week"
 exclude-newer-package = { xarray-annotated = false }
 
 [tool.uv.sources]
-conduit = { git = "https://github.com/NERC-CEH/conduit", rev = "8657eff048b065589c868e426587f6f8e12bf619" }
+ukceh-catena = { git = "https://github.com/NERC-CEH/catena", branch = "main" }

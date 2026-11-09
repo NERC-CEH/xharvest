@@ -35,5 +35,5 @@ xharvest cosmos fetch ALIC1 --start 2025-01-01 --end 2025-01-14 --out data/raw
 xharvest cosmos standardise data/raw/*.json --out data/cosmos.nc
 ```
 
-`data/cosmos.nc` is ready for a conduit `[inputs.*]` section.
-Each provider's page says what its standardised output contains and which conduit nodes it provides; start with [COSMOS-UK](providers/cosmos-uk.md).
+`data/cosmos.nc` is ready for a catena `[inputs.*]` section.
+Each provider's page says what its standardised output contains and which catena nodes it provides; start with [COSMOS-UK](providers/cosmos-uk.md).

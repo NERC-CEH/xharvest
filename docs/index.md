@@ -1,14 +1,14 @@
 # xharvest
 
-Download environmental data from its providers, and standardise it into netCDF that [conduit](https://github.com/NERC-CEH/conduit) and xarray read as-is.
+Download environmental data from its providers, and standardise it into netCDF that [catena](https://github.com/NERC-CEH/catena) and xarray read as-is.
 
 Each provider is a subpackage with up to three layers:
 
 - **fetch** downloads raw files and records where and when they came from;
 - **standardise** converts them to netCDF with named dims, CF units and provenance attributes;
-- **nodes** (some providers) are contract-annotated functions for preparation specific to the source, which conduit finds by section name.
+- **nodes** (some providers) are contract-annotated functions for preparation specific to the source, which catena finds by section name.
 
-None of them needs conduit, so the package is just as useful for getting data into xarray.
+None of them needs catena, so the package is just as useful for getting data into xarray.
 
 ## Providers
 

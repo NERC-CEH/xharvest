@@ -1,6 +1,6 @@
 # xharvest
 
-Download environmental data from its providers, and standardise it into netCDF that [conduit](https://github.com/NERC-CEH/conduit) and xarray read as-is.
+Download environmental data from its providers, and standardise it into netCDF that [catena](https://github.com/NERC-CEH/catena) and xarray read as-is.
 
 | Provider | Extra | Credentials |
 |---|---|---|
