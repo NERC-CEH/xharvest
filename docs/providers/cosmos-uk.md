@@ -137,6 +137,7 @@ Run `xharvest cosmos <command> --help` for a command's options; they mirror the 
 Annotate a node's input with one and catena checks the file against it before compute.
 Import the module rather than the names, as `from xharvest import cosmos`, and write `cosmos.Precip`: the module keeps them apart from other providers' types.
 Each declares the API's unit and the coordinates `time`, `site`, `lat` and `lon`, which one site selected with `.sel(site=...)` still carries.
+Types with the same unit are the same object (`cosmos.Albedo is cosmos.Snow`), so a type does not tell variables apart: catena checks a file against a type's declarations, not its name.
 None declares a `Freq`; add one where it matters, as `Annotated[cosmos.CosmosVWC, Freq("D")]`.
 Their units need `xarray_annotated.units.use_cf_units()`.
 

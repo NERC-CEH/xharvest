@@ -60,6 +60,7 @@ netCDF with:
 
 `_variables.py` is the single source of truth for what the standardised variables look like, to catena and to anyone writing a node.
 Each type is `Annotated[xr.DataArray, ...]` with the provider's `Unit` and the `Coords` every variable carries.
+Types with the same unit and coordinates are the same object, since `typing.Annotated` treats equal metadata as equal types, so a name documents intent but does not tell variables apart; `VARIABLES` is what pairs each variable with its contract.
 Name a type after its quantity without a provider prefix (`Precip`, not `CosmosPrecip`); users write `cosmos.Precip`, so the module keeps providers apart.
 Declare `Dims` only if no reasonable selection removes one, and leave `Freq` to consumers unless the provider fixes it.
 Nodes annotate their inputs with these types, and so can users, adding facets with `Annotated[Type, Freq("D")]`.

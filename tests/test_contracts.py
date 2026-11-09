@@ -1,8 +1,8 @@
 """Checks every connector's standardised output against the shared rules.
 
 Add a connector to ``CONNECTORS`` with its `to_netcdf` function, a fixture of raw
-provider output, its `VARIABLES` contract types, and its node module, if it has one. The checks run on the netCDF
-file as read back, since that is what catena reads.
+provider output, its `VARIABLES` contract types, and its node module, if it has one.
+The checks run on the netCDF file as read back, since that is what catena reads.
 """
 
 import inspect
@@ -153,4 +153,5 @@ def test_node_inputs_match_variables(standardised):
             schema = _declared(connector.variables[param])
             conflicts = xra.declaration_conflicts(declared[param], schema)
             assert not conflicts, f"{fn.__name__}({param}): {conflicts}"
-            assert not xra.declaration_violations(ds[param], declared[param], param)
+            violations = xra.declaration_violations(ds[param], declared[param], param)
+            assert not violations, f"{fn.__name__}({param}): {violations}"
