@@ -1,24 +1,15 @@
-"""Nodes that catena finds under the config section `[cosmos]`.
+"""Nodes that catena finds under the config section `[cosmos]`."""
 
-They name their inputs after the standardised variables, so catena must read the
-standardised file with `suffix = ""`.
-"""
-
-from typing import Annotated
-
-import xarray as xr
 import xarray_annotated as xra
-from xarray_annotated import Unit
 from xarray_annotated.units import use_cf_units
+
+from ._variables import CosmosVWC, Snow
 
 use_cf_units()
 
-Percent = Annotated[xr.DataArray, Unit("%")]
-Flag = Annotated[xr.DataArray, Unit("1")]
-
 
 @xra.check_annotations
-def cosmos_vwc_snow_masked(cosmos_vwc: Percent, snow: Flag) -> Percent:
+def cosmos_vwc_snow_masked(cosmos_vwc: CosmosVWC, snow: Snow) -> CosmosVWC:
     """Daily COSMOS volumetric water content, NaN on snow days.
 
     Snow on the ground inflates the neutron signal, so on snow days COSMOS-UK

@@ -1,6 +1,6 @@
 # Adding a connector
 
-A connector downloads one provider's data, standardises it, and optionally provides catena nodes for preparing it.
+A connector downloads one provider's data, standardises it, declares what the standardised variables look like, and optionally provides catena nodes for preparing it.
 Adding one is a proposal, then a pull request.
 [CONTRIBUTING.md](https://github.com/NERC-CEH/xharvest/blob/main/CONTRIBUTING.md) covers what applies to every contribution: setting up, running the checks, and keeping pinned tools in step.
 
@@ -26,6 +26,7 @@ The [design decisions](https://github.com/NERC-CEH/xharvest/tree/main/docs/adr) 
 |---|---|---|
 | `_fetch.py` | `fetch(...) -> list[Path]`: downloads raw files to a directory, skipping any already present. | The provider's client library, through `require` |
 | `_standardise.py` | `standardise(paths) -> xr.Dataset`, and `to_netcdf(paths, out)`. | xarray |
+| `_variables.py` | One contract type per standardised variable, and `VARIABLES`, mapping each variable's name to its type. | `xarray-annotated` |
 | `nodes.py` (optional) | Contract-annotated node functions for source-specific preparation, registered in the `catena.modules` entry-point group. | `xarray-annotated`, `hamilton` |
 
 - `__init__.py` lists the public API in `__all__`; the provider page documents each name in it.
@@ -55,6 +56,15 @@ netCDF with:
 - a CF `units` attribute on every data variable, valid under `xarray_annotated.units.use_cf_units()`, and `cell_methods` where the provider says how values were aggregated;
 - the provenance attributes above.
 
+### Contract types
+
+`_variables.py` is the single source of truth for what the standardised variables look like, to catena and to anyone writing a node.
+Each type is `Annotated[xr.DataArray, ...]` with the provider's `Unit` and the `Coords` every variable carries.
+Name a type after its quantity without a provider prefix (`Precip`, not `CosmosPrecip`); users write `cosmos.Precip`, so the module keeps providers apart.
+Declare `Dims` only if no reasonable selection removes one, and leave `Freq` to consumers unless the provider fixes it.
+Nodes annotate their inputs with these types, and so can users, adding facets with `Annotated[Type, Freq("D")]`.
+`tests/test_contracts.py` checks that `VARIABLES` covers every standardised variable, that the fixtures meet it, and that no node input contradicts it.
+
 ### Errors
 
 - Raise `xharvest.errors.ProviderError` when a provider cannot be reached, rejects a request, or returns something unreadable, with the provider's own message where it gives one.
@@ -68,7 +78,7 @@ Tests must not touch the network or need credentials.
   Never hand-edit fixtures.
   Regenerated data files should be byte-identical; if they are not, the provider has revised its data.
 - Let `fetch` accept a client (as `cosmos.fetch` takes an `httpx.Client`), and test it against a mock transport serving the fixtures.
-- Add the connector to `CONNECTORS` in `tests/test_contracts.py`, which checks the standardised output and the node contracts; a test fails until you do.
+- Add the connector to `CONNECTORS` in `tests/test_contracts.py`, which checks the standardised output against `VARIABLES` and the node contracts against both; a test fails until you do.
 - Put tests that call the real API in `test_<provider>_live.py`, marked `live`; `just test-live` runs them.
 
 ### Docs

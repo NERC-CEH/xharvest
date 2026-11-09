@@ -22,14 +22,16 @@ import xarray_annotated as xra
 from xarray_annotated import Freq, Unit
 from xarray_annotated.units import use_cf_units
 
+from xharvest import cosmos
+
 use_cf_units()
 
-Percent = Annotated[xr.DataArray, Unit("%"), Freq("D")]
+DailyVWC = Annotated[cosmos.CosmosVWC, Freq("D")]
 Fraction = Annotated[xr.DataArray, Unit("m3 m-3"), Freq("D")]
 
 
 @xra.check_annotations
-def vwc_fraction(cosmos_vwc_snow_masked: Percent) -> Fraction:
+def vwc_fraction(cosmos_vwc_snow_masked: DailyVWC) -> Fraction:
     return xra.units.convert(cosmos_vwc_snow_masked, "m3 m-3")
 """
 

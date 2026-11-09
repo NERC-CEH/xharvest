@@ -131,6 +131,25 @@ Run `xharvest cosmos <command> --help` for a command's options; they mirror the 
     options:
       heading_level: 3
 
+## Contract types
+
+`xharvest.cosmos` exports a contract type for each variable in a standardised `1D` file, and `VARIABLES`, which maps each variable's name to its type.
+Annotate a node's input with one and catena checks the file against it before compute.
+Import the module rather than the names, as `from xharvest import cosmos`, and write `cosmos.Precip`: the module keeps them apart from other providers' types.
+Each declares the API's unit and the coordinates `time`, `site`, `lat` and `lon`, which one site selected with `.sel(site=...)` still carries.
+None declares a `Freq`; add one where it matters, as `Annotated[cosmos.CosmosVWC, Freq("D")]`.
+Their units need `xarray_annotated.units.use_cf_units()`.
+
+| Variable | Type | Unit |
+|---|---|---|
+| `albedo` | `Albedo` | `1` |
+| `cosmos_vwc` | `CosmosVWC` | `%` |
+| `d86_75m` | `D86Depth` | `cm` |
+| `precip` | `Precip` | `mm` |
+| `snow` | `Snow` | `1` |
+| `ta` | `AirTemperature` | `degC` |
+| `tdt3_vwc` | `TdtVWC` | `%` |
+
 ## Catena nodes
 
 catena finds these nodes under the config section `[cosmos]` once xharvest is installed.
@@ -146,7 +165,7 @@ vars = ["cosmos_vwc", "snow"]
 ```
 
 These nodes keep the API's units, and a node declaring a different unit for its input raises rather than converts.
-A node that wants another unit declares `%` and converts in its body:
+A node that wants another unit takes the contract type and converts in its body:
 
 ```python
 from typing import Annotated
@@ -156,14 +175,15 @@ import xarray_annotated as xra
 from xarray_annotated import Unit
 from xarray_annotated.units import use_cf_units
 
+from xharvest import cosmos
+
 use_cf_units()
 
-Percent = Annotated[xr.DataArray, Unit("%")]
 Fraction = Annotated[xr.DataArray, Unit("m3 m-3")]
 
 
 @xra.check_annotations
-def vwc_fraction(cosmos_vwc_snow_masked: Percent) -> Fraction:
+def vwc_fraction(cosmos_vwc_snow_masked: cosmos.CosmosVWC) -> Fraction:
     return xra.units.convert(cosmos_vwc_snow_masked, "m3 m-3")
 ```
 
