@@ -48,7 +48,6 @@ pre-commit install
 ## Dependencies and tooling
 
 - Tool versions are pinned in three places that must stay in step: `[dependency-groups] dev` in `pyproject.toml`, the revs in `.pre-commit-config.yaml`, and the `uv_build` bound in `[build-system]`.
-- conduit is pinned to a commit in `[tool.uv.sources]`; move the pin deliberately, in its own commit.
 - The project was generated from a [copier template](https://github.com/jmarshrossney/python-package-template).
   Never hand-edit `.copier-answers.yml`: to change an answer, run `copier update --vcs-ref <current _commit> --data key=value`, then resolve every conflict to the project's side.
 

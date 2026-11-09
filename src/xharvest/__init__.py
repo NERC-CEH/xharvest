@@ -2,9 +2,9 @@
 
 Each provider is a subpackage, for example `xharvest.cosmos` for COSMOS-UK.
 A connector downloads raw provider files (`fetch`) and converts them into
-standardised netCDF that conduit reads as-is (`standardise`). Some also provide
+standardised netCDF that catena reads as-is (`standardise`). Some also provide
 contract-annotated node functions for preparation specific to the source, which
-conduit finds through its `conduit.modules` entry point.
+catena finds through its `catena.modules` entry point.
 
 Third-party dependencies of each provider sit behind an install extra named after
 it, e.g. `pip install xharvest[cosmos]`.

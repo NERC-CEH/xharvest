@@ -1,29 +1,33 @@
-"""Nodes that conduit finds under the config section `[cosmos]`.
-
-They name their inputs after the standardised variables, so conduit must read the
-standardised file with `suffix = ""`.
-"""
+"""Nodes that catena finds under the config section `[cosmos]`."""
 
 from typing import Annotated
 
-import xarray as xr
-from xarray_annotated.temporal import Freq, declare_freq
-from xarray_annotated.units import Unit, declare_units, use_cf_units
+import xarray_annotated as xra
+from xarray_annotated.units import use_cf_units
+
+from ._variables import CosmosVWC, Snow
 
 use_cf_units()
 
-DailyPercent = Annotated[xr.DataArray, Unit("%"), Freq("D")]
-DailyFlag = Annotated[xr.DataArray, Unit("1"), Freq("D")]
+# NOTE: decide how to handle the 30-minute collection. These nodes take daily data
+# only, and VARIABLES covers the `1D` collection only.
+
+_DAILY = xra.Freq("D", gaps_ok=True)
+DailyVWC = Annotated[CosmosVWC, _DAILY]
+DailySnow = Annotated[Snow, _DAILY]
 
 
-@declare_units
-@declare_freq
-def cosmos_vwc_snow_masked(cosmos_vwc: DailyPercent, snow: DailyFlag) -> DailyPercent:
+@xra.check_annotations
+def cosmos_vwc_snow_masked(cosmos_vwc: DailyVWC, snow: DailySnow) -> DailyVWC:
     """Daily COSMOS volumetric water content, NaN on snow days.
 
     Snow on the ground inflates the neutron signal, so on snow days COSMOS-UK
     reports a VWC estimated from the counts before the snow. Use this node where
     only VWC derived from that day's counts will do; use `cosmos_vwc` to keep
     the estimates. Days where `snow` is missing are kept.
+
+    Declares `Freq("D", gaps_ok=True)`: masking works day by day, so a gap in the
+    time axis, left by joining files from separate periods, is fine here, but
+    sub-daily data is rejected.
     """
     return cosmos_vwc.where(snow != 1)

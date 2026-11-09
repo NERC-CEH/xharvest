@@ -44,8 +44,8 @@ def _id(path: Path) -> str:
 
 
 @pytest.mark.parametrize("path", MODULES, ids=_id)
-def test_nothing_imports_conduit(path):
-    assert "conduit" not in _imports(path)
+def test_nothing_imports_catena(path):
+    assert "catena" not in _imports(path)
 
 
 @pytest.mark.parametrize(

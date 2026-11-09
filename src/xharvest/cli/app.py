@@ -5,7 +5,7 @@ import typer
 from .cosmos import app as cosmos_app
 
 app = typer.Typer(
-    help="Download and standardise environmental data for conduit and xarray.",
+    help="Download and standardise environmental data for catena and xarray.",
     no_args_is_help=True,
 )
 app.add_typer(cosmos_app, name="cosmos")

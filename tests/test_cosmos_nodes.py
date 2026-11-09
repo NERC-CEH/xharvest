@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from xarray_annotated.temporal import FreqError
 
 from xharvest.cosmos import standardise
 from xharvest.cosmos.nodes import cosmos_vwc_snow_masked
@@ -22,3 +23,18 @@ def test_keeps_days_with_missing_snow(cosmos_raw):
     assert masked.isel(time=0).item() == pytest.approx(
         ds.cosmos_vwc.isel(time=0).item()
     )
+
+
+def test_accepts_a_gap_in_the_time_axis(cosmos_raw):
+    ds = standardise(cosmos_raw).sel(site="MOORH").isel(time=[0, 1, 2, 8, 9, 10])
+    masked = cosmos_vwc_snow_masked(ds.cosmos_vwc, ds.snow)
+    assert masked.time.equals(ds.time)
+
+
+def test_rejects_sub_daily_data(cosmos_raw):
+    ds = standardise(cosmos_raw).sel(site="MOORH").isel(time=[0, 1, 2])
+    ds = ds.assign_coords(
+        time=ds.time.values[0] + np.arange(3) * np.timedelta64(30, "m")
+    )
+    with pytest.raises(FreqError):
+        cosmos_vwc_snow_masked(ds.cosmos_vwc, ds.snow)

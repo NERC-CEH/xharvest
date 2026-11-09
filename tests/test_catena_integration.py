@@ -1,7 +1,7 @@
-"""Run a small conduit pipeline over standardised COSMOS-UK data.
+"""Run a small catena pipeline over standardised COSMOS-UK data.
 
-This is the only test that needs conduit. It checks that conduit reads the
-standardised file as-is, finds the node module through the ``conduit.modules``
+This is the only test that needs catena. It checks that catena reads the
+standardised file as-is, finds the node module through the ``catena.modules``
 entry point, and passes the whole-DAG contract check.
 """
 
@@ -10,7 +10,7 @@ import textwrap
 import numpy as np
 import pytest
 
-conduit = pytest.importorskip("conduit")
+catena = pytest.importorskip("catena")
 
 from xharvest.cosmos import standardise, to_netcdf  # noqa: E402
 
@@ -18,18 +18,21 @@ CONSUMER = """
 from typing import Annotated
 
 import xarray as xr
-from xarray_annotated.temporal import Freq, declare_freq
-from xarray_annotated.units import Unit, declare_units, use_cf_units
+import xarray_annotated as xra
+from xarray_annotated import Freq, Unit
+from xarray_annotated.units import use_cf_units
+
+from xharvest import cosmos
 
 use_cf_units()
 
+DailyVWC = Annotated[cosmos.CosmosVWC, Freq("D")]
 Fraction = Annotated[xr.DataArray, Unit("m3 m-3"), Freq("D")]
 
 
-@declare_units
-@declare_freq
-def vwc_fraction(cosmos_vwc_snow_masked: Fraction) -> Fraction:
-    return cosmos_vwc_snow_masked
+@xra.check_annotations
+def vwc_fraction(cosmos_vwc_snow_masked: DailyVWC) -> Fraction:
+    return xra.units.convert(cosmos_vwc_snow_masked, "m3 m-3")
 """
 
 CONFIG = """
@@ -60,14 +63,14 @@ def config(cosmos_raw, tmp_path):
 
 
 def test_dry_run_finds_the_registered_module(config):
-    report = conduit.dry_run(config)
+    report = catena.dry_run(config)
     detail = report.stages[0].detail
     assert "[cosmos] provided by xharvest" in detail
     assert "xharvest.cosmos.nodes" in detail
 
 
 def test_run(config, cosmos_raw):
-    report = conduit.run(config)
+    report = catena.run(config)
     result = report.outputs["result"]
     expected = standardise(cosmos_raw)
     masked = expected.cosmos_vwc.where(expected.snow != 1)

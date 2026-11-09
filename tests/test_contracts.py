@@ -1,8 +1,8 @@
 """Checks every connector's standardised output against the shared rules.
 
 Add a connector to ``CONNECTORS`` with its `to_netcdf` function, a fixture of raw
-provider output, and its node module, if it has one. The checks run on the netCDF
-file as read back, since that is what conduit reads.
+provider output, its `VARIABLES` contract types, and its node module, if it has one.
+The checks run on the netCDF file as read back, since that is what catena reads.
 """
 
 import inspect
@@ -14,13 +14,8 @@ from typing import Any
 import numpy as np
 import pytest
 import xarray as xr
-from xarray_annotated.temporal import check_freq, freq_from_signature
-from xarray_annotated.units import (
-    assert_valid_unit,
-    units_compatible,
-    units_from_signature,
-    use_cf_units,
-)
+import xarray_annotated as xra
+from xarray_annotated.units import assert_valid_unit, use_cf_units
 
 from xharvest import cosmos
 from xharvest.cosmos import nodes as cosmos_nodes
@@ -32,11 +27,12 @@ class Connector:
     name: str
     to_netcdf: Any
     fixture: str
+    variables: dict[str, Any]
     nodes: ModuleType | None
 
 
 CONNECTORS = [
-    Connector("cosmos", cosmos.to_netcdf, "cosmos_raw", cosmos_nodes),
+    Connector("cosmos", cosmos.to_netcdf, "cosmos_raw", cosmos.VARIABLES, cosmos_nodes),
 ]
 
 SRC = Path(__file__).parents[1] / "src" / "xharvest"
@@ -71,6 +67,12 @@ def _node_functions(module: ModuleType):
         for name, fn in inspect.getmembers(module, inspect.isfunction)
         if fn.__module__ == module.__name__ and not name.startswith("_")
     ]
+
+
+def _declared(hint: Any) -> xra.Declared:
+    declared = xra.declaration_from_hint(hint)
+    assert declared is not None, f"{hint} declares no contract"
+    return declared
 
 
 def test_one_datetime_dimension(standardised):
@@ -115,7 +117,23 @@ def test_provenance_attributes(standardised):
         assert ds.attrs.get(attr), attr
 
 
-def test_node_inputs_match_standardised_output(standardised):
+def test_variables_declares_every_standardised_variable(standardised):
+    connector, ds = standardised
+    assert set(connector.variables) == set(ds.data_vars)
+
+
+def test_standardised_output_meets_variables(standardised):
+    use_cf_units()
+    connector, ds = standardised
+    violations = [
+        violation
+        for name, hint in connector.variables.items()
+        for violation in xra.declaration_violations(ds[name], _declared(hint), name)
+    ]
+    assert not violations
+
+
+def test_node_inputs_match_variables(standardised):
     use_cf_units()
     connector, ds = standardised
     if connector.nodes is None:
@@ -124,18 +142,16 @@ def test_node_inputs_match_standardised_output(standardised):
     assert functions
     nodes = {fn.__name__ for fn in functions}
     for fn in functions:
-        units, _ = units_from_signature(fn)
-        freqs, _ = freq_from_signature(fn)
+        declared, _ = xra.declarations_from_signature(fn)
         for param in inspect.signature(fn).parameters:
             assert param in ds or param in nodes, (
                 f"{fn.__name__}({param}): neither a standardised variable nor a node"
             )
-            if param not in ds:
+            if param in nodes:
                 continue
-            if param in units:
-                assert units_compatible(ds[param].attrs["units"], units[param]), (
-                    f"{fn.__name__}({param}): {ds[param].attrs['units']} vs "
-                    f"{units[param]}"
-                )
-            if param in freqs:
-                check_freq(ds[param], freqs[param], param, on_mismatch="error")
+            assert param in declared, f"{fn.__name__}({param}) declares no contract"
+            schema = _declared(connector.variables[param])
+            conflicts = xra.declaration_conflicts(declared[param], schema)
+            assert not conflicts, f"{fn.__name__}({param}): {conflicts}"
+            violations = xra.declaration_violations(ds[param], declared[param], param)
+            assert not violations, f"{fn.__name__}({param}): {violations}"

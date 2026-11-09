@@ -1,6 +1,6 @@
 # Adding a connector
 
-A connector downloads one provider's data, standardises it, and optionally provides conduit nodes for preparing it.
+A connector downloads one provider's data, standardises it, declares what the standardised variables look like, and optionally provides catena nodes for preparing it.
 Adding one is a proposal, then a pull request.
 [CONTRIBUTING.md](https://github.com/NERC-CEH/xharvest/blob/main/CONTRIBUTING.md) covers what applies to every contribution: setting up, running the checks, and keeping pinned tools in step.
 
@@ -26,7 +26,8 @@ The [design decisions](https://github.com/NERC-CEH/xharvest/tree/main/docs/adr) 
 |---|---|---|
 | `_fetch.py` | `fetch(...) -> list[Path]`: downloads raw files to a directory, skipping any already present. | The provider's client library, through `require` |
 | `_standardise.py` | `standardise(paths) -> xr.Dataset`, and `to_netcdf(paths, out)`. | xarray |
-| `nodes.py` (optional) | Contract-annotated node functions for source-specific preparation, registered in the `conduit.modules` entry-point group. | `xarray-annotated`, `hamilton` |
+| `_variables.py` | One contract type per standardised variable, and `VARIABLES`, mapping each variable's name to its type. | `xarray-annotated` |
+| `nodes.py` (optional) | Contract-annotated node functions for source-specific preparation, registered in the `catena.modules` entry-point group. | `xarray-annotated`, `hamilton` |
 
 - `__init__.py` lists the public API in `__all__`; the provider page documents each name in it.
 - The CLI command group in `cli/` calls these functions and adds nothing the Python API cannot do.
@@ -51,9 +52,19 @@ netCDF with:
 
 - named dimensions, and at most one time dimension, whose coordinate is `datetime64`, in UTC;
 - a `time_bounds` coordinate (`time` carries `bounds = "time_bounds"`) whenever values aggregate over a period, because providers differ on whether a stamp marks its period's start or end;
-- fill values decoded to NaN, and scale factors applied, but units left as the provider gives them: unit conversion is conduit's job;
+- fill values decoded to NaN, and scale factors applied, but units left as the provider gives them: unit conversion is the consuming node's job;
 - a CF `units` attribute on every data variable, valid under `xarray_annotated.units.use_cf_units()`, and `cell_methods` where the provider says how values were aggregated;
 - the provenance attributes above.
+
+### Contract types
+
+`_variables.py` is the single source of truth for what the standardised variables look like, to catena and to anyone writing a node.
+Each type is `Annotated[xr.DataArray, ...]` with the provider's `Unit` and the `Coords` every variable carries.
+Types with the same unit and coordinates are the same object, since `typing.Annotated` treats equal metadata as equal types, so a name documents intent but does not tell variables apart; `VARIABLES` is what pairs each variable with its contract.
+Name a type after its quantity without a provider prefix (`Precip`, not `CosmosPrecip`); users write `cosmos.Precip`, so the module keeps providers apart.
+Declare `Dims` only if no reasonable selection removes one, and leave `Freq` to consumers unless the provider fixes it.
+Nodes annotate their inputs with these types, and so can users, adding facets with `Annotated[Type, Freq("D")]`.
+`tests/test_contracts.py` checks that `VARIABLES` covers every standardised variable, that the fixtures meet it, and that no node input contradicts it.
 
 ### Errors
 
@@ -68,7 +79,7 @@ Tests must not touch the network or need credentials.
   Never hand-edit fixtures.
   Regenerated data files should be byte-identical; if they are not, the provider has revised its data.
 - Let `fetch` accept a client (as `cosmos.fetch` takes an `httpx.Client`), and test it against a mock transport serving the fixtures.
-- Add the connector to `CONNECTORS` in `tests/test_contracts.py`, which checks the standardised output and the node contracts; a test fails until you do.
+- Add the connector to `CONNECTORS` in `tests/test_contracts.py`, which checks the standardised output against `VARIABLES` and the node contracts against both; a test fails until you do.
 - Put tests that call the real API in `test_<provider>_live.py`, marked `live`; `just test-live` runs them.
 
 ### Docs
