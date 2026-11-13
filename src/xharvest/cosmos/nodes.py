@@ -9,8 +9,7 @@ from ._variables import CosmosVWC, Snow
 
 use_cf_units()
 
-# NOTE: decide how to handle the 30-minute collection. These nodes take daily data
-# only, and VARIABLES covers the `1D` collection only.
+# Daily data only; the 30-minute collection is deferred to NERC-CEH/xharvest#8.
 
 _DAILY = xra.Freq("D", gaps_ok=True)
 DailyVWC = Annotated[CosmosVWC, _DAILY]
