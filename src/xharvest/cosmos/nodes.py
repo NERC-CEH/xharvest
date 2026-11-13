@@ -1,22 +1,27 @@
-"""Nodes that catena finds under the config section `[cosmos]`."""
+"""Nodes that catena finds under the config section `[cosmos]`.
+
+Each node takes the suffix set by `cosmos_suffix` in that section, which should
+match the `suffix` of the input section that loads the COSMOS-UK file.
+"""
 
 from typing import Annotated
 
 import xarray_annotated as xra
 from xarray_annotated.units import use_cf_units
 
+from .._suffix import follows_suffix
 from ._variables import CosmosVWC, Snow
 
 use_cf_units()
 
-# NOTE: decide how to handle the 30-minute collection. These nodes take daily data
-# only, and VARIABLES covers the `1D` collection only.
+# Daily data only; the 30-minute collection is deferred to NERC-CEH/xharvest#8.
 
 _DAILY = xra.Freq("D", gaps_ok=True)
 DailyVWC = Annotated[CosmosVWC, _DAILY]
 DailySnow = Annotated[Snow, _DAILY]
 
 
+@follows_suffix("cosmos_suffix")
 @xra.check_annotations
 def cosmos_vwc_snow_masked(cosmos_vwc: DailyVWC, snow: DailySnow) -> DailyVWC:
     """Daily COSMOS volumetric water content, NaN on snow days.
