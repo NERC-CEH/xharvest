@@ -154,7 +154,7 @@ Their units need `xarray_annotated.units.use_cf_units()`.
 ## Catena nodes
 
 catena finds these nodes under the config section `[cosmos]` once xharvest is installed.
-They name their inputs after the standardised variables, so read the standardised file with `suffix = ""`:
+They name their inputs after the standardised variables, so a file read with `suffix = ""` needs nothing more:
 
 ```toml
 [inputs.cosmos]
@@ -164,6 +164,22 @@ vars = ["cosmos_vwc", "snow"]
 
 [cosmos]
 ```
+
+To keep COSMOS-UK variables apart from another provider's, give the input section a suffix and set the same one as `cosmos_suffix`.
+Every node then reads and produces names with that suffix, so `cosmos_vwc_snow_masked` becomes `cosmos_vwc_snow_masked_cosmos`, reading `cosmos_vwc_cosmos` and `snow_cosmos`:
+
+```toml
+[inputs.cosmos]
+path = "data/cosmos.nc"
+suffix = "_cosmos"
+vars = ["cosmos_vwc", "snow"]
+
+[cosmos]
+cosmos_suffix = "_cosmos"
+```
+
+Leaving out `suffix` gives the same result, since catena's default suffix is `_<label>`.
+If the two disagree, the build fails on an unbound input.
 
 These nodes keep the API's units, and a node declaring a different unit for its input raises rather than converts.
 A node that wants another unit takes the contract type and converts in its body:
