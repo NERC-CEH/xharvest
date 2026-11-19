@@ -103,7 +103,9 @@ def test_bad_dates_are_rejected(mock_api, tmp_path):
 
 
 def test_unknown_collection_lists_the_choices(mock_api):
-    result = runner.invoke(app, ["cosmos", "sites", "--collection", "1H"])
+    # Widen the terminal so Rich does not wrap the choices across lines.
+    args = ["cosmos", "sites", "--collection", "1H"]
+    result = runner.invoke(app, args, env={"COLUMNS": "200"})
     assert result.exit_code == 2
     # Typer styles its output when GITHUB_ACTIONS is set, so compare plain text.
     assert "'1D', '30M'" in unstyle(result.output)

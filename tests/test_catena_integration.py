@@ -125,7 +125,10 @@ def test_a_suffix_mismatch_fails_the_build(cosmos_raw, tmp_path):
         )
     )
     with (
-        pytest.raises(catena.errors.CatenaValueError, match="unbound"),
+        pytest.raises(
+            catena.errors.CatenaValueError,
+            match="Required input cosmos_vwc not provided",
+        ),
         pytest.warns(UserWarning, match="consumed by no node"),
     ):
         catena.run(config)
