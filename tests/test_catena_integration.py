@@ -84,3 +84,48 @@ def test_run(config, cosmos_raw):
     )
     assert result.vwc_fraction.attrs["units"] == "m3 m-3"
     assert (config.parent / "result.nc").exists()
+
+
+SUFFIXED = """
+[inputs.cosmos]
+path = "cosmos.nc"
+vars = ["cosmos_vwc", "snow"]
+
+[cosmos]
+cosmos_suffix = "_cosmos"
+
+[outputs.result]
+path = "result.nc"
+suffix = ""
+vars = ["cosmos_vwc_snow_masked_cosmos"]
+"""
+
+
+def test_nodes_follow_the_default_input_suffix(cosmos_raw, tmp_path):
+    # With no `suffix`, catena loads `snow` as `snow_cosmos`, after the label.
+    to_netcdf(cosmos_raw, tmp_path / "cosmos.nc")
+    config = tmp_path / "pipeline.toml"
+    config.write_text(SUFFIXED)
+    result = catena.run(config).outputs["result"]
+    expected = standardise(cosmos_raw)
+    masked = expected.cosmos_vwc.where(expected.snow != 1)
+    np.testing.assert_allclose(
+        result.cosmos_vwc_snow_masked_cosmos,
+        masked.transpose(*result.cosmos_vwc_snow_masked_cosmos.dims),
+    )
+
+
+def test_a_suffix_mismatch_fails_the_build(cosmos_raw, tmp_path):
+    # Without `cosmos_suffix` the node reads bare names, which nothing loads.
+    to_netcdf(cosmos_raw, tmp_path / "cosmos.nc")
+    config = tmp_path / "pipeline.toml"
+    config.write_text(
+        SUFFIXED.replace('cosmos_suffix = "_cosmos"', "").replace(
+            '"cosmos_vwc_snow_masked_cosmos"', '"cosmos_vwc_snow_masked"'
+        )
+    )
+    with (
+        pytest.raises(catena.errors.CatenaValueError, match="unbound"),
+        pytest.warns(UserWarning, match="consumed by no node"),
+    ):
+        catena.run(config)

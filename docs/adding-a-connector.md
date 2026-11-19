@@ -66,6 +66,13 @@ Declare `Dims` only if no reasonable selection removes one, and leave `Freq` to 
 Nodes annotate their inputs with these types, and so can users, adding facets with `Annotated[Type, Freq("D")]`.
 `tests/test_contracts.py` checks that `VARIABLES` covers every standardised variable, that the fixtures meet it, and that no node input contradicts it.
 
+### Nodes
+
+Name a node's data parameters after the standardised variables they read, and give the node a name that carries the provider, as `cosmos_vwc_snow_masked` does.
+Decorate every node with `xharvest._suffix.follows_suffix("<provider>_suffix")`, outermost, so a config can give the node and its inputs the suffix the input section uses; this is how two providers' files with a variable in common stay apart.
+Make settings keyword-only; they keep their names.
+`tests/test_contracts.py` fails for any node that does not take the suffix.
+
 ### Errors
 
 - Raise `xharvest.errors.ProviderError` when a provider cannot be reached, rejects a request, or returns something unreadable, with the provider's own message where it gives one.
