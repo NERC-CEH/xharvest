@@ -158,6 +158,10 @@ show_source = false
 show_symbol_type_heading = true
 show_symbol_type_toc = true
 
+# Opens each standardisation node's docs with its `action` tag (ADR 2).
+[[project.plugins.mkdocstrings.handlers.python.options.extensions]]
+"docs_tools/actions.py" = { }
+
 # mkdocs-typer2: renders the CLI reference on each provider page.
 [project.markdown_extensions."mkdocs_typer2.markdown:makeExtension"]
 pretty = false

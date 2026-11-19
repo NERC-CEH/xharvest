@@ -21,3 +21,6 @@ tmp/
 
 # OS
 .DS_Store
+
+# Rendered at docs build time by `just graphs`
+docs/providers/_graphs/

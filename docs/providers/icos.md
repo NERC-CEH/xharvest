@@ -79,38 +79,29 @@ The result has dims `(time, site, depth)`:
 ### What standardise changes
 
 `fetch` changes nothing: it picks each site's current archive, checks it against the portal's SHA-256, and saves it as served.
-Everything else happens when `standardise` reads the archives.
+`standardise` runs the graph below, from the archive paths to the dataset.
+Each node does one thing; its colour says what kind of thing, and its entry under [Standardisation nodes](#standardisation-nodes) says what and why.
 
-Reading each archive:
+![The ICOS standardisation graph](_graphs/icos.svg)
 
-1. Text is decoded as UTF-8, or as Latin-1 where that fails.
-2. Every `-9999` becomes NaN.
-3. Each row's local date becomes `time`, the UTC start of that day: the date minus the archive's `UTC_OFFSET`.
-4. Site metadata must have exactly one header, location, UTC offset, land-cover class and ONEFlux product entry, or reading raises.
-5. Each soil sensor's depth is the negative of its `VAR_INFO_HEIGHT`, rounded to 0.1 mm; two sensors of one variable at the same depth, or a sensor whose depth changes within the record, raise.
-
-Building the dataset:
-
-1. Only the variables listed under [Standardise](#standardise) are kept.
-2. Unit strings are renamed to CF, with the original kept in `provider_units`; a variable whose renamed unit is not the one expected for it raises.
-3. Every `_QC` gets unit `1` and a description written by xharvest, and raises if a value lies outside 0-1 (see [Quality flags](#quality-flags)).
-4. Numbered soil columns are stacked on `depth`.
-5. Sites are joined on `time` and `depth`, NaN-padded; a variable a site lacks is NaN there.
-6. Archives of one site from different releases are merged, and must agree where they overlap; sites with different UTC offsets are refused.
-7. Each variable's `description` is the archive's definition; `cell_methods = "time: mean"` is added where the data were checked to be daily means (see [Daily aggregation](#daily-aggregation)).
-8. `time_bounds`, site coordinates and the provenance attributes are added.
+| Action | Meaning |
+|---|---|
+| `reads` | parses provider files without changing what they say |
+| `selects` | keeps some of what was read and drops the rest |
+| `checks` | raises if the data break an expectation, else passes them on |
+| `decodes` | changes values as the provider specifies |
+| `reshapes` | rearranges values without changing them |
+| `annotates` | adds or rewrites attributes and coordinates, not values |
+| `interprets` | a judgement the provider does not state |
 
 Nothing converts units, filters on quality flags, or fills gaps.
 Gap-filled values come from ONEFlux, upstream; the `_QC` fractions say how much of each day was filled.
 
 !!! note "Judgement calls"
 
-    These choices are xharvest's, not the provider's, and could reasonably go the other way.
-
-    - **Descriptions come from one archive.** Where several archives describe a variable, `description` is the first one's, in path order; for a soil profile, the shallowest sensor's. If networks word a definition differently, the other wordings are not kept.
-    - **A variable's first metadata entry is kept.** The archive gives a variable one entry per period of its sensor metadata. Reading keeps the first and raises only if the unit, or a soil sensor's depth, changes later. Other changes, such as a new radiometer, pass without note: UK-AMo's `SW_IN_F` has several entries.
-    - **`cell_methods` rests on checks at two sites.** "Time: mean" is added because every variable that carries it matched the mean of its half-hours at UK-Cvn and ES-Dnn, not because the archive says so: the archive's definitions are wrong for `LE_CORR` and `H_CORR`.
-    - **Quality flags are described from their values, not the archive.** Every `_QC` is taken to be a 0-1 fraction because the values are, even where the archive labels one as its parent variable.
+    The nodes tagged `interprets` make choices that are xharvest's, not the provider's, and could reasonably go the other way:
+    [`variables`](#xharvest._fluxnet.variables), [`descriptions`](#xharvest.icos._pipeline.descriptions), [`flag_attributes`](#xharvest.icos._pipeline.flag_attributes) and [`cell_methods`](#xharvest.icos._pipeline.cell_methods).
+    Each one's entry says what it decides and why.
 
 ## About the data
 
@@ -237,6 +228,25 @@ Run `xharvest icos <command> --help` for a command's options; they mirror the Py
 ::: xharvest.icos.to_netcdf
     options:
       heading_level: 3
+
+## Standardisation nodes
+
+The nodes of the graph above, in the order their modules define them.
+The FLUXNET reader is shared with other FLUXNET hubs; the rest are specific to this connector.
+
+::: xharvest._fluxnet
+    options:
+      heading_level: 3
+      show_root_heading: true
+      members_order: source
+      filters: ["!^_", "!^FILL_VALUE$"]
+
+::: xharvest.icos._pipeline
+    options:
+      heading_level: 3
+      show_root_heading: true
+      members_order: source
+      filters: ["!^_", "!^QC_DESCRIPTION$", "!^TITLE$"]
 
 ## Contract types
 
