@@ -5,6 +5,7 @@ Download environmental data from its providers, and standardise it into netCDF t
 | Provider | Extra | Credentials |
 |---|---|---|
 | COSMOS-UK soil moisture and meteorology | `cosmos` | None |
+| FLUXNET daily fluxes and meteorology, from the ICOS Carbon Portal | `icos` | None |
 
 ## Installation
 

@@ -111,3 +111,51 @@ def test_unknown_collection_lists_the_choices(mock_api):
     assert "'1D', '30M'" in unstyle(result.output)
     help_text = runner.invoke(app, ["cosmos", "sites", "--help"]).output
     assert "1D|30M" in unstyle(help_text)
+
+
+@pytest.fixture
+def mock_portal(monkeypatch, icos_portal):
+    from xharvest.icos import _fetch as icos_fetch
+
+    client = icos_portal.client()
+    monkeypatch.setattr(icos_fetch, "_client", lambda _: nullcontext(client))
+    return icos_portal
+
+
+def test_icos_sites(mock_portal):
+    result = runner.invoke(app, ["icos", "sites"])
+    assert result.exit_code == 0, result.output
+    assert (
+        "UK-Cvn\tCoveney\t52.43339\t0.16218\tEUF_UK-Cvn_FLUXNET_2023-2024_v1.3_r1.zip"
+        in result.output
+    )
+
+
+def test_icos_fetch_then_standardise(mock_portal, tmp_path):
+    raw = tmp_path / "raw"
+    result = runner.invoke(
+        app, ["icos", "fetch", "UK-Cvn", "UK-Ags", "--out", str(raw)]
+    )
+    assert result.exit_code == 0, result.output
+    assert len(result.output.splitlines()) == 2
+
+    out = tmp_path / "icos.nc"
+    files = [str(p) for p in raw.iterdir()]
+    result = runner.invoke(app, ["icos", "standardise", *files, "--out", str(out)])
+    assert result.exit_code == 0, result.output
+    with xr.open_dataset(out) as ds:
+        assert set(ds.site.values) == {"UK-Cvn", "UK-Ags"}
+
+
+@pytest.mark.parametrize(
+    "args",
+    [
+        ["fetch", "UK-Xyz", "--out", "x"],
+        ["standardise", "missing.zip", "--out", "x.nc"],
+    ],
+)
+def test_icos_errors_exit_cleanly(mock_portal, tmp_path, monkeypatch, args):
+    monkeypatch.chdir(tmp_path)
+    result = runner.invoke(app, ["icos", *args])
+    assert result.exit_code == 1
+    assert result.output.startswith("Error: ")

@@ -19,7 +19,7 @@ from hamilton import driver, node
 from hamilton.settings import ENABLE_POWER_USER_MODE
 from xarray_annotated.units import assert_valid_unit, use_cf_units
 
-from xharvest import cosmos
+from xharvest import cosmos, icos
 from xharvest.cosmos import nodes as cosmos_nodes
 from xharvest.provenance import PROVENANCE_ATTRS
 
@@ -35,6 +35,7 @@ class Connector:
 
 CONNECTORS = [
     Connector("cosmos", cosmos.to_netcdf, "cosmos_raw", cosmos.VARIABLES, cosmos_nodes),
+    Connector("icos", icos.to_netcdf, "icos_raw", icos.VARIABLES, None),
 ]
 
 SRC = Path(__file__).parents[1] / "src" / "xharvest"

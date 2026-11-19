@@ -1,0 +1,114 @@
+{
+ "head": {
+  "vars": [
+   "dobj",
+   "fileName",
+   "sha256",
+   "siteId",
+   "siteName",
+   "lat",
+   "lon",
+   "timeStart",
+   "timeEnd",
+   "citation"
+  ]
+ },
+ "results": {
+  "bindings": [
+   {
+    "siteId": {
+     "type": "literal",
+     "value": "UK-Ags"
+    },
+    "dobj": {
+     "type": "uri",
+     "value": "https://meta.icos-cp.eu/objects/1ZUP9SKUkeaLUfCFH8xeYoi4"
+    },
+    "sha256": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#base64Binary",
+     "type": "literal",
+     "value": "1ZUP9SKUkeaLUfCFH8xeYoi4ZqeIbQ8BwgVcMketP5k"
+    },
+    "siteName": {
+     "type": "literal",
+     "value": "Anglesey"
+    },
+    "lat": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#double",
+     "type": "literal",
+     "value": "53.3097"
+    },
+    "lon": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#double",
+     "type": "literal",
+     "value": "-4.30044"
+    },
+    "citation": {
+     "type": "literal",
+     "value": "Crabtree, D.E., D'Acunha, B., Evans, C., Morrison, R., Riutta, T., van den Berg, M. (2026). Fluxnet Archive Product from Anglesey, 2023\u20132025, FLUXNET, https://hdl.handle.net/11676/1ZUP9SKUkeaLUfCFH8xeYoi4"
+    },
+    "fileName": {
+     "type": "literal",
+     "value": "EUF_UK-Ags_FLUXNET_2023-2025_v1.3_r1.zip"
+    },
+    "timeStart": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "2023-01-01T00:00:00Z"
+    },
+    "timeEnd": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "2026-01-01T00:00:00Z"
+    }
+   },
+   {
+    "siteId": {
+     "type": "literal",
+     "value": "UK-Cvn"
+    },
+    "dobj": {
+     "type": "uri",
+     "value": "https://meta.icos-cp.eu/objects/37X3GrWRM7AEcdIt8WRasg1l"
+    },
+    "sha256": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#base64Binary",
+     "type": "literal",
+     "value": "37X3GrWRM7AEcdIt8WRasg1l6quY2MYbdnrZ9Kh3EfY"
+    },
+    "siteName": {
+     "type": "literal",
+     "value": "Coveney"
+    },
+    "lat": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#double",
+     "type": "literal",
+     "value": "52.43339"
+    },
+    "lon": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#double",
+     "type": "literal",
+     "value": "0.162177"
+    },
+    "citation": {
+     "type": "literal",
+     "value": "D'Acunha, B., Evans, C., Morrison, R., Riutta, T., Shuckburgh, E., van den Berg, M. (2026). Fluxnet Archive Product from Coveney, 2023\u20132024, FLUXNET, https://hdl.handle.net/11676/37X3GrWRM7AEcdIt8WRasg1l"
+    },
+    "fileName": {
+     "type": "literal",
+     "value": "EUF_UK-Cvn_FLUXNET_2023-2024_v1.3_r1.zip"
+    },
+    "timeStart": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "2023-01-01T00:00:00Z"
+    },
+    "timeEnd": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "2025-01-01T00:00:00Z"
+    }
+   }
+  ]
+ }
+}

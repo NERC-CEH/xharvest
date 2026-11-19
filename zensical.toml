@@ -25,6 +25,7 @@ nav = [
   { "Adding a connector" = "adding-a-connector.md" },
   { "Providers" = [
     { "COSMOS-UK" = "providers/cosmos-uk.md" },
+    { "ICOS (FLUXNET)" = "providers/icos.md" },
   ] },
 ]
 

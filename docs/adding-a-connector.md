@@ -32,6 +32,7 @@ The [design decisions](https://github.com/NERC-CEH/xharvest/tree/main/docs/adr) 
 - `__init__.py` lists the public API in `__all__`; the provider page documents each name in it.
 - The CLI command group in `cli/` calls these functions and adds nothing the Python API cannot do.
 - `tests/test_layout.py` enforces the import rules in the table.
+- A reader for a file format several providers share goes in a private top-level module, as `xharvest._fluxnet` does for FLUXNET archives, so each provider's connector reuses it.
 
 ### Dependencies
 
@@ -54,6 +55,7 @@ netCDF with:
 - a `time_bounds` coordinate (`time` carries `bounds = "time_bounds"`) whenever values aggregate over a period, because providers differ on whether a stamp marks its period's start or end;
 - fill values decoded to NaN, and scale factors applied, but units left as the provider gives them: unit conversion is the consuming node's job;
 - a CF `units` attribute on every data variable, valid under `xarray_annotated.units.use_cf_units()`, and `cell_methods` where the provider says how values were aggregated;
+- a provider's unit string that is not valid CF rewritten as the same unit in CF (`deg C` as `degC`), with the original kept in a `provider_units` attribute: this is renaming, not conversion, and a string with no known CF equivalent raises `ProviderError` rather than passing through;
 - the provenance attributes above.
 
 ### Contract types
@@ -77,6 +79,7 @@ Make settings keyword-only; they keep their names.
 
 - Raise `xharvest.errors.ProviderError` when a provider cannot be reached, rejects a request, or returns something unreadable, with the provider's own message where it gives one.
 - Re-raise the client library's transport errors (e.g. `httpx.TransportError`) as `ProviderError`, so callers handle one exception.
+- Where the provider publishes a checksum, verify each download against it and raise `ProviderError` on a mismatch, as `icos.fetch` does.
 
 ### Tests
 
@@ -85,9 +88,11 @@ Tests must not touch the network or need credentials.
 - Commit a few days of real raw output under `tests/fixtures/<provider>/`, trimmed to what the tests need, with a `make_fixtures.py` that regenerates it.
   Never hand-edit fixtures.
   Regenerated data files should be byte-identical; if they are not, the provider has revised its data.
+  Where the provider serves only large files, as ICOS serves whole-site archives, `make_fixtures.py` fetches one with the connector and writes a trimmed copy under the same name, keeping the real sidecar.
 - Let `fetch` accept a client (as `cosmos.fetch` takes an `httpx.Client`), and test it against a mock transport serving the fixtures.
 - Add the connector to `CONNECTORS` in `tests/test_contracts.py`, which checks the standardised output against `VARIABLES` and the node contracts against both; a test fails until you do.
 - Put tests that call the real API in `test_<provider>_live.py`, marked `live`; `just test-live` runs them.
+  Where practical, include the checks behind the provider page's claims about the data, so a new release re-checks them.
 
 ### Docs
 

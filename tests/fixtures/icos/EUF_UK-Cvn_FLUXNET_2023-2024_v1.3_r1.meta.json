@@ -1,0 +1,14 @@
+{
+  "url": "https://data.icos-cp.eu/objects/37X3GrWRM7AEcdIt8WRasg1l",
+  "params": {},
+  "retrieved": "2026-11-19T15:13:29Z",
+  "agent": "xharvest 0.2.0.dev1",
+  "metadata": {
+    "site_id": "UK-Cvn",
+    "site_name": "Coveney",
+    "object": "https://meta.icos-cp.eu/objects/37X3GrWRM7AEcdIt8WRasg1l",
+    "pid": "https://hdl.handle.net/11676/37X3GrWRM7AEcdIt8WRasg1l",
+    "sha256": "37X3GrWRM7AEcdIt8WRasg1l6quY2MYbdnrZ9Kh3EfY",
+    "citation": "D'Acunha, B., Evans, C., Morrison, R., Riutta, T., Shuckburgh, E., van den Berg, M. (2026). Fluxnet Archive Product from Coveney, 2023\u20132024, FLUXNET, https://hdl.handle.net/11676/37X3GrWRM7AEcdIt8WRasg1l"
+  }
+}

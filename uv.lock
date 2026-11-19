@@ -1748,6 +1748,9 @@ all = [
 cosmos = [
     { name = "httpx" },
 ]
+icos = [
+    { name = "httpx" },
+]
 
 [package.dev-dependencies]
 dev = [
@@ -1780,14 +1783,15 @@ test = [
 [package.metadata]
 requires-dist = [
     { name = "httpx", marker = "extra == 'cosmos'", specifier = ">=0.28.1" },
+    { name = "httpx", marker = "extra == 'icos'", specifier = ">=0.28.1" },
     { name = "netcdf4", specifier = ">=1.7.4" },
     { name = "numpy", specifier = ">=2.4.2" },
     { name = "typer", specifier = ">=0.24.1" },
     { name = "xarray", specifier = ">=2026.2.0" },
     { name = "xarray-annotated", extras = ["cf"], specifier = ">=0.9.0rc1" },
-    { name = "xharvest", extras = ["cosmos"], marker = "extra == 'all'" },
+    { name = "xharvest", extras = ["cosmos", "icos"], marker = "extra == 'all'" },
 ]
-provides-extras = ["cosmos", "all"]
+provides-extras = ["cosmos", "icos", "all"]
 
 [package.metadata.requires-dev]
 dev = [
