@@ -65,6 +65,7 @@ def test_style_fills_nodes_by_action(nodes):
     class Node:
         def __init__(self, action):
             self.tags = {"action": action}
+            self.originating_functions = ()
 
     style, node_class, legend = _graph._style(
         node=Node("interprets"), node_class="function"
@@ -82,10 +83,21 @@ def test_run_raises_the_node_error_quietly(caplog):
     assert not logging.getLogger("hamilton.driver").disabled
 
 
-@pytest.mark.skipif(shutil.which("dot") is None, reason="needs Graphviz's dot")
-def test_render_writes_svg(tmp_path):
+def test_digraph_links_each_node_to_its_entry_with_a_tooltip(nodes):
     pytest.importorskip("graphviz")
-    _graph.render(icos_standardise.MODULES, tmp_path / "icos.svg")
-    svg = (tmp_path / "icos.svg").read_text()
-    assert _graph.COLOURS["interprets"] in svg
-    assert "checked_flags" in svg
+    source = _graph.digraph(icos_standardise.MODULES).source
+    for node in nodes:
+        fn = node.originating_functions[0]
+        assert f'URL="{_graph.anchor(fn)}"' in source, node.name
+    assert 'tooltip="interprets: Describe each column by its first BIFVARINFO' in source
+    assert "cluster__legend" not in source
+
+
+@pytest.mark.skipif(shutil.which("dot") is None, reason="needs Graphviz's dot")
+def test_docs_fragment_has_a_key_and_a_preview_per_node(nodes):
+    pytest.importorskip("graphviz")
+    script = Path(__file__).parents[1] / "scripts" / "render_graphs.py"
+    fragment = runpy.run_path(str(script))["fragment"](icos_standardise.MODULES)
+    assert fragment.count("data-preview") == len(nodes)
+    assert fragment.count('class="xh-swatch"') == len(_graph.ACTIONS)
+    assert "\n\n" not in fragment.strip()

@@ -65,8 +65,10 @@ dev = [
     {include-group = "docs"},
     {include-group = "test"},
 ]
+# catena's `graph_html` draws the standardisation graphs for the provider pages.
 docs = [
     "graphviz>=0.20",
+    "ukceh-catena",
     "mkdocs-typer2[termynal]>=0.4.1",
     "mkdocstrings-python>=2.0.5",
     "zensical>=0.0.52",

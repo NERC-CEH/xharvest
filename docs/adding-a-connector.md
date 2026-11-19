@@ -46,7 +46,7 @@ The [design decisions](https://github.com/NERC-CEH/xharvest/tree/main/docs/adr) 
 - A `checks` node returns what it checked, and the nodes after it take that, since Hamilton runs only the nodes the output needs.
 - Helpers are private (`_name`), and only for mechanics within one node; any decision about the data is a node.
 - Run the graph with `xharvest._graph.run`, which keeps Hamilton's error logging quiet and raises the node's exception unchanged.
-- Add the graph to `GRAPHS` in `tests/test_graph.py`, which checks the rules above, and in `scripts/render_graphs.py`, which draws it for the docs.
+- Add the graph to `GRAPHS` in `tests/test_graph.py`, which checks the rules above, and in `scripts/render_graphs.py`, which draws it for the docs with catena's `graph_html`, so each node links to its entry and previews it on hover.
 - Never register a pipeline module in `catena.modules`.
 
 ### Dependencies
@@ -112,7 +112,7 @@ Tests must not touch the network or need credentials.
 ### Docs
 
 Add a page under `docs/providers/`, to the `zensical.toml` nav, and to the provider tables in `README.md` and `docs/index.md`.
-The page embeds the graph `just graphs` draws (`_graphs/<provider>.svg`) and renders the node reference from the graph's modules, in place of a hand-written list of what `standardise` does; see the [ICOS](providers/icos.md) page.
+The page includes the graph `just graphs` draws (`--8<-- "docs/providers/_graphs/<provider>.html"`), whose nodes link to the node reference rendered from the graph's modules, in place of a hand-written list of what `standardise` does; see the [ICOS](providers/icos.md) page.
 Copy the structure of the [COSMOS-UK](providers/cosmos-uk.md) page.
 Its "About the data" section must say what a timestamp means.
 Check claims like this against the data, not only the provider's docs, and record what was checked and how.

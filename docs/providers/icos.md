@@ -80,19 +80,10 @@ The result has dims `(time, site, depth)`:
 
 `fetch` changes nothing: it picks each site's current archive, checks it against the portal's SHA-256, and saves it as served.
 `standardise` runs the graph below, from the archive paths to the dataset.
-Each node does one thing; its colour says what kind of thing, and its entry under [Standardisation nodes](#standardisation-nodes) says what and why.
+Each node does one thing, and its colour says what kind of thing.
+Hover over a node for a summary, or click it for its entry under [Standardisation nodes](#standardisation-nodes), which says what it does and why.
 
-![The ICOS standardisation graph](_graphs/icos.svg)
-
-| Action | Meaning |
-|---|---|
-| `reads` | parses provider files without changing what they say |
-| `selects` | keeps some of what was read and drops the rest |
-| `checks` | raises if the data break an expectation, else passes them on |
-| `decodes` | changes values as the provider specifies |
-| `reshapes` | rearranges values without changing them |
-| `annotates` | adds or rewrites attributes and coordinates, not values |
-| `interprets` | a judgement the provider does not state |
+--8<-- "docs/providers/_graphs/icos.html"
 
 Nothing converts units, filters on quality flags, or fills gaps.
 Gap-filled values come from ONEFlux, upstream; the `_QC` fractions say how much of each day was filled.

@@ -42,6 +42,8 @@ nav = [
 # Delete all three blocks below (plus `arithmatex`) if the docs have no maths.
 extra_javascript = [
     "_static/js/katex.js",
+    # Full-screen button for the standardisation graphs on provider pages.
+    "_static/js/graph.js",
     "https://unpkg.com/katex@0/dist/katex.min.js",
     "https://unpkg.com/katex@0/dist/contrib/auto-render.min.js",
     # Copied from the `termynal` package, for mkdocs-typer2's `:termynal:` output.
@@ -49,6 +51,7 @@ extra_javascript = [
 ]
 extra_css = [
     "https://unpkg.com/katex@0/dist/katex.min.css",
+    "_static/css/graph.css",
     "assets/termynal.css",
 ]
 
@@ -121,6 +124,11 @@ pygments_lang_class = true
 [project.markdown_extensions.pymdownx.magiclink]
 [project.markdown_extensions.pymdownx.mark]
 [project.markdown_extensions.pymdownx.smartsymbols]
+# Includes each provider's standardisation graph, drawn by `just graphs`; a
+# missing file fails the build.
+[project.markdown_extensions.pymdownx.snippets]
+base_path = ["."]
+check_paths = true
 [project.markdown_extensions.pymdownx.superfences]
 custom_fences = [
   { name = "mermaid", class = "mermaid", format = "pymdownx.superfences.fence_code_format" }

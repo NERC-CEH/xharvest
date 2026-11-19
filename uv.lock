@@ -1782,6 +1782,7 @@ docs = [
     { name = "graphviz" },
     { name = "mkdocs-typer2", extra = ["termynal"] },
     { name = "mkdocstrings-python" },
+    { name = "ukceh-catena" },
     { name = "zensical" },
 ]
 test = [
@@ -1826,6 +1827,7 @@ docs = [
     { name = "graphviz", specifier = ">=0.20" },
     { name = "mkdocs-typer2", extras = ["termynal"], specifier = ">=0.4.1" },
     { name = "mkdocstrings-python", specifier = ">=2.0.5" },
+    { name = "ukceh-catena", git = "https://github.com/NERC-CEH/catena?branch=main" },
     { name = "zensical", specifier = ">=0.0.52" },
 ]
 test = [
