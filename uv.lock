@@ -390,6 +390,15 @@ wheels = [
 ]
 
 [[package]]
+name = "graphviz"
+version = "0.21"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/f8/b3/3ac91e9be6b761a4b30d66ff165e54439dcd48b83f4e20d644867215f6ca/graphviz-0.21.tar.gz", hash = "sha256:20743e7183be82aaaa8ad6c93f8893c923bd6658a04c32ee115edb3c8a835f78", size = 200434, upload-time = "2025-06-15T09:35:05.824Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/91/4c/e0ce1ef95d4000ebc1c11801f9b944fa5910ecc15b5e351865763d8657f8/graphviz-0.21-py3-none-any.whl", hash = "sha256:54f33de9f4f911d7e84e4191749cac8cc5653f815b06738c54db9a15ab8b1e42", size = 47300, upload-time = "2025-06-15T09:35:04.433Z" },
+]
+
+[[package]]
 name = "griffelib"
 version = "2.4.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1734,6 +1743,7 @@ name = "xharvest"
 version = "0.2.0.dev1"
 source = { editable = "." }
 dependencies = [
+    { name = "apache-hamilton" },
     { name = "netcdf4" },
     { name = "numpy" },
     { name = "typer" },
@@ -1755,6 +1765,7 @@ icos = [
 [package.dev-dependencies]
 dev = [
     { name = "coverage" },
+    { name = "graphviz" },
     { name = "mkdocs-typer2", extra = ["termynal"] },
     { name = "mkdocstrings-python" },
     { name = "pre-commit" },
@@ -1768,6 +1779,7 @@ dev = [
     { name = "zensical" },
 ]
 docs = [
+    { name = "graphviz" },
     { name = "mkdocs-typer2", extra = ["termynal"] },
     { name = "mkdocstrings-python" },
     { name = "zensical" },
@@ -1782,6 +1794,7 @@ test = [
 
 [package.metadata]
 requires-dist = [
+    { name = "apache-hamilton", specifier = ">=1.90.0" },
     { name = "httpx", marker = "extra == 'cosmos'", specifier = ">=0.28.1" },
     { name = "httpx", marker = "extra == 'icos'", specifier = ">=0.28.1" },
     { name = "netcdf4", specifier = ">=1.7.4" },
@@ -1796,6 +1809,7 @@ provides-extras = ["cosmos", "icos", "all"]
 [package.metadata.requires-dev]
 dev = [
     { name = "coverage", specifier = ">=7.15.2" },
+    { name = "graphviz", specifier = ">=0.20" },
     { name = "mkdocs-typer2", extras = ["termynal"], specifier = ">=0.4.1" },
     { name = "mkdocstrings-python", specifier = ">=2.0.5" },
     { name = "pre-commit", specifier = ">=4.6.1" },
@@ -1809,6 +1823,7 @@ dev = [
     { name = "zensical", specifier = ">=0.0.52" },
 ]
 docs = [
+    { name = "graphviz", specifier = ">=0.20" },
     { name = "mkdocs-typer2", extras = ["termynal"], specifier = ">=0.4.1" },
     { name = "mkdocstrings-python", specifier = ">=2.0.5" },
     { name = "zensical", specifier = ">=0.0.52" },
