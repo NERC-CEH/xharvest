@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "xharvest"
-version = "0.1.0"
+version = "0.2.0.dev1"
 description = "Harvest environmental data from many providers into standardised, xarray-ready netCDF."
 authors = [
     { name = "Joe Marsh Rossney", email = "17361029+jmarshrossney@users.noreply.github.com" }
