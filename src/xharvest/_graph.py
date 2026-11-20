@@ -37,6 +37,17 @@ COLOURS = {
 }
 """Fill colour of each action in the rendered graph; judgements stand out."""
 
+DARK_COLOURS = {
+    "reads": "#264764",
+    "selects": "#412b5e",
+    "checks": "#395d2c",
+    "decodes": "#8a5312",
+    "reshapes": "#454545",
+    "annotates": "#4f4c2c",
+    "interprets": "#8a3422",
+}
+"""Fill colour of each action on a dark page, matching `COLOURS` in hue."""
+
 # Hamilton logs a traceback, and an invitation to its Slack, when a node raises.
 # The exception itself reaches the caller unchanged, so these are only noise.
 _NOISY_LOGGERS = ("hamilton.driver", "hamilton.execution.graph_functions")

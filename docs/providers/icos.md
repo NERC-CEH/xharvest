@@ -80,7 +80,7 @@ The result has dims `(time, site, depth)`:
 
 `fetch` changes nothing: it picks each site's current archive, checks it against the portal's SHA-256, and saves it as served.
 `standardise` runs the graph below, from the archive paths to the dataset.
-Each node does one thing, and its colour says what kind of thing.
+Each node does one thing, and its colour says what kind of thing; [ADR 2](https://github.com/NERC-CEH/xharvest/blob/main/docs/adr/0002-standardise-as-hamilton-graph.md#decision) defines each kind.
 Hover over a node for a summary, or click its name for its entry under [Standardisation nodes](#standardisation-nodes), which says what it does and why.
 
 --8<-- "docs/providers/_graphs/icos.html"

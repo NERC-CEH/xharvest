@@ -45,6 +45,7 @@ def test_every_pipeline_is_in_graphs():
 
 def test_every_action_has_a_colour():
     assert set(_graph.COLOURS) == set(_graph.ACTIONS)
+    assert set(_graph.DARK_COLOURS) == set(_graph.ACTIONS)
 
 
 @pytest.mark.parametrize("name", GRAPHS)
@@ -84,7 +85,16 @@ def test_digraph_fills_links_and_explains_each_node(nodes):
         assert url in source, node.name
     assert f'fillcolor="{_graph.COLOURS["interprets"]}"' in source
     assert 'tooltip="interprets: Describe each column by its first BIFVARINFO' in source
-    assert "cluster__legend" not in source
+
+
+def test_digraph_legend_names_each_action_without_links():
+    source = _render_graphs()["digraph"](icos_standardise.MODULES).source
+    legend = source[source.index("subgraph cluster__legend") :]
+    legend = legend[: legend.index("}")]
+    for action in _graph.ACTIONS:
+        assert f"{action} [" in legend, action
+    assert "URL=" not in legend
+    assert "tooltip=" not in legend
 
 
 @pytest.mark.skipif(shutil.which("dot") is None, reason="needs Graphviz's dot")
@@ -92,5 +102,7 @@ def test_docs_fragment_has_a_key_and_a_preview_per_node(nodes):
     fragment = _render_graphs()["fragment"](icos_standardise.MODULES)
     assert fragment.count("data-preview") == len(nodes)
     assert fragment.count("<autoref ") == len(nodes)
-    assert fragment.count('class="xh-swatch"') == len(_graph.ACTIONS)
     assert "\n\n" not in fragment.strip()
+    light, dark = _graph.COLOURS["interprets"], _graph.DARK_COLOURS["interprets"]
+    legend_and_fills = fragment.count(f"light-dark({light},{dark})")
+    assert legend_and_fills == 1 + sum(n.tags["action"] == "interprets" for n in nodes)

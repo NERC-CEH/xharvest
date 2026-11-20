@@ -36,9 +36,10 @@ doctest:
 graphs:
   python scripts/render_graphs.py
 
-# Build the documentation using Zensical.
+# Build the documentation using Zensical, failing on any warning, such as a graph
+# node whose link to its entry does not resolve.
 docs: graphs
-  zensical build
+  zensical build --strict
 
 # Serve the documentation locally with live reload.
 docs-serve: graphs

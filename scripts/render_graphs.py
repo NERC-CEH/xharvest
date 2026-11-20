@@ -4,13 +4,13 @@ Run through `just graphs`, which `just docs` runs before each build. Writes
 `docs/providers/_graphs/<provider>.html`, which the page includes and which is
 not committed. Needs the `docs` dependency group and the Graphviz `dot` binary.
 
-The fragment holds a key to the actions and the graph, drawn with dotdoc: each
-node is filled by its action, its name links to its entry in the page's node
-reference and previews it on hover, its tooltip gives its action and docstring
-summary, and buttons above the graph zoom it and expand it to the window.
+The fragment holds the graph, drawn with dotdoc: each node is filled by its
+action, with Hamilton's legend as the key, its name links to its entry in the
+page's node reference and previews it on hover, its tooltip gives its action and
+docstring summary, and buttons above the graph zoom it and expand it to the
+window. Fills switch to `_graph.DARK_COLOURS` with the theme's dark scheme.
 """
 
-import html
 from collections.abc import Callable
 from pathlib import Path
 from types import ModuleType
@@ -18,6 +18,7 @@ from types import ModuleType
 import graphviz
 from dotdoc import graph_html
 from dotdoc.hamilton import (
+    clean_legend,
     compose_styles,
     fill_by_tag,
     link_style,
@@ -32,6 +33,10 @@ from xharvest.icos import _standardise as icos
 GRAPHS = {"icos": icos.MODULES}
 OUT = Path(__file__).parents[1] / "docs" / "providers" / "_graphs"
 
+# Each light fill to its dark counterpart; Hamilton fills input nodes white.
+DARK = {_graph.COLOURS[a]: _graph.DARK_COLOURS[a] for a in _graph.ACTIONS}
+DARK["#ffffff"] = "transparent"
+
 
 def _tooltip(node: HamiltonNode, fn: Callable | None) -> str | None:
     """A node's action and the first paragraph of its docstring."""
@@ -42,10 +47,7 @@ def _tooltip(node: HamiltonNode, fn: Callable | None) -> str | None:
 
 
 def digraph(modules: tuple[ModuleType, ...]) -> graphviz.Digraph:
-    """Draw the graph top to bottom, each node styled as the module docstring says.
-
-    There is no legend: `key` shows the actions next to the graph.
-    """
+    """Draw the graph top to bottom, each node styled as the module docstring says."""
     dr = _graph.build(*modules)
     drawn = dr.display_all_functions(
         custom_style_function=compose_styles(
@@ -54,26 +56,15 @@ def digraph(modules: tuple[ModuleType, ...]) -> graphviz.Digraph:
             link_style(dr),
         ),
         show_schema=False,
-        show_legend=False,
         orient="TB",
     )
     assert drawn is not None, "Hamilton returns no drawing without `graphviz`"
-    return drawn
-
-
-def key() -> str:
-    """A key to the actions, each with its colour and meaning."""
-    items = "".join(
-        f'<li><span class="xh-swatch" style="background:{_graph.COLOURS[action]}">'
-        f"</span><code>{action}</code> {html.escape(meaning)}</li>"
-        for action, meaning in _graph.ACTIONS.items()
-    )
-    return f'<ul class="xh-graph-key">{items}</ul>'
+    return clean_legend(drawn)
 
 
 def fragment(modules: tuple[ModuleType, ...]) -> str:
-    """The HTML a provider page includes: key and graph, on one line."""
-    return f"{key()}{graph_html(digraph(modules), controls=True)}\n"
+    """The HTML a provider page includes, on one line."""
+    return graph_html(digraph(modules), controls=True, dark=DARK) + "\n"
 
 
 def main() -> None:

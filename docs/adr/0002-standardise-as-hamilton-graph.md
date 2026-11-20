@@ -1,6 +1,6 @@
 ## 2. Standardise runs as a Hamilton graph of single-purpose nodes
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-11-19
 
 ### Context
