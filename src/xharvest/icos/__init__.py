@@ -4,7 +4,8 @@
 """
 
 from ._fetch import Site, fetch, sites
-from ._standardise import PROFILES, QC, SCALARS, standardise, to_netcdf
+from ._pipeline import PROFILES, QC, SCALARS
+from ._standardise import standardise, to_netcdf
 from ._variables import (
     VARIABLES,
     AirPressure,

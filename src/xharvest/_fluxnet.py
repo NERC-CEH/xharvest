@@ -1,7 +1,8 @@
-"""Read FLUXNET data products, the ZIP archives ONEFlux v1.3 writes for each site.
+"""Nodes that read FLUXNET data products, the archives ONEFlux v1.3 writes per site.
 
 Every regional network publishes the same archive layout, so connectors for the
-hubs that serve them share this reader. An archive holds, among other files:
+hubs that serve them build their standardisation graphs from these nodes and their
+own. An archive holds, among other files:
 
 - `<N>_<site>_FLUXNET_FLUXMET_<res>_<years>_<version>.csv`: the data, one file
   per resolution (`HH`, `DD`, `WW`, `MM`, `YY`);
@@ -11,8 +12,8 @@ hubs that serve them share this reader. An archive holds, among other files:
   of the data's clock;
 - `DATA_POLICY_LICENSE_AND_INSTRUCTIONS.txt`: the licence.
 
-Only daily (`DD`) files are read for now. Timestamps are local standard time,
-`UTC + UTC_OFFSET`; a daily value covers the local day.
+Only daily (`DD`) files are read for now. Every node takes and returns a mapping
+from archive path to that archive's part, so it acts on all archives at once.
 """
 
 import csv
@@ -22,10 +23,10 @@ import zipfile
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import timedelta
-from os import PathLike
 from pathlib import Path
 
 import numpy as np
+from hamilton.function_modifiers import tag
 
 from .errors import ProviderError
 
@@ -55,12 +56,30 @@ in `µmolCO2` and `gC` is not part of the CF unit; it is in each variable's
 definition.
 """
 
-_PROFILE_INDEX = re.compile(r"^(?P<base>.+)_(?P<index>\d+)(?P<qc>_QC)?$")
+_PROFILE_INDEX = re.compile(r"^(?P<base>.+)_(?P<index>\d+)$")
+_LICENCE = re.compile(r"shared under the (\S+) (?:data use )?license")
+
+
+@dataclass(frozen=True)
+class ArchiveText:
+    """The text of the files in one archive that standardisation reads.
+
+    Attributes:
+        data: The daily data file.
+        variable_info: `BIFVARINFO_DD`, describing each data column.
+        site_info: The site BIF.
+        policy: The data policy and licence.
+    """
+
+    data: str
+    variable_info: str
+    site_info: str
+    policy: str
 
 
 @dataclass(frozen=True)
 class Variable:
-    """One data column, as `BIFVARINFO` describes it.
+    """One data column, as one `BIFVARINFO` entry describes it.
 
     Attributes:
         name: The column name, e.g. `"SWC_F_MDS_1"`.
@@ -74,25 +93,10 @@ class Variable:
     definition: str
     height: float | None
 
-    @property
-    def cf_units(self) -> str:
-        """The CF equivalent of `units`.
-
-        Raises:
-            ProviderError: If the unit string is not in `CF_UNITS`.
-        """
-        try:
-            return CF_UNITS[self.units]
-        except KeyError:
-            raise ProviderError(
-                f"FLUXNET variable {self.name} has unit {self.units!r}, which "
-                "xharvest does not know a CF equivalent for"
-            ) from None
-
 
 @dataclass(frozen=True)
-class Archive:
-    """The daily data of one site's FLUXNET archive.
+class Site:
+    """A site, as its archive's site BIF describes it.
 
     Attributes:
         site: The FLUXNET site code, e.g. `"UK-Cvn"`.
@@ -105,10 +109,6 @@ class Archive:
         network: The network that prepared the data, e.g. `"EUF"`.
         processing_center: Where ONEFlux was run, e.g. `"EUDB_ICOS"`.
         oneflux_version: The full ONEFlux version, e.g. `"1.3.2-rc"`.
-        licence: The licence the archive states, e.g. `"CC-BY-4.0"`.
-        dates: The local date of each row, as `datetime64[D]`.
-        columns: Each data column, with fill values as NaN.
-        variables: Each data column's `BIFVARINFO` entry.
     """
 
     site: str
@@ -121,50 +121,19 @@ class Archive:
     network: str
     processing_center: str
     oneflux_version: str
-    licence: str
+
+
+@dataclass(frozen=True)
+class Table:
+    """The rows of one archive's daily data file.
+
+    Attributes:
+        dates: The local date of each row, as `datetime64[D]`.
+        columns: Each data column, by name.
+    """
+
     dates: np.ndarray
     columns: dict[str, np.ndarray]
-    variables: dict[str, Variable]
-
-    @property
-    def time(self) -> np.ndarray:
-        """The UTC start of each row's local day, as `datetime64[ns]`."""
-        offset = np.timedelta64(timedelta(hours=self.utc_offset))
-        return (self.dates.astype("datetime64[ns]") - offset).astype("datetime64[ns]")
-
-    def profile(self, base: str) -> dict[float, str]:
-        """Map each depth of a soil profile to the column measured there.
-
-        Args:
-            base: The variable without its index, e.g. `"SWC_F_MDS"`.
-
-        Returns:
-            Depth in metres below ground, positive down, to the column name,
-            ordered by depth. Profile indices are not depths: they skip numbers
-            and differ between variables and sites, so `VAR_INFO_HEIGHT` is used.
-
-        Raises:
-            ProviderError: If a column has no height, or two share a depth.
-        """
-        depths: dict[float, str] = {}
-        for name in self.columns:
-            match = _PROFILE_INDEX.match(name)
-            if not match or match["base"] != base or match["qc"]:
-                continue
-            height = self.variables[name].height
-            if height is None:
-                raise ProviderError(
-                    f"{self.site}: {name} has no VAR_INFO_HEIGHT, so its depth "
-                    "is unknown"
-                )
-            depth = round(-height, 4)
-            if depth in depths:
-                raise ProviderError(
-                    f"{self.site}: {depths[depth]} and {name} are both at "
-                    f"{depth} m depth"
-                )
-            depths[depth] = name
-        return dict(sorted(depths.items()))
 
 
 def _decode(raw: bytes) -> str:
@@ -185,15 +154,15 @@ def _member(archive: zipfile.ZipFile, path: Path, pattern: str) -> str:
     return names[0]
 
 
-def _read_bif(text: str) -> dict[str, list[dict[str, str]]]:
+def _bif_groups(text: str) -> dict[str, list[dict[str, str]]]:
     """Group BIF rows into `{VARIABLE_GROUP: [{VARIABLE: DATAVALUE}, ...]}`.
 
     The `SITE_ID` column becomes a `SITE_ID` entry in every group.
     """
     groups: dict[tuple[str, str], dict[str, str]] = defaultdict(dict)
     for row in csv.DictReader(io.StringIO(text)):
-        groups[row["VARIABLE_GROUP"], row["GROUP_ID"]]["SITE_ID"] = row["SITE_ID"]
         group = groups[row["VARIABLE_GROUP"], row["GROUP_ID"]]
+        group["SITE_ID"] = row["SITE_ID"]
         group.setdefault(row["VARIABLE"], row["DATAVALUE"])
     result: dict[str, list[dict[str, str]]] = defaultdict(list)
     for (name, _), values in groups.items():
@@ -201,8 +170,8 @@ def _read_bif(text: str) -> dict[str, list[dict[str, str]]]:
     return result
 
 
-def _one(bif: dict[str, list[dict[str, str]]], group: str, path: Path):
-    entries = bif.get(group, [])
+def _one(groups: dict[str, list[dict[str, str]]], group: str, path: Path):
+    entries = groups.get(group, [])
     if len(entries) != 1:
         raise ProviderError(
             f"{path}: expected one {group} entry in the site BIF, found {len(entries)}"
@@ -214,109 +183,291 @@ def _float(value: str | None) -> float | None:
     return None if value in (None, "") else float(value)
 
 
-def _variables(text: str, path: Path) -> dict[str, Variable]:
-    variables: dict[str, Variable] = {}
-    for entry in _read_bif(text).get("GRP_VAR_INFO", []):
-        name = entry["VAR_INFO_VARNAME"]
-        variable = Variable(
-            name=name,
-            units=entry.get("VAR_INFO_UNIT", ""),
-            definition=entry.get("VAR_INFO_DEFINITION", ""),
-            height=_float(entry.get("VAR_INFO_HEIGHT")),
-        )
-        # A variable has one entry per period with its own sensor metadata.
-        previous = variables.get(name)
-        if previous is not None and (
-            previous.units != variable.units
-            or (name.startswith(("SWC_", "TS_")) and previous.height != variable.height)
-        ):
-            raise ProviderError(
-                f"{path}: {name} changes unit or depth within the record, which "
-                "xharvest cannot yet represent"
-            )
-        variables.setdefault(name, variable)
-    return variables
-
-
-def _columns(text: str, path: Path) -> tuple[np.ndarray, dict[str, np.ndarray]]:
-    reader = csv.reader(io.StringIO(text))
-    header = next(reader)
-    if header[0] != "TIMESTAMP":
-        raise ProviderError(f"{path}: the daily file does not start with TIMESTAMP")
-    rows = list(reader)
-    stamps = [row[0] for row in rows]
-    dates = np.array(
-        [f"{s[:4]}-{s[4:6]}-{s[6:8]}" for s in stamps], dtype="datetime64[D]"
-    )
-    values = np.array([row[1:] for row in rows], dtype=float).reshape(
-        len(rows), len(header) - 1
-    )
-    values[values == FILL_VALUE] = np.nan
-    return dates, {name: values[:, i] for i, name in enumerate(header[1:])}
-
-
-_LICENCE = re.compile(r"shared under the (\S+) (?:data use )?license")
-
-
-def read_daily(path: str | PathLike) -> Archive:
-    """Read the daily file of a FLUXNET archive, without extracting it.
-
-    Args:
-        path: A FLUXNET ZIP archive.
-
-    Returns:
-        The site's daily data and metadata.
-
-    Raises:
-        ProviderError: If the archive lacks a file this needs, a data column
-            has no `BIFVARINFO` entry, or the site metadata is ambiguous.
-    """
-    path = Path(path)
+def _read_archive(path: Path) -> ArchiveText:
     try:
         archive = zipfile.ZipFile(path)
     except zipfile.BadZipFile:
         raise ProviderError(f"{path} is not a ZIP archive") from None
     with archive:
-        data = _decode(archive.read(_member(archive, path, r"_FLUXMET_DD_.*\.csv$")))
-        info = _decode(archive.read(_member(archive, path, r"_BIFVARINFO_DD_.*\.csv$")))
-        site_bif = _decode(
-            archive.read(_member(archive, path, r"_FLUXNET_BIF_.*\.csv$"))
+
+        def read(pattern: str) -> str:
+            return _decode(archive.read(_member(archive, path, pattern)))
+
+        return ArchiveText(
+            data=read(r"_FLUXMET_DD_.*\.csv$"),
+            variable_info=read(r"_BIFVARINFO_DD_.*\.csv$"),
+            site_info=read(r"_FLUXNET_BIF_.*\.csv$"),
+            policy=read(r"^DATA_POLICY.*\.txt$"),
         )
-        policy = _decode(archive.read(_member(archive, path, r"^DATA_POLICY.*\.txt$")))
 
-    dates, columns = _columns(data, path)
-    variables = _variables(info, path)
-    undescribed = [name for name in columns if name not in variables]
-    if undescribed:
-        raise ProviderError(f"{path}: no BIFVARINFO entry for {', '.join(undescribed)}")
-    licence = _LICENCE.search(policy)
-    if licence is None:
-        raise ProviderError(f"{path}: cannot find the licence in the data policy")
 
-    bif = _read_bif(site_bif)
-    header = _one(bif, "GRP_HEADER", path)
-    location = _one(bif, "GRP_LOCATION", path)
-    oneflux = _one(bif, "GRP_ONEFLUX", path)
-    lat, lon = (
-        _float(location.get("LOCATION_LAT")),
-        _float(location.get("LOCATION_LONG")),
-    )
-    offset = _float(_one(bif, "GRP_UTC_OFFSET", path).get("UTC_OFFSET"))
-    if lat is None or lon is None or offset is None:
-        raise ProviderError(f"{path}: the site BIF lacks a location or UTC offset")
-    return Archive(
-        site=header["SITE_ID"],
-        site_name=header.get("SITE_NAME", ""),
-        lat=lat,
-        lon=lon,
-        elevation=_float(location.get("LOCATION_ELEV")),
-        utc_offset=offset,
-        igbp=_one(bif, "GRP_IGBP", path).get("IGBP", ""),
-        network=oneflux.get("PRODUCT_SOURCE_NETWORK", ""),
-        processing_center=oneflux.get("PRODUCT_PROCESSING_CENTER", ""),
-        oneflux_version=oneflux.get("PRODUCT_ONEFLUX_VERSION", ""),
-        licence=licence[1],
-        dates=dates,
-        columns=columns,
-        variables=variables,
-    )
+@tag(action="reads")
+def archive_texts(archive_paths: list[Path]) -> dict[Path, ArchiveText]:
+    """Read the four files standardisation needs from each archive, as text.
+
+    The archives are read in place, without extracting them. Text is decoded as
+    UTF-8, or as Latin-1 where that fails, since networks differ.
+
+    Raises:
+        ProviderError: If a path is not a ZIP archive, or an archive does not
+            hold exactly one of each file.
+    """
+    return {path: _read_archive(path) for path in archive_paths}
+
+
+@tag(action="reads")
+def sites(archive_texts: dict[Path, ArchiveText]) -> dict[Path, Site]:
+    """Read each archive's site metadata from its site BIF.
+
+    Raises:
+        ProviderError: If the BIF does not have exactly one header, location,
+            UTC offset, land-cover class and ONEFlux product entry, or lacks a
+            latitude, longitude or UTC offset.
+    """
+    result = {}
+    for path, text in archive_texts.items():
+        groups = _bif_groups(text.site_info)
+        header = _one(groups, "GRP_HEADER", path)
+        location = _one(groups, "GRP_LOCATION", path)
+        oneflux = _one(groups, "GRP_ONEFLUX", path)
+        lat = _float(location.get("LOCATION_LAT"))
+        lon = _float(location.get("LOCATION_LONG"))
+        offset = _float(_one(groups, "GRP_UTC_OFFSET", path).get("UTC_OFFSET"))
+        if lat is None or lon is None or offset is None:
+            raise ProviderError(f"{path}: the site BIF lacks a location or UTC offset")
+        result[path] = Site(
+            site=header["SITE_ID"],
+            site_name=header.get("SITE_NAME", ""),
+            lat=lat,
+            lon=lon,
+            elevation=_float(location.get("LOCATION_ELEV")),
+            utc_offset=offset,
+            igbp=_one(groups, "GRP_IGBP", path).get("IGBP", ""),
+            network=oneflux.get("PRODUCT_SOURCE_NETWORK", ""),
+            processing_center=oneflux.get("PRODUCT_PROCESSING_CENTER", ""),
+            oneflux_version=oneflux.get("PRODUCT_ONEFLUX_VERSION", ""),
+        )
+    return result
+
+
+@tag(action="reads")
+def licences(archive_texts: dict[Path, ArchiveText]) -> dict[Path, str]:
+    """Read the licence each archive's data policy states, e.g. `"CC-BY-4.0"`.
+
+    Raises:
+        ProviderError: If the policy does not name a licence.
+    """
+    result = {}
+    for path, text in archive_texts.items():
+        match = _LICENCE.search(text.policy)
+        if match is None:
+            raise ProviderError(f"{path}: cannot find the licence in the data policy")
+        result[path] = match[1]
+    return result
+
+
+@tag(action="reads")
+def variable_entries(
+    archive_texts: dict[Path, ArchiveText],
+) -> dict[Path, dict[str, list[Variable]]]:
+    """Read every `BIFVARINFO` entry, grouped by the column it describes.
+
+    A column can have several entries, one per period of its sensor metadata,
+    e.g. after an instrument was replaced; they are kept in the archive's order.
+    """
+    result = {}
+    for path, text in archive_texts.items():
+        entries: dict[str, list[Variable]] = defaultdict(list)
+        for entry in _bif_groups(text.variable_info).get("GRP_VAR_INFO", []):
+            name = entry["VAR_INFO_VARNAME"]
+            entries[name].append(
+                Variable(
+                    name=name,
+                    units=entry.get("VAR_INFO_UNIT", ""),
+                    definition=entry.get("VAR_INFO_DEFINITION", ""),
+                    height=_float(entry.get("VAR_INFO_HEIGHT")),
+                )
+            )
+        result[path] = dict(entries)
+    return result
+
+
+@tag(action="interprets")
+def variables(
+    variable_entries: dict[Path, dict[str, list[Variable]]],
+) -> dict[Path, dict[str, Variable]]:
+    """Describe each column by its first `BIFVARINFO` entry.
+
+    A judgement: later entries, which record a change of sensor metadata during
+    the record, are dropped. They are allowed only if they keep the unit and,
+    for a soil profile (`SWC_` or `TS_`), the sensor's height; other changes,
+    such as a new instrument model, pass without note.
+
+    Raises:
+        ProviderError: If a later entry changes a column's unit, or a soil
+            sensor's height.
+    """
+    result = {}
+    for path, entries in variable_entries.items():
+        kept = {}
+        for name, versions in entries.items():
+            first = versions[0]
+            for later in versions[1:]:
+                if later.units != first.units or (
+                    name.startswith(("SWC_", "TS_")) and later.height != first.height
+                ):
+                    raise ProviderError(
+                        f"{path}: {name} changes unit or depth within the record, "
+                        "which xharvest cannot yet represent"
+                    )
+            kept[name] = first
+        result[path] = kept
+    return result
+
+
+@tag(action="reads")
+def raw_tables(archive_texts: dict[Path, ArchiveText]) -> dict[Path, Table]:
+    """Read each daily data file: the local date of each row, and every column.
+
+    Raises:
+        ProviderError: If the file's first column is not `TIMESTAMP`.
+    """
+    result = {}
+    for path, text in archive_texts.items():
+        reader = csv.reader(io.StringIO(text.data))
+        header = next(reader)
+        if header[0] != "TIMESTAMP":
+            raise ProviderError(f"{path}: the daily file does not start with TIMESTAMP")
+        rows = list(reader)
+        dates = np.array(
+            [f"{r[0][:4]}-{r[0][4:6]}-{r[0][6:8]}" for r in rows],
+            dtype="datetime64[D]",
+        )
+        values = np.array([row[1:] for row in rows], dtype=float).reshape(
+            len(rows), len(header) - 1
+        )
+        columns = {name: values[:, i] for i, name in enumerate(header[1:])}
+        result[path] = Table(dates=dates, columns=columns)
+    return result
+
+
+@tag(action="decodes")
+def tables(raw_tables: dict[Path, Table]) -> dict[Path, Table]:
+    """Replace FLUXNET's fill value, `-9999`, with NaN in every column."""
+    result = {}
+    for path, table in raw_tables.items():
+        columns = {
+            name: np.where(values == FILL_VALUE, np.nan, values)
+            for name, values in table.columns.items()
+        }
+        result[path] = Table(dates=table.dates, columns=columns)
+    return result
+
+
+@tag(action="checks")
+def described_tables(
+    tables: dict[Path, Table], variables: dict[Path, dict[str, Variable]]
+) -> dict[Path, Table]:
+    """Check that `BIFVARINFO` describes every data column.
+
+    Raises:
+        ProviderError: If a column has no entry, since its unit is then unknown.
+    """
+    for path, table in tables.items():
+        undescribed = [name for name in table.columns if name not in variables[path]]
+        if undescribed:
+            raise ProviderError(
+                f"{path}: no BIFVARINFO entry for {', '.join(undescribed)}"
+            )
+    return tables
+
+
+@tag(action="decodes")
+def times(
+    described_tables: dict[Path, Table], sites: dict[Path, Site]
+) -> dict[Path, np.ndarray]:
+    """Convert each row's local date to the UTC start of that day.
+
+    The data keep local standard time, UTC plus the site's `UTC_OFFSET`, so a
+    day starts at midnight minus the offset, in UTC. The archive README says
+    local solar time; `SW_IN_POT` shows otherwise (see the provider page).
+    """
+    result = {}
+    for path, table in described_tables.items():
+        offset = np.timedelta64(timedelta(hours=sites[path].utc_offset))
+        local = table.dates.astype("datetime64[ns]")
+        result[path] = (local - offset).astype("datetime64[ns]")
+    return result
+
+
+@tag(action="reads")
+def soil_profiles(
+    described_tables: dict[Path, Table],
+    variables: dict[Path, dict[str, Variable]],
+    profiled_variables: tuple[str, ...],
+) -> dict[Path, dict[str, dict[float, str]]]:
+    """Map each soil sensor's depth to its column, for each profiled variable.
+
+    FLUXNET numbers soil sensors (`SWC_F_MDS_1`, `SWC_F_MDS_2`, ...), but the
+    numbers are not depths: they skip values and differ between variables and
+    sites. A sensor's depth is the negative of its `VAR_INFO_HEIGHT`, in metres,
+    rounded to 0.1 mm.
+
+    Returns:
+        `{path: {variable: {depth: column}}}`, depths ascending.
+
+    Raises:
+        ProviderError: If a sensor has no height, or two sensors of one
+            variable share a depth.
+    """
+    result = {}
+    for path, table in described_tables.items():
+        profiles = {}
+        for base in profiled_variables:
+            depths: dict[float, str] = {}
+            for name in table.columns:
+                match = _PROFILE_INDEX.match(name)
+                if not match or match["base"] != base:
+                    continue
+                height = variables[path][name].height
+                if height is None:
+                    raise ProviderError(
+                        f"{path}: {name} has no VAR_INFO_HEIGHT, so its depth is "
+                        "unknown"
+                    )
+                depth = round(-height, 4)
+                if depth in depths:
+                    raise ProviderError(
+                        f"{path}: {depths[depth]} and {name} are both at "
+                        f"{depth} m depth"
+                    )
+                depths[depth] = name
+            profiles[base] = dict(sorted(depths.items()))
+        result[path] = profiles
+    return result
+
+
+@tag(action="annotates")
+def cf_units(
+    kept_variables: dict[Path, dict[str, Variable]],
+) -> dict[Path, dict[str, str]]:
+    """Rename each kept column's unit string to its CF equivalent.
+
+    Renaming only, from `CF_UNITS`: `deg C` becomes `degC`, `gC m-2 d-1` becomes
+    `g m-2 d-1`. The values are unchanged.
+
+    Raises:
+        ProviderError: If a unit string has no known CF equivalent.
+    """
+    result = {}
+    for path, kept in kept_variables.items():
+        units = {}
+        for name, variable in kept.items():
+            if variable.units not in CF_UNITS:
+                raise ProviderError(
+                    f"FLUXNET variable {name} has unit {variable.units!r}, which "
+                    "xharvest does not know a CF equivalent for"
+                )
+            units[name] = CF_UNITS[variable.units]
+        result[path] = units
+    return result

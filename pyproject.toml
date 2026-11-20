@@ -14,6 +14,7 @@ license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.12"
 dependencies = [
+    "apache-hamilton>=1.90.0",
     "netcdf4>=1.7.4",
     "numpy>=2.4.2",
     "typer>=0.24.1",
@@ -64,7 +65,9 @@ dev = [
     {include-group = "docs"},
     {include-group = "test"},
 ]
+# dotdoc draws the standardisation graphs for the provider pages.
 docs = [
+    "dotdoc[hamilton]>=0.1.0rc1",
     "mkdocs-typer2[termynal]>=0.4.1",
     "mkdocstrings-python>=2.0.5",
     "zensical>=0.0.52",
@@ -124,9 +127,10 @@ convention = "google"
 # [dependency-groups] must be at or below the version that existed a week ago,
 # or resolution fails outright.
 exclude-newer = "1 week"
-# Exempt xarray-annotated from the cutoff: its releases are worth picking up the
-# day they land, because the contracts depend on it closely.
-exclude-newer-package = { xarray-annotated = false }
+# Exempt xarray-annotated and dotdoc from the cutoff: same maintainer, and their
+# releases are worth picking up the day they land, because the contracts and the
+# provider pages depend on them closely.
+exclude-newer-package = { xarray-annotated = false, dotdoc = false }
 
 [tool.uv.sources]
 ukceh-catena = { git = "https://github.com/NERC-CEH/catena", branch = "main" }

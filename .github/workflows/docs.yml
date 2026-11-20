@@ -15,6 +15,8 @@ jobs:
       - uses: astral-sh/setup-uv@v8.1.0
       # `docs` does not include rust-just, so install `just` separately here.
       - uses: extractions/setup-just@v4
+      # `just docs` draws each connector's graph with Graphviz's `dot`.
+      - run: sudo apt-get update && sudo apt-get install -y graphviz
       - run: uv sync --group docs --locked
       - run: uv run just docs
       - uses: actions/upload-pages-artifact@v4

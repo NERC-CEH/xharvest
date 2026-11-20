@@ -12,8 +12,8 @@ import zipfile
 import numpy as np
 import pytest
 
+from xharvest import _fluxnet as fx
 from xharvest import icos
-from xharvest._fluxnet import read_daily
 
 pytestmark = pytest.mark.live
 
@@ -78,8 +78,9 @@ def test_a_daily_value_covers_the_local_day(
     # starting within the day on the file's clock.
     starts, columns = half_hourly
     days, expected = _daily(starts, columns[name], how)
-    archive = read_daily(archive_path)
-    daily = dict(zip(archive.dates, archive.columns[name], strict=True))
+    texts = fx.archive_texts([archive_path])
+    table = fx.tables(fx.raw_tables(texts))[archive_path]
+    daily = dict(zip(table.dates, table.columns[name], strict=True))
     found = np.array([daily.get(d, np.nan) for d in days])
     both = np.isfinite(found) & np.isfinite(expected)
     assert both.sum() > 300
@@ -91,7 +92,7 @@ def test_the_file_clock_is_local_standard_time(archive_path, half_hourly):
     # that is 12:00 - lon / 15 + offset, give or take the equation of time
     # (16 min); local solar time would put it at 12:00 whatever the longitude.
     starts, columns = half_hourly
-    archive = read_daily(archive_path)
+    site = fx.sites(fx.archive_texts([archive_path]))[archive_path]
     potential = columns["SW_IN_POT"]
     days = starts.astype("datetime64[D]")
     peaks = []
@@ -100,5 +101,5 @@ def test_the_file_clock_is_local_standard_time(archive_path, half_hourly):
         if np.isfinite(potential[today]).all():
             peak = starts[today[np.argmax(potential[today])]]
             peaks.append((peak - day).astype(float) / 60 + 0.25)
-    expected = 12 - archive.lon / 15 + archive.utc_offset
+    expected = 12 - site.lon / 15 + site.utc_offset
     assert abs(np.median(peaks) - expected) < 0.5

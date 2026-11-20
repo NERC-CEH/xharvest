@@ -121,6 +121,11 @@ pygments_lang_class = true
 [project.markdown_extensions.pymdownx.magiclink]
 [project.markdown_extensions.pymdownx.mark]
 [project.markdown_extensions.pymdownx.smartsymbols]
+# Includes each provider's standardisation graph, drawn by `just graphs`; a
+# missing file fails the build.
+[project.markdown_extensions.pymdownx.snippets]
+base_path = ["."]
+check_paths = true
 [project.markdown_extensions.pymdownx.superfences]
 custom_fences = [
   { name = "mermaid", class = "mermaid", format = "pymdownx.superfences.fence_code_format" }
@@ -157,6 +162,10 @@ show_root_members_full_path = false
 show_source = false
 show_symbol_type_heading = true
 show_symbol_type_toc = true
+
+# Opens each standardisation node's docs with its `action` tag (ADR 2).
+[[project.plugins.mkdocstrings.handlers.python.options.extensions]]
+"docs_tools/actions.py" = { }
 
 # mkdocs-typer2: renders the CLI reference on each provider page.
 [project.markdown_extensions."mkdocs_typer2.markdown:makeExtension"]

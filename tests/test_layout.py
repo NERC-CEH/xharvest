@@ -1,8 +1,6 @@
 """Checks the import rules in CONTRIBUTING.md."""
 
 import ast
-import importlib
-import sys
 from pathlib import Path
 
 import pytest
@@ -52,11 +50,17 @@ def test_nothing_imports_catena(path):
 
 @pytest.mark.parametrize(
     "path",
-    [p for p in MODULES if p.stem in {"_fetch", "_standardise"}],
+    [p for p in MODULES if p.stem in {"_fetch", "_standardise", "_pipeline"}],
     ids=_id,
 )
 def test_fetch_and_standardise_need_no_contracts(path):
-    assert not _imports(path) & {"xarray_annotated", "hamilton"}
+    assert "xarray_annotated" not in _imports(path)
+
+
+@pytest.mark.parametrize("path", [p for p in MODULES if p.stem == "_fetch"], ids=_id)
+def test_fetch_is_not_a_graph(path):
+    # Downloading stays imperative (ADR 2).
+    assert "hamilton" not in _imports(path)
 
 
 @pytest.mark.parametrize("path", MODULES, ids=_id)
@@ -67,17 +71,3 @@ def test_extras_are_imported_lazily(path):
 def test_there_are_fetch_and_standardise_modules():
     stems = {p.stem for p in MODULES}
     assert {"_fetch", "_standardise"} <= stems
-
-
-NODE_MODULES = ["xharvest._suffix", "xharvest.cosmos.nodes"]
-
-
-@pytest.mark.parametrize("module", NODE_MODULES)
-def test_node_modules_explain_a_missing_hamilton(module, monkeypatch):
-    # Hamilton comes with catena and is not a dependency of xharvest.
-    for name in list(sys.modules):
-        if name in NODE_MODULES or name.split(".")[0] == "hamilton":
-            monkeypatch.delitem(sys.modules, name)
-    monkeypatch.setitem(sys.modules, "hamilton", None)
-    with pytest.raises(ImportError, match="need Hamilton, which catena provides"):
-        importlib.import_module(module)

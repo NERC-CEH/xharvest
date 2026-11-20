@@ -25,14 +25,29 @@ The [design decisions](https://github.com/NERC-CEH/xharvest/tree/main/docs/adr) 
 | Module | What it does | May import |
 |---|---|---|
 | `_fetch.py` | `fetch(...) -> list[Path]`: downloads raw files to a directory, skipping any already present. | The provider's client library, through `require` |
-| `_standardise.py` | `standardise(paths) -> xr.Dataset`, and `to_netcdf(paths, out)`. | xarray |
+| `_pipeline.py` | The nodes of the standardisation graph (see below). | xarray, `hamilton` |
+| `_standardise.py` | `standardise(paths) -> xr.Dataset`, which runs the graph, and `to_netcdf(paths, out)`. | xarray |
 | `_variables.py` | One contract type per standardised variable, and `VARIABLES`, mapping each variable's name to its type. | `xarray-annotated` |
 | `nodes.py` (optional) | Contract-annotated node functions for source-specific preparation, registered in the `catena.modules` entry-point group. | `xarray-annotated`, `hamilton` |
 
 - `__init__.py` lists the public API in `__all__`; the provider page documents each name in it.
 - The CLI command group in `cli/` calls these functions and adds nothing the Python API cannot do.
 - `tests/test_layout.py` enforces the import rules in the table.
-- A reader for a file format several providers share goes in a private top-level module, as `xharvest._fluxnet` does for FLUXNET archives, so each provider's connector reuses it.
+- A reader for a file format several providers share goes in a private top-level module of nodes, as `xharvest._fluxnet` does for FLUXNET archives, so each provider's graph reuses it.
+
+### Standardisation graph
+
+`standardise` runs a Hamilton graph built from `_pipeline.py` and any shared format module, from one input, `paths`, to one output, `dataset`, so a reader can see each thing done to the provider's data.
+[ADR 2](https://github.com/NERC-CEH/xharvest/blob/main/docs/adr/0002-standardise-as-hamilton-graph.md) gives the reasons; `xharvest.cosmos` is the simplest example, and `xharvest.icos` shows a graph built with a shared format module.
+
+- One node does one thing, to every site and variable at once: never a node per site or per variable, and no dynamic fan-out.
+- Every node has a docstring saying what it does and why, and an `action` tag from `xharvest._graph.ACTIONS`.
+  Tag a decision the provider does not state `interprets`, so it stands out in the graph.
+- A `checks` node returns what it checked, and the nodes after it take that, since Hamilton runs only the nodes the output needs.
+- Helpers are private (`_name`), and only for mechanics within one node; any decision about the data is a node.
+- Run the graph with `xharvest._graph.run`, which keeps Hamilton's error logging quiet and raises the node's exception unchanged.
+- Add the graph to `GRAPHS` in `tests/test_graph.py`, which checks the rules above, and in `scripts/render_graphs.py`, which draws it for the docs with [dotdoc](https://github.com/jmarshrossney/dotdoc), so each node links to its entry and previews it on hover.
+- Never register a pipeline module in `catena.modules`.
 
 ### Dependencies
 
@@ -97,6 +112,7 @@ Tests must not touch the network or need credentials.
 ### Docs
 
 Add a page under `docs/providers/`, to the `zensical.toml` nav, and to the provider tables in `README.md` and `docs/index.md`.
+The page includes the graph `just graphs` draws (`--8<-- "docs/providers/_graphs/<provider>.html"`), whose nodes link to the node reference rendered from the graph's modules, in place of a hand-written list of what `standardise` does; see the [ICOS](providers/icos.md) page.
 Copy the structure of the [COSMOS-UK](providers/cosmos-uk.md) page.
 Its "About the data" section must say what a timestamp means.
 Check claims like this against the data, not only the provider's docs, and record what was checked and how.

@@ -32,10 +32,15 @@ test-cov:
 doctest:
   pytest --doctest-modules src/xharvest
 
-# Build the documentation using Zensical.
-docs:
-  zensical build
+# Draw each connector's standardisation graph for the docs (needs Graphviz).
+graphs:
+  python scripts/render_graphs.py
+
+# Build the documentation using Zensical, failing on any warning, such as a graph
+# node whose link to its entry does not resolve.
+docs: graphs
+  zensical build --strict
 
 # Serve the documentation locally with live reload.
-docs-serve:
+docs-serve: graphs
   zensical serve

@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from xharvest._fluxnet import read_daily
+from xharvest import _fluxnet as fx
 from xharvest.errors import ProviderError
 from xharvest.icos import PROFILES, QC, SCALARS, standardise, to_netcdf
 from xharvest.provenance import PROVENANCE_ATTRS, sidecar_path
@@ -65,18 +65,17 @@ def test_depth_is_the_union_of_the_sites_sensors(icos_raw):
 
 def test_values_are_the_archives_own(icos_raw):
     ds = standardise(icos_raw)
-    archive = read_daily(_by_site(icos_raw)["UK-Cvn"])
+    path = _by_site(icos_raw)["UK-Cvn"]
+    columns = fx.tables(fx.raw_tables(fx.archive_texts([path])))[path].columns
     cvn = ds.sel(site="UK-Cvn", time=slice("2023-09-01", "2023-09-14"))
-    np.testing.assert_array_equal(cvn.TA_F.values, archive.columns["TA_F"])
-    np.testing.assert_array_equal(
-        cvn.NEE_VUT_REF.values, archive.columns["NEE_VUT_REF"]
-    )
+    np.testing.assert_array_equal(cvn.TA_F.values, columns["TA_F"])
+    np.testing.assert_array_equal(cvn.NEE_VUT_REF.values, columns["NEE_VUT_REF"])
     # SWC_F_MDS_5 is the 0.25 m sensor at UK-Cvn.
     np.testing.assert_array_equal(
-        cvn.SWC_F_MDS.sel(depth=0.25).values, archive.columns["SWC_F_MDS_5"]
+        cvn.SWC_F_MDS.sel(depth=0.25).values, columns["SWC_F_MDS_5"]
     )
     np.testing.assert_array_equal(
-        cvn.SWC_F_MDS_QC.sel(depth=0.25).values, archive.columns["SWC_F_MDS_5_QC"]
+        cvn.SWC_F_MDS_QC.sel(depth=0.25).values, columns["SWC_F_MDS_5_QC"]
     )
 
 

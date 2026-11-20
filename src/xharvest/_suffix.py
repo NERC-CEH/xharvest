@@ -7,30 +7,19 @@ in a connector's node module carries `follows_suffix`, so its output and its dat
 inputs all take the suffix the config gives under `<provider>_suffix`, and edges
 between the module's own nodes still meet.
 
-Hamilton is not a dependency of xharvest: node modules are for catena, which
-provides it. Importing one without Hamilton raises an `ImportError` that says so.
 """
 
 import inspect
 from collections.abc import Callable
 from typing import Any
 
-try:
-    from hamilton.function_modifiers import (
-        ResolveAt,
-        parameterize,
-        resolve,
-        source,
-    )
-    from hamilton.function_modifiers.dependencies import ParametrizedDependency
-except ImportError as err:
-    raise ImportError(
-        "xharvest's node modules are for catena pipelines and need Hamilton, "
-        "which catena provides: install catena "
-        "(`pip install git+https://github.com/NERC-CEH/catena`), or "
-        "Hamilton alone (`pip install apache-hamilton`) to build the nodes "
-        "without catena. The standardised data does not need either."
-    ) from err
+from hamilton.function_modifiers import (
+    ResolveAt,
+    parameterize,
+    resolve,
+    source,
+)
+from hamilton.function_modifiers.dependencies import ParametrizedDependency
 
 
 def follows_suffix(key: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:

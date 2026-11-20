@@ -15,6 +15,7 @@ exclude-newer = "0001-01-01T00:00:00Z" # This has no effect and is included for 
 exclude-newer-span = "P1W"
 
 [options.exclude-newer-package]
+dotdoc = false
 xarray-annotated = false
 
 [[package]]
@@ -308,6 +309,23 @@ wheels = [
 ]
 
 [[package]]
+name = "dotdoc"
+version = "0.1.0rc1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "graphviz" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/55/42/24054150be1ff34ae091bedb8d381ae932f73c4677097828a870f389c3c2/dotdoc-0.1.0rc1.tar.gz", hash = "sha256:7b3f6057cf2161d0bbc4d41c71c1cf83522e2498e74c86d877905887dfbbe84d", size = 13889, upload-time = "2026-11-20T16:09:47.055Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/79/33/a0452e35ee48767fe3ffe4b8cbf674058cf75f26276543407ef048463a8c/dotdoc-0.1.0rc1-py3-none-any.whl", hash = "sha256:a618ab7630f9840dcd648363f7b3fa29b439f8c9996ca6669122a0995d9abad7", size = 14113, upload-time = "2026-11-20T16:09:46.048Z" },
+]
+
+[package.optional-dependencies]
+hamilton = [
+    { name = "apache-hamilton" },
+]
+
+[[package]]
 name = "filelock"
 version = "4.2.10"
 source = { registry = "https://pypi.org/simple" }
@@ -387,6 +405,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/c5/f8/7e33845d6b90ce1cf37cfabf25cb859277c7d3533ef1b6b1e1ca58581549/google_crc32c-1.9.0-cp315-cp315-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:f97c3806dcea41c29c04965347b0e12481561b75e0045dc7a4f69d75dec5d9b1", size = 38359, upload-time = "2026-09-24T21:38:14.983Z" },
     { url = "https://files.pythonhosted.org/packages/36/ff/556b2423f449a7515af6b8222a4d7833cbe09ff3e8d2f0b80471f5f6d02e/google_crc32c-1.9.0-cp315-cp315-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:0abe7e202c25909869c35672ab0f2fe748a7acf276eb78577332a7c38999740f", size = 36858, upload-time = "2026-09-24T21:38:15.799Z" },
     { url = "https://files.pythonhosted.org/packages/40/71/4733f1b7c921d04a2bb9b9916cf66498bf7ad0860a06289413830da83192/google_crc32c-1.9.0-cp315-cp315-win_amd64.whl", hash = "sha256:5695c8b9327e040b2aba12c6659b0acb5995314ef0af0192da66e662e011103b", size = 35534, upload-time = "2026-09-24T21:39:31.337Z" },
+]
+
+[[package]]
+name = "graphviz"
+version = "0.21"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/f8/b3/3ac91e9be6b761a4b30d66ff165e54439dcd48b83f4e20d644867215f6ca/graphviz-0.21.tar.gz", hash = "sha256:20743e7183be82aaaa8ad6c93f8893c923bd6658a04c32ee115edb3c8a835f78", size = 200434, upload-time = "2025-06-15T09:35:05.824Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/91/4c/e0ce1ef95d4000ebc1c11801f9b944fa5910ecc15b5e351865763d8657f8/graphviz-0.21-py3-none-any.whl", hash = "sha256:54f33de9f4f911d7e84e4191749cac8cc5653f815b06738c54db9a15ab8b1e42", size = 47300, upload-time = "2025-06-15T09:35:04.433Z" },
 ]
 
 [[package]]
@@ -1734,6 +1761,7 @@ name = "xharvest"
 version = "0.2.0.dev1"
 source = { editable = "." }
 dependencies = [
+    { name = "apache-hamilton" },
     { name = "netcdf4" },
     { name = "numpy" },
     { name = "typer" },
@@ -1755,6 +1783,7 @@ icos = [
 [package.dev-dependencies]
 dev = [
     { name = "coverage" },
+    { name = "dotdoc", extra = ["hamilton"] },
     { name = "mkdocs-typer2", extra = ["termynal"] },
     { name = "mkdocstrings-python" },
     { name = "pre-commit" },
@@ -1768,6 +1797,7 @@ dev = [
     { name = "zensical" },
 ]
 docs = [
+    { name = "dotdoc", extra = ["hamilton"] },
     { name = "mkdocs-typer2", extra = ["termynal"] },
     { name = "mkdocstrings-python" },
     { name = "zensical" },
@@ -1782,6 +1812,7 @@ test = [
 
 [package.metadata]
 requires-dist = [
+    { name = "apache-hamilton", specifier = ">=1.90.0" },
     { name = "httpx", marker = "extra == 'cosmos'", specifier = ">=0.28.1" },
     { name = "httpx", marker = "extra == 'icos'", specifier = ">=0.28.1" },
     { name = "netcdf4", specifier = ">=1.7.4" },
@@ -1796,6 +1827,7 @@ provides-extras = ["cosmos", "icos", "all"]
 [package.metadata.requires-dev]
 dev = [
     { name = "coverage", specifier = ">=7.15.2" },
+    { name = "dotdoc", extras = ["hamilton"], specifier = ">=0.1.0rc1" },
     { name = "mkdocs-typer2", extras = ["termynal"], specifier = ">=0.4.1" },
     { name = "mkdocstrings-python", specifier = ">=2.0.5" },
     { name = "pre-commit", specifier = ">=4.6.1" },
@@ -1809,6 +1841,7 @@ dev = [
     { name = "zensical", specifier = ">=0.0.52" },
 ]
 docs = [
+    { name = "dotdoc", extras = ["hamilton"], specifier = ">=0.1.0rc1" },
     { name = "mkdocs-typer2", extras = ["termynal"], specifier = ">=0.4.1" },
     { name = "mkdocstrings-python", specifier = ">=2.0.5" },
     { name = "zensical", specifier = ">=0.0.52" },
