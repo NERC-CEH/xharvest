@@ -67,7 +67,7 @@ dev = [
 ]
 # dotdoc draws the standardisation graphs for the provider pages.
 docs = [
-    "dotdoc[hamilton]>=0.1.0rc1",
+    "dotdoc[hamilton]>=0.1.0",
     "mkdocs-typer2[termynal]>=0.4.1",
     "mkdocstrings-python>=2.0.5",
     "zensical>=0.0.52",

@@ -16,13 +16,12 @@ from pathlib import Path
 from types import ModuleType
 
 import graphviz
-from dotdoc import graph_html
+from dotdoc import graph_html, summary
 from dotdoc.hamilton import (
     clean_legend,
     compose_styles,
     fill_by_tag,
     link_style,
-    summary,
     tooltip_style,
 )
 from hamilton.graph_types import HamiltonNode

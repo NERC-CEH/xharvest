@@ -84,7 +84,7 @@ def _render_graphs():
 
 
 def test_digraph_fills_links_and_explains_each_node(modules, nodes):
-    from dotdoc.hamilton import summary
+    from dotdoc import summary
 
     source = _render_graphs()["digraph"](modules).source
     for node in nodes:
