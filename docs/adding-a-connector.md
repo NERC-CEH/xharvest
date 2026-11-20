@@ -38,7 +38,7 @@ The [design decisions](https://github.com/NERC-CEH/xharvest/tree/main/docs/adr) 
 ### Standardisation graph
 
 `standardise` runs a Hamilton graph built from `_pipeline.py` and any shared format module, from one input, `paths`, to one output, `dataset`, so a reader can see each thing done to the provider's data.
-[ADR 2](https://github.com/NERC-CEH/xharvest/blob/main/docs/adr/0002-standardise-as-hamilton-graph.md) gives the reasons; `xharvest.icos` is the reference until COSMOS-UK is converted.
+[ADR 2](https://github.com/NERC-CEH/xharvest/blob/main/docs/adr/0002-standardise-as-hamilton-graph.md) gives the reasons; `xharvest.cosmos` is the simplest example, and `xharvest.icos` shows a graph built with a shared format module.
 
 - One node does one thing, to every site and variable at once: never a node per site or per variable, and no dynamic fan-out.
 - Every node has a docstring saying what it does and why, and an `action` tag from `xharvest._graph.ACTIONS`.

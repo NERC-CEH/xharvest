@@ -34,16 +34,23 @@ Collection = Literal["1D", "30M"]
 
 
 @dataclass(frozen=True)
-class _Period:
+class Period:
+    """The period a collection's values cover, relative to their stamps.
+
+    Attributes:
+        length: How long each value's period is.
+        stamp_ends: Whether a stamp marks the end of its period rather than
+            the start.
+    """
+
     length: timedelta
-    # Whether a stamp marks the end of its period rather than the start.
     stamp_ends: bool
 
 
 # Settled by summing 30-minute values into daily ones; see the provider page.
-PERIODS: dict[Collection, _Period] = {
-    "1D": _Period(timedelta(days=1), stamp_ends=False),
-    "30M": _Period(timedelta(minutes=30), stamp_ends=True),
+PERIODS: dict[Collection, Period] = {
+    "1D": Period(timedelta(days=1), stamp_ends=False),
+    "30M": Period(timedelta(minutes=30), stamp_ends=True),
 }
 COLLECTIONS: tuple[Collection, ...] = tuple(PERIODS)
 

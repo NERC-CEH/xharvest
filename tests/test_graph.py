@@ -9,9 +9,10 @@ from pathlib import Path
 import pytest
 
 from xharvest import _graph
+from xharvest.cosmos import _standardise as cosmos_standardise
 from xharvest.icos import _standardise as icos_standardise
 
-GRAPHS = {"icos": icos_standardise.MODULES}
+GRAPHS = {"cosmos": cosmos_standardise.MODULES, "icos": icos_standardise.MODULES}
 
 
 def _nodes(modules):
@@ -21,8 +22,13 @@ def _nodes(modules):
 
 
 @pytest.fixture(params=GRAPHS, ids=str)
-def nodes(request):
-    return _nodes(GRAPHS[request.param])
+def modules(request):
+    return GRAPHS[request.param]
+
+
+@pytest.fixture
+def nodes(modules):
+    return _nodes(modules)
 
 
 def test_every_node_has_a_docstring(nodes):
@@ -77,32 +83,37 @@ def _render_graphs():
     )
 
 
-def test_digraph_fills_links_and_explains_each_node(nodes):
-    source = _render_graphs()["digraph"](icos_standardise.MODULES).source
+def test_digraph_fills_links_and_explains_each_node(modules, nodes):
+    from dotdoc.hamilton import summary
+
+    source = _render_graphs()["digraph"](modules).source
     for node in nodes:
         fn = node.originating_functions[0]
-        url = f'URL="autoref:{fn.__module__}.{fn.__qualname__}"'
-        assert url in source, node.name
-    assert f'fillcolor="{_graph.COLOURS["interprets"]}"' in source
-    assert 'tooltip="interprets: Describe each column by its first BIFVARINFO' in source
+        action = node.tags["action"]
+        assert f'URL="autoref:{fn.__module__}.{fn.__qualname__}"' in source, node.name
+        assert f'fillcolor="{_graph.COLOURS[action]}"' in source, node.name
+        tooltip = f"{action}: {summary(fn)}".replace('"', '\\"')
+        assert f'tooltip="{tooltip}"' in source, node.name
 
 
-def test_digraph_legend_names_each_action_without_links():
-    source = _render_graphs()["digraph"](icos_standardise.MODULES).source
+def test_digraph_legend_names_each_action_without_links(modules, nodes):
+    source = _render_graphs()["digraph"](modules).source
     legend = source[source.index("subgraph cluster__legend") :]
     legend = legend[: legend.index("}")]
-    for action in _graph.ACTIONS:
+    for action in {n.tags["action"] for n in nodes}:
         assert f"{action} [" in legend, action
     assert "URL=" not in legend
     assert "tooltip=" not in legend
 
 
 @pytest.mark.skipif(shutil.which("dot") is None, reason="needs Graphviz's dot")
-def test_docs_fragment_has_a_key_and_a_preview_per_node(nodes):
-    fragment = _render_graphs()["fragment"](icos_standardise.MODULES)
+def test_docs_fragment_has_a_preview_per_node_and_dark_fills(modules, nodes):
+    fragment = _render_graphs()["fragment"](modules)
     assert fragment.count("data-preview") == len(nodes)
     assert fragment.count("<autoref ") == len(nodes)
     assert "\n\n" not in fragment.strip()
-    light, dark = _graph.COLOURS["interprets"], _graph.DARK_COLOURS["interprets"]
-    legend_and_fills = fragment.count(f"light-dark({light},{dark})")
-    assert legend_and_fills == 1 + sum(n.tags["action"] == "interprets" for n in nodes)
+    for action in {n.tags["action"] for n in nodes}:
+        light, dark = _graph.COLOURS[action], _graph.DARK_COLOURS[action]
+        fills = sum(n.tags["action"] == action for n in nodes)
+        # One more for the legend's entry.
+        assert fragment.count(f"light-dark({light},{dark})") == fills + 1, action
