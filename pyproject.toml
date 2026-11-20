@@ -65,10 +65,9 @@ dev = [
     {include-group = "docs"},
     {include-group = "test"},
 ]
-# catena's `graph_html` draws the standardisation graphs for the provider pages.
+# dotdoc draws the standardisation graphs for the provider pages.
 docs = [
-    "graphviz>=0.20",
-    "ukceh-catena",
+    "dotdoc[hamilton]>=0.1.0rc1",
     "mkdocs-typer2[termynal]>=0.4.1",
     "mkdocstrings-python>=2.0.5",
     "zensical>=0.0.52",
@@ -128,9 +127,10 @@ convention = "google"
 # [dependency-groups] must be at or below the version that existed a week ago,
 # or resolution fails outright.
 exclude-newer = "1 week"
-# Exempt xarray-annotated from the cutoff: its releases are worth picking up the
-# day they land, because the contracts depend on it closely.
-exclude-newer-package = { xarray-annotated = false }
+# Exempt xarray-annotated and dotdoc from the cutoff: same maintainer, and their
+# releases are worth picking up the day they land, because the contracts and the
+# provider pages depend on them closely.
+exclude-newer-package = { xarray-annotated = false, dotdoc = false }
 
 [tool.uv.sources]
 ukceh-catena = { git = "https://github.com/NERC-CEH/catena", branch = "main" }

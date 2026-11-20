@@ -46,7 +46,7 @@ The [design decisions](https://github.com/NERC-CEH/xharvest/tree/main/docs/adr) 
 - A `checks` node returns what it checked, and the nodes after it take that, since Hamilton runs only the nodes the output needs.
 - Helpers are private (`_name`), and only for mechanics within one node; any decision about the data is a node.
 - Run the graph with `xharvest._graph.run`, which keeps Hamilton's error logging quiet and raises the node's exception unchanged.
-- Add the graph to `GRAPHS` in `tests/test_graph.py`, which checks the rules above, and in `scripts/render_graphs.py`, which draws it for the docs with catena's `graph_html`, so each node links to its entry and previews it on hover.
+- Add the graph to `GRAPHS` in `tests/test_graph.py`, which checks the rules above, and in `scripts/render_graphs.py`, which draws it for the docs with [dotdoc](https://github.com/jmarshrossney/dotdoc), so each node links to its entry and previews it on hover.
 - Never register a pipeline module in `catena.modules`.
 
 ### Dependencies

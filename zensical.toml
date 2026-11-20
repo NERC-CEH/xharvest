@@ -42,8 +42,6 @@ nav = [
 # Delete all three blocks below (plus `arithmatex`) if the docs have no maths.
 extra_javascript = [
     "_static/js/katex.js",
-    # Full-screen button for the standardisation graphs on provider pages.
-    "_static/js/graph.js",
     "https://unpkg.com/katex@0/dist/katex.min.js",
     "https://unpkg.com/katex@0/dist/contrib/auto-render.min.js",
     # Copied from the `termynal` package, for mkdocs-typer2's `:termynal:` output.

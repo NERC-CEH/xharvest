@@ -15,6 +15,7 @@ exclude-newer = "0001-01-01T00:00:00Z" # This has no effect and is included for 
 exclude-newer-span = "P1W"
 
 [options.exclude-newer-package]
+dotdoc = false
 xarray-annotated = false
 
 [[package]]
@@ -305,6 +306,23 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/25/71/80cc718ff6d7abfbabacb1f57aaa42e9c1552bfdd01e64ddd704e4a03638/donfig-0.8.1.post1.tar.gz", hash = "sha256:3bef3413a4c1c601b585e8d297256d0c1470ea012afa6e8461dc28bfb7c23f52", size = 19506, upload-time = "2024-05-23T14:14:31.513Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/0c/d5/c5db1ea3394c6e1732fb3286b3bd878b59507a8f77d32a2cebda7d7b7cd4/donfig-0.8.1.post1-py3-none-any.whl", hash = "sha256:2a3175ce74a06109ff9307d90a230f81215cbac9a751f4d1c6194644b8204f9d", size = 21592, upload-time = "2024-05-23T14:13:55.283Z" },
+]
+
+[[package]]
+name = "dotdoc"
+version = "0.1.0rc1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "graphviz" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/55/42/24054150be1ff34ae091bedb8d381ae932f73c4677097828a870f389c3c2/dotdoc-0.1.0rc1.tar.gz", hash = "sha256:7b3f6057cf2161d0bbc4d41c71c1cf83522e2498e74c86d877905887dfbbe84d", size = 13889, upload-time = "2026-11-20T16:09:47.055Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/79/33/a0452e35ee48767fe3ffe4b8cbf674058cf75f26276543407ef048463a8c/dotdoc-0.1.0rc1-py3-none-any.whl", hash = "sha256:a618ab7630f9840dcd648363f7b3fa29b439f8c9996ca6669122a0995d9abad7", size = 14113, upload-time = "2026-11-20T16:09:46.048Z" },
+]
+
+[package.optional-dependencies]
+hamilton = [
+    { name = "apache-hamilton" },
 ]
 
 [[package]]
@@ -1765,7 +1783,7 @@ icos = [
 [package.dev-dependencies]
 dev = [
     { name = "coverage" },
-    { name = "graphviz" },
+    { name = "dotdoc", extra = ["hamilton"] },
     { name = "mkdocs-typer2", extra = ["termynal"] },
     { name = "mkdocstrings-python" },
     { name = "pre-commit" },
@@ -1779,10 +1797,9 @@ dev = [
     { name = "zensical" },
 ]
 docs = [
-    { name = "graphviz" },
+    { name = "dotdoc", extra = ["hamilton"] },
     { name = "mkdocs-typer2", extra = ["termynal"] },
     { name = "mkdocstrings-python" },
-    { name = "ukceh-catena" },
     { name = "zensical" },
 ]
 test = [
@@ -1810,7 +1827,7 @@ provides-extras = ["cosmos", "icos", "all"]
 [package.metadata.requires-dev]
 dev = [
     { name = "coverage", specifier = ">=7.15.2" },
-    { name = "graphviz", specifier = ">=0.20" },
+    { name = "dotdoc", extras = ["hamilton"], specifier = ">=0.1.0rc1" },
     { name = "mkdocs-typer2", extras = ["termynal"], specifier = ">=0.4.1" },
     { name = "mkdocstrings-python", specifier = ">=2.0.5" },
     { name = "pre-commit", specifier = ">=4.6.1" },
@@ -1824,10 +1841,9 @@ dev = [
     { name = "zensical", specifier = ">=0.0.52" },
 ]
 docs = [
-    { name = "graphviz", specifier = ">=0.20" },
+    { name = "dotdoc", extras = ["hamilton"], specifier = ">=0.1.0rc1" },
     { name = "mkdocs-typer2", extras = ["termynal"], specifier = ">=0.4.1" },
     { name = "mkdocstrings-python", specifier = ">=2.0.5" },
-    { name = "ukceh-catena", git = "https://github.com/NERC-CEH/catena?branch=main" },
     { name = "zensical", specifier = ">=0.0.52" },
 ]
 test = [

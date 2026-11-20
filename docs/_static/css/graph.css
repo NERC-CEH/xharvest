@@ -1,12 +1,4 @@
-/* Standardisation graphs on provider pages (see scripts/render_graphs.py). */
-
-.xh-graph {
-  margin: 1em 0;
-}
-
-.xh-graph-fullscreen {
-  margin-bottom: 0.5em;
-}
+/* The key to a standardisation graph's actions (see scripts/render_graphs.py). */
 
 /* The theme styles every list in page content, so match its specificity. */
 .md-typeset ul.xh-graph-key {
@@ -31,18 +23,4 @@
   margin-right: 0.35em;
   vertical-align: -0.1em;
   border: 1px solid #555;
-}
-
-/* Full screen: white, scrollable, and the graph as wide as fits. */
-.xh-graph:fullscreen {
-  overflow: auto;
-  padding: 1.5rem;
-  background: #fff;
-  color: #000;
-}
-
-.xh-graph:fullscreen .catena-graph {
-  width: min(100%, 1400px);
-  max-width: none !important;
-  margin: 0 auto;
 }

@@ -64,6 +64,6 @@ COSMOS-UK follows once the ICOS page shows whether the generated documentation r
 - Adding a connector needs some familiarity with Hamilton, which raises the bar for contributors who do not use catena.
 - Hamilton logs a traceback and a request to join its Slack when a node raises.
   `standardise` silences Hamilton's loggers while it runs and re-raises the original exception, so errors reach the CLI and callers as they do now.
-- Building the docs needs Graphviz: the `graphviz` package in the `docs` group, and the `dot` binary in CI.
+- Building the docs needs Graphviz: dotdoc, which draws the graphs, in the `docs` group, and the `dot` binary in CI.
 - A graph shows data flow, not decisions.
   The docstrings and tags must say why each node does what it does, or the graph adds nothing.

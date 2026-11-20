@@ -61,20 +61,6 @@ def test_pipeline_modules_are_not_catena_modules():
     assert not registered & pipelines
 
 
-def test_style_fills_nodes_by_action(nodes):
-    class Node:
-        def __init__(self, action):
-            self.tags = {"action": action}
-            self.originating_functions = ()
-
-    style, node_class, legend = _graph._style(
-        node=Node("interprets"), node_class="function"
-    )
-    assert style["fillcolor"] == _graph.COLOURS["interprets"]
-    assert (node_class, legend) == ("function", "interprets")
-    assert _graph._style(node=Node(None), node_class="input") == ({}, "input", None)
-
-
 def test_run_raises_the_node_error_quietly(caplog):
     # `archive_paths` raises inside the graph; Hamilton would log it too.
     with caplog.at_level(logging.DEBUG), pytest.raises(ValueError, match="no ICOS"):
@@ -83,21 +69,28 @@ def test_run_raises_the_node_error_quietly(caplog):
     assert not logging.getLogger("hamilton.driver").disabled
 
 
-def test_digraph_links_each_node_to_its_entry_with_a_tooltip(nodes):
-    pytest.importorskip("graphviz")
-    source = _graph.digraph(icos_standardise.MODULES).source
+def _render_graphs():
+    pytest.importorskip("dotdoc")
+    return runpy.run_path(
+        str(Path(__file__).parents[1] / "scripts" / "render_graphs.py")
+    )
+
+
+def test_digraph_fills_links_and_explains_each_node(nodes):
+    source = _render_graphs()["digraph"](icos_standardise.MODULES).source
     for node in nodes:
         fn = node.originating_functions[0]
-        assert f'URL="{_graph.anchor(fn)}"' in source, node.name
+        url = f'URL="autoref:{fn.__module__}.{fn.__qualname__}"'
+        assert url in source, node.name
+    assert f'fillcolor="{_graph.COLOURS["interprets"]}"' in source
     assert 'tooltip="interprets: Describe each column by its first BIFVARINFO' in source
     assert "cluster__legend" not in source
 
 
 @pytest.mark.skipif(shutil.which("dot") is None, reason="needs Graphviz's dot")
 def test_docs_fragment_has_a_key_and_a_preview_per_node(nodes):
-    pytest.importorskip("graphviz")
-    script = Path(__file__).parents[1] / "scripts" / "render_graphs.py"
-    fragment = runpy.run_path(str(script))["fragment"](icos_standardise.MODULES)
+    fragment = _render_graphs()["fragment"](icos_standardise.MODULES)
     assert fragment.count("data-preview") == len(nodes)
+    assert fragment.count("<autoref ") == len(nodes)
     assert fragment.count('class="xh-swatch"') == len(_graph.ACTIONS)
     assert "\n\n" not in fragment.strip()
