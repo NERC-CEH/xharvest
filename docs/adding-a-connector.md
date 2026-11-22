@@ -30,7 +30,7 @@ The [design decisions](https://github.com/NERC-CEH/xharvest/tree/main/docs/adr) 
 | `_variables.py` | One contract type per standardised variable, and `VARIABLES`, mapping each variable's name to its type. | `xarray-annotated` |
 | `nodes.py` (optional) | Contract-annotated node functions for source-specific preparation, registered in the `catena.modules` entry-point group. | `xarray-annotated`, `hamilton` |
 
-- `__init__.py` lists the public API in `__all__`; the provider page documents each name in it, as a `:::` reference or by name in backticks.
+- `__init__.py` lists the public API in `__all__`; the provider pages document each name in it, as a `:::` reference or by name in backticks.
   `tests/test_docs.py` checks this, once the page is added to its `PAGES`.
 - The CLI command group in `cli/` calls these functions and adds nothing the Python API cannot do.
 - `tests/test_layout.py` enforces the import rules in the table.
@@ -109,20 +109,30 @@ Tests must not touch the network or need credentials.
 - Let `fetch` accept a client (as `cosmos.fetch` takes an `httpx.Client`), and test it against a mock transport serving the fixtures.
 - Add the connector to `CONNECTORS` in `tests/test_contracts.py`, which checks the standardised output against `VARIABLES` and the node contracts against both; a test fails until you do.
 - Put tests that call the real API in `test_<provider>_live.py`, marked `live`; `just test-live` runs them.
-  Where practical, include the checks behind the provider page's claims about the data, so a new release re-checks them.
+  Where practical, include the checks behind the claims on the provider's `data.md`, so a new release re-checks them.
 
 ### Docs
 
-Add a page under `docs/providers/`, to the `zensical.toml` nav, and to the provider tables in `README.md` and `docs/index.md`.
-The page includes the graph `just graphs` draws (`--8<-- "docs/providers/_graphs/<provider>.html"`), whose nodes link to the node reference rendered from the graph's modules, in place of a hand-written list of what `standardise` does; see the [ICOS](providers/icos.md) page.
-It also includes a table of every variable the standardised file can hold (`--8<-- "docs/providers/_variables/<provider>.md"`), which `just variables` draws from the committed fixtures; add a function for the provider to `scripts/render_variables.py`.
-Copy the structure of the [COSMOS-UK](providers/cosmos-uk.md) page.
-Its "About the data" section must say what a timestamp means.
-Check claims like this against the data, not only the provider's docs, and record what was checked and how.
+Each provider has a directory under `docs/providers/` holding the same five pages, which `tests/test_docs.py` checks:
+
+| Page | Holds |
+|---|---|
+| `index.md` | What a new user needs: install, download, standardise, the variables, and how to cite the data |
+| `data.md` | What the data mean, checked against the data |
+| `standardise.md` | The standardisation graph and its node reference |
+| `catena.md` | Contract types, and the catena nodes if there are any |
+| `reference.md` | The CLI and the Python API |
+
+Copy the [COSMOS-UK](providers/cosmos-uk/index.md) pages, and add them to the `zensical.toml` nav, the provider tables in `README.md` and `docs/index.md`, and `PAGES` in `tests/test_docs.py`.
+
+- `index.md` includes a table of every variable the standardised file can hold (`--8<-- "docs/providers/_variables/<provider>.md"`), which `just variables` draws from the committed fixtures; add a function for the provider to `scripts/render_variables.py`.
+- `standardise.md` includes the graph `just graphs` draws (`--8<-- "docs/providers/_graphs/<provider>.html"`), in place of a hand-written list of what `standardise` does. Its nodes link to the node reference on the same page, so the two stay together.
+- `data.md` must say what a timestamp means.
+  Check claims like this against the data, not only the provider's docs, and record what was checked and how.
 COSMOS-UK's timestamp convention, for example, was settled by summing the API's 30-minute values into daily ones.
 
 ## Before opening the pull request
 
 - [ ] `uv run just` passes, and `uv run just test-live` passes against the real API.
-- [ ] The provider page is in the nav, the provider tables and `PAGES` in `tests/test_docs.py`.
+- [ ] The provider pages are in the nav, the provider tables and `PAGES` in `tests/test_docs.py`.
 - [ ] Anything this connector settled that the next one should follow is added to this page.

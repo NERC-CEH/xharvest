@@ -14,8 +14,8 @@ None of them needs catena, so the package is just as useful for getting data int
 
 | Provider | Extra | Credentials | |
 |---|---|---|---|
-| COSMOS-UK soil moisture and meteorology | `cosmos` | None | [COSMOS-UK](providers/cosmos-uk.md) |
-| FLUXNET daily fluxes and meteorology, from the ICOS Carbon Portal | `icos` | None | [ICOS](providers/icos.md) |
+| COSMOS-UK soil moisture and meteorology | `cosmos` | None | [COSMOS-UK](providers/cosmos-uk/index.md) |
+| FLUXNET daily fluxes and meteorology, from the ICOS Carbon Portal | `icos` | None | [ICOS](providers/icos/index.md) |
 
 ## Installation
 
@@ -24,4 +24,4 @@ pip install "xharvest[cosmos] @ git+https://github.com/NERC-CEH/xharvest"
 ```
 
 See [Getting started](getting-started.md) for a first download.
-Each provider page has its usage, Python API and CLI reference, and [Adding a connector](adding-a-connector.md) covers adding a provider.
+Each provider's overview covers downloading and standardising its data, with further pages on what the data mean, how standardisation works, catena and the API; [Adding a connector](adding-a-connector.md) covers adding a provider.

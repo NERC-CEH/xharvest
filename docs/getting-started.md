@@ -44,4 +44,4 @@ xharvest cosmos standardise data/raw/*.json --out data/cosmos.nc
 ```
 
 `data/cosmos.nc` is ready for a catena `[inputs.*]` section.
-Each provider's page says what its standardised output contains and which catena nodes it provides; start with [COSMOS-UK](providers/cosmos-uk.md).
+Each provider's overview says what its standardised output contains; start with [COSMOS-UK](providers/cosmos-uk/index.md).
