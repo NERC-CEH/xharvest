@@ -14,9 +14,12 @@ copyright = """
 Copyright &copy; 2026 Joe Marsh Rossney
 """
 
-# ADRs are for contributors, read on GitHub, so they are not built.
+# ADRs are for contributors, read on GitHub, so they are not built. The rendered
+# graphs and variable tables are only included into provider pages.
 exclude_docs = """
 adr/
+providers/_graphs/
+providers/_variables/
 """
 
 nav = [
