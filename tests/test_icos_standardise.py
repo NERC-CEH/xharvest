@@ -5,9 +5,9 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from xharvest import _fluxnet as fx
 from xharvest.errors import ProviderError
 from xharvest.icos import VARIABLES, standardise, to_netcdf
+from xharvest.icos import _fluxnet as fx
 from xharvest.provenance import PROVENANCE_ATTRS, sidecar_path
 
 

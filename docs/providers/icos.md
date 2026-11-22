@@ -90,7 +90,7 @@ Gap-filled values come from ONEFlux, upstream; the `_QC` fractions say how much 
 !!! note "Judgement calls"
 
     The nodes tagged `interprets` make choices that are xharvest's, not the provider's, and could reasonably go the other way:
-    [`variables`](#xharvest._fluxnet.variables), [`descriptions`](#xharvest.icos._pipeline.descriptions), [`flag_attributes`](#xharvest.icos._pipeline.flag_attributes) and [`cell_methods`](#xharvest.icos._pipeline.cell_methods).
+    [`variables`](#xharvest.icos._fluxnet.variables), [`descriptions`](#xharvest.icos._pipeline.descriptions), [`flag_attributes`](#xharvest.icos._pipeline.flag_attributes) and [`cell_methods`](#xharvest.icos._pipeline.cell_methods).
     Each one's entry says what it decides and why.
 
 ## About the data
@@ -222,9 +222,9 @@ Run `xharvest icos <command> --help` for a command's options; they mirror the Py
 ## Standardisation nodes
 
 The nodes of the graph above, in the order their modules define them.
-The FLUXNET reader is shared with other FLUXNET hubs; the rest are specific to this connector.
+The FLUXNET reader reads any FLUXNET archive, whichever hub serves it; the rest are specific to this connector.
 
-::: xharvest._fluxnet
+::: xharvest.icos._fluxnet
     options:
       heading_level: 3
       show_root_heading: true

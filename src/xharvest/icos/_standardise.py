@@ -1,7 +1,7 @@
 """Standardise FLUXNET archives from the ICOS Carbon Portal into one Dataset.
 
 `standardise` runs a Hamilton graph built from the nodes in
-`xharvest.icos._pipeline` and the shared FLUXNET reader, `xharvest._fluxnet`. Each
+`xharvest.icos._pipeline` and the FLUXNET reader, `xharvest.icos._fluxnet`. Each
 node does one thing, which its docstring and `action` tag say; the provider page
 draws the graph and lists the nodes.
 
@@ -20,8 +20,8 @@ from pathlib import Path
 
 import xarray as xr
 
-from .. import _fluxnet, _graph
-from . import _pipeline
+from .. import _graph
+from . import _fluxnet, _pipeline
 
 MODULES = (_fluxnet, _pipeline)
 """The node modules `standardise` builds its graph from."""

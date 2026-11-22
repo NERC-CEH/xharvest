@@ -34,7 +34,8 @@ The [design decisions](https://github.com/NERC-CEH/xharvest/tree/main/docs/adr) 
   `tests/test_docs.py` checks this, once the page is added to its `PAGES`.
 - The CLI command group in `cli/` calls these functions and adds nothing the Python API cannot do.
 - `tests/test_layout.py` enforces the import rules in the table.
-- A reader for a file format several providers share goes in a private top-level module of nodes, as `xharvest._fluxnet` does for FLUXNET archives, so each provider's graph reuses it.
+- A reader for a file format other providers also serve goes in its own module of nodes, apart from `_pipeline`, as `xharvest.icos._fluxnet` does for FLUXNET archives.
+  It moves to a subpackage of its own when a second connector needs it.
 
 ### Standardisation graph
 

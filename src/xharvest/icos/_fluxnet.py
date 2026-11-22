@@ -1,8 +1,9 @@
 """Nodes that read FLUXNET data products, the archives ONEFlux v1.3 writes per site.
 
-Every regional network publishes the same archive layout, so connectors for the
-hubs that serve them build their standardisation graphs from these nodes and their
-own. An archive holds, among other files:
+Every regional network publishes the same archive layout, so these nodes are kept
+apart from the ICOS-specific ones in `_pipeline`, ready to move to a FLUXNET
+subpackage when a connector for another hub needs them. An archive holds, among
+other files:
 
 - `<N>_<site>_FLUXNET_FLUXMET_<res>_<years>_<version>.csv`: the data, one file
   per resolution (`HH`, `DD`, `WW`, `MM`, `YY`);
@@ -28,7 +29,7 @@ from pathlib import Path
 import numpy as np
 from hamilton.function_modifiers import tag
 
-from .errors import ProviderError
+from ..errors import ProviderError
 
 FILL_VALUE = -9999.0
 
