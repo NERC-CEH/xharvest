@@ -1,8 +1,9 @@
 """Tabulate each connector's standardised variables for its overview page.
 
 Run through `just variables`, which `just docs` runs before each build. Writes
-`docs/providers/_variables/<provider>.md`, which the page includes and which is
-not committed.
+`docs/providers/_variables/<provider>.md`, the table, and
+`<provider>-dataset.md`, the standardised fixtures as xarray prints them, which
+the page includes and which are not committed.
 
 Both tables come from the committed fixtures, so the build needs no network and a
 table changes only when the fixtures are regenerated:
@@ -18,6 +19,9 @@ import json
 import re
 from pathlib import Path
 
+import xarray as xr
+
+from xharvest.cosmos import standardise as cosmos_standardise
 from xharvest.icos import standardise as icos_standardise
 
 ROOT = Path(__file__).parents[1]
@@ -77,11 +81,20 @@ def icos() -> str:
     return _table(["Name", "Unit", "Profile", "`_QC`", "Description"], rows)
 
 
+def printed(ds: xr.Dataset) -> str:
+    """The Dataset as `print` shows it, in a code block."""
+    return f"```text\n{ds}\n```\n"
+
+
 def main() -> None:
-    """Write every provider's table."""
+    """Write every provider's table and printed fixtures."""
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / "cosmos.md").write_text(cosmos())
     (OUT / "icos.md").write_text(icos())
+    cosmos_raw = sorted((FIXTURES / "cosmos").glob("*_1D_*.json"))
+    (OUT / "cosmos-dataset.md").write_text(printed(cosmos_standardise(cosmos_raw)))
+    icos_raw = sorted((FIXTURES / "icos").glob("*.zip"))
+    (OUT / "icos-dataset.md").write_text(printed(icos_standardise(icos_raw)))
 
 
 if __name__ == "__main__":
