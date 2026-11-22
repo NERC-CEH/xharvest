@@ -237,7 +237,7 @@ The FLUXNET reader is shared with other FLUXNET hubs; the rest are specific to t
       heading_level: 3
       show_root_heading: true
       members_order: source
-      filters: ["!^_", "!^QC_DESCRIPTION$", "!^TITLE$"]
+      filters: ["!^_", "!^QC_DESCRIPTION$", "!^TITLE$", "!^Kept$", "!^KEPT$"]
 
 ## Contract types
 

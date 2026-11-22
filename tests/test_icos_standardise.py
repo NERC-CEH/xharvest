@@ -7,7 +7,7 @@ import xarray as xr
 
 from xharvest import _fluxnet as fx
 from xharvest.errors import ProviderError
-from xharvest.icos import PROFILES, QC, SCALARS, standardise, to_netcdf
+from xharvest.icos import VARIABLES, standardise, to_netcdf
 from xharvest.provenance import PROVENANCE_ATTRS, sidecar_path
 
 
@@ -24,8 +24,7 @@ def _copy_with_sidecar(path, dest):
 def test_dims_and_variables(icos_raw):
     ds = standardise(icos_raw)
     assert set(ds.site.values) == {"UK-Ags", "UK-Cvn"}
-    expected = set(SCALARS) | set(PROFILES) | {f"{v}_QC" for v in QC}
-    assert set(ds.data_vars) == expected
+    assert set(ds.data_vars) == set(VARIABLES)
     assert ds.TA_F.dims == ("time", "site")
     assert ds.SWC_F_MDS.dims == ("time", "site", "depth")
     assert ds.TS_F_MDS_QC.dims == ("time", "site", "depth")
