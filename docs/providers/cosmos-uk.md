@@ -5,7 +5,7 @@
 
 | | |
 |---|---|
-| Install | `pip install xharvest[cosmos]` |
+| Install | `pip install "xharvest[cosmos] @ git+https://github.com/NERC-CEH/xharvest"` |
 | Credentials | None |
 | Licence | [Open Government Licence v3](http://www.nationalarchives.gov.uk/doc/open-government-licence), as stated by the API |
 | Cite | [EIDC release](https://doi.org/10.5285/dde10e2b-ee1a-4b2b-a247-176db2f7bb31) (see [Citing the data](#citing-the-data)) |

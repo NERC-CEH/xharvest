@@ -3,6 +3,9 @@
 import importlib
 from types import ModuleType
 
+SOURCE = "git+https://github.com/NERC-CEH/xharvest"
+"""Where to install xharvest from, as it is not on PyPI."""
+
 
 def require(module: str, extra: str) -> ModuleType:
     """Import `module`, or explain which extra provides it.
@@ -22,5 +25,5 @@ def require(module: str, extra: str) -> ModuleType:
     except ImportError as err:
         raise ImportError(
             f"{module!r} is not installed; install it with "
-            f"`pip install xharvest[{extra}]`"
+            f'`pip install "xharvest[{extra}] @ {SOURCE}"`'
         ) from err

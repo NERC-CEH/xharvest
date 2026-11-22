@@ -1,6 +1,7 @@
 """Download and standardise COSMOS-UK site data.
 
-`sites` and `fetch` need the `cosmos` extra: `pip install xharvest[cosmos]`.
+`sites` and `fetch` need the `cosmos` extra:
+`pip install "xharvest[cosmos] @ git+https://github.com/NERC-CEH/xharvest"`.
 """
 
 from ._fetch import Collection, Site, fetch, sites

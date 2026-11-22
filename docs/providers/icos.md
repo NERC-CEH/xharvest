@@ -5,7 +5,7 @@ The [ICOS Carbon Portal](https://www.icos-cp.eu) hosts the FLUXNET data product,
 
 | | |
 |---|---|
-| Install | `pip install xharvest[icos]` |
+| Install | `pip install "xharvest[icos] @ git+https://github.com/NERC-CEH/xharvest"` |
 | Credentials | None |
 | Licence | CC BY 4.0, as each archive's data policy states |
 | Cite | One citation per site (see [Citing the data](#citing-the-data)) |
