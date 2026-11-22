@@ -15,10 +15,10 @@ import json
 from collections.abc import Iterable
 from contextlib import AbstractContextManager, nullcontext
 from dataclasses import dataclass
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime
 from os import PathLike
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any
 
 from .._extras import require
 from ..errors import ProviderError
@@ -29,30 +29,11 @@ if TYPE_CHECKING:
 
 API_URL = "https://cosmos-api.ceh.ac.uk"
 
-Collection = Literal["1D", "30M"]
-"""The API's collections: daily, and 30-minute."""
+COLLECTION = "1D"
+"""The API's daily collection, the only one xharvest reads.
 
-
-@dataclass(frozen=True)
-class Period:
-    """The period a collection's values cover, relative to their stamps.
-
-    Attributes:
-        length: How long each value's period is.
-        stamp_ends: Whether a stamp marks the end of its period rather than
-            the start.
-    """
-
-    length: timedelta
-    stamp_ends: bool
-
-
-# Settled by summing 30-minute values into daily ones; see the provider page.
-PERIODS: dict[Collection, Period] = {
-    "1D": Period(timedelta(days=1), stamp_ends=False),
-    "30M": Period(timedelta(minutes=30), stamp_ends=True),
-}
-COLLECTIONS: tuple[Collection, ...] = tuple(PERIODS)
+The 30-minute collection is deferred to NERC-CEH/xharvest#8.
+"""
 
 _TIMEOUT = 120.0
 
@@ -86,14 +67,6 @@ def _client(
     return httpx.Client(timeout=_TIMEOUT)
 
 
-def _check_collection(collection: str) -> None:
-    if collection not in COLLECTIONS:
-        raise ValueError(
-            f"unknown COSMOS-UK collection {collection!r}; "
-            f"expected one of {', '.join(COLLECTIONS)}"
-        )
-
-
 def _get(client: "httpx.Client", url: str, params: dict[str, Any]) -> bytes:
     httpx = require("httpx", "cosmos")
     try:
@@ -117,13 +90,10 @@ def _lat_lon(coordinates: list[float]) -> tuple[float, float]:
     return (a, b) if a > b else (b, a)
 
 
-def sites(
-    collection: Collection = "1D", *, client: "httpx.Client | None" = None
-) -> list[Site]:
-    """List the sites with data in `collection`.
+def sites(*, client: "httpx.Client | None" = None) -> list[Site]:
+    """List the sites with daily data.
 
     Args:
-        collection: `"1D"` for daily data, `"30M"` for 30-minute data.
         client: An `httpx.Client` to use, e.g. one with a mock transport for
             testing. A new one is created if omitted.
 
@@ -133,9 +103,8 @@ def sites(
     Raises:
         ProviderError: If the API cannot be reached or returns an error.
     """
-    _check_collection(collection)
     with _client(client) as http:
-        body = _get(http, f"{API_URL}/collections/{collection}/locations", {})
+        body = _get(http, f"{API_URL}/collections/{COLLECTION}/locations", {})
     features = json.loads(body)["features"]
     result = []
     for feature in features:
@@ -159,19 +128,12 @@ def _timestamp(value: datetime) -> str:
     return value.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def _query_time(value: date | datetime, collection: Collection, *, end: bool) -> str:
-    """The stamp to request for a bound; a date selects the whole day."""
+def _query_time(value: date | datetime) -> str:
+    """The stamp to request for a bound; a date selects that day's value."""
     if isinstance(value, datetime):
         return _timestamp(value)
-    # The first or last stamp whose period lies within the day.
-    midnight = datetime(value.year, value.month, value.day)
-    period = PERIODS[collection]
-    if not end:
-        first = midnight + period.length if period.stamp_ends else midnight
-        return _timestamp(first)
-    next_midnight = midnight + timedelta(days=1)
-    last = next_midnight if period.stamp_ends else next_midnight - period.length
-    return _timestamp(last)
+    # A daily value is stamped at the start of the GMT day it covers.
+    return _timestamp(datetime(value.year, value.month, value.day))
 
 
 def _file_stamp(value: date | datetime) -> str:
@@ -189,13 +151,12 @@ def fetch(
     out: str | PathLike,
     *,
     parameters: Iterable[str] | None = None,
-    collection: Collection = "1D",
     overwrite: bool = False,
     client: "httpx.Client | None" = None,
 ) -> list[Path]:
-    """Download data for one or more sites, one CoverageJSON file per site.
+    """Download daily data for one or more sites, one CoverageJSON file per site.
 
-    Each file is named `{site}_{collection}_{start}_{end}.json`, where a date is
+    Each file is named `{site}_1D_{start}_{end}.json`, where a date is
     written `%Y%m%d` and a datetime `%Y%m%dT%H%M%S` in UTC. It has a provenance
     sidecar next to it (see `xharvest.provenance`), which also records the
     collection and the site's name, since the data response omits both. Pass
@@ -204,16 +165,13 @@ def fetch(
     Args:
         site_ids: Site identifiers, e.g. `"ALIC1"` or `["ALIC1", "BUNNY"]`.
             `sites` lists them.
-        start: First timestamp to include; a naive `datetime` is taken as UTC.
-            A `date` includes every value whose period lies within that GMT day,
-            which for `30M` starts at the 00:30 stamp.
-        end: Last timestamp to include, as for `start`; the interval is closed.
-            A `date` includes the whole day, which for `30M` ends at the 00:00
-            stamp of the next day.
+        start: First day to include, as a GMT day, or first timestamp; a naive
+            `datetime` is taken as UTC.
+        end: Last day or timestamp to include, as for `start`; the interval is
+            closed.
         out: Directory to write to; created if missing.
         parameters: Parameter names to request, e.g. `["cosmos_vwc", "precip"]`.
             Every parameter is requested if omitted.
-        collection: `"1D"` for daily data, `"30M"` for 30-minute data.
         overwrite: Download again even if a file already exists. Without it, a
             file is skipped if its sidecar records the same request, and
             downloaded again if it has no sidecar (an interrupted download).
@@ -230,20 +188,17 @@ def fetch(
         ValueError: If a file exists from a different request, e.g. with other
             parameters, and `overwrite` is not set.
     """
-    _check_collection(collection)
     site_ids = [site_ids] if isinstance(site_ids, str) else list(site_ids)
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
 
-    first = _query_time(start, collection, end=False)
-    last = _query_time(end, collection, end=True)
-    params: dict[str, Any] = {"datetime": f"{first}/{last}"}
+    params: dict[str, Any] = {"datetime": f"{_query_time(start)}/{_query_time(end)}"}
     if parameters is not None:
         params["parameter-name"] = ",".join(parameters)
 
     stamp = f"{_file_stamp(start)}_{_file_stamp(end)}"
-    url = f"{API_URL}/collections/{collection}/locations"
-    paths = [out / f"{site_id}_{collection}_{stamp}.json" for site_id in site_ids]
+    url = f"{API_URL}/collections/{COLLECTION}/locations"
+    paths = [out / f"{site_id}_{COLLECTION}_{stamp}.json" for site_id in site_ids]
     todo = [
         (site_id, path)
         for site_id, path in zip(site_ids, paths, strict=True)
@@ -253,11 +208,11 @@ def fetch(
         return paths
     with _client(client) as http:
         # Data responses carry no site names, so look them up once.
-        names = {s.id: s.name for s in sites(collection, client=http)}
+        names = {s.id: s.name for s in sites(client=http)}
         for site_id, path in todo:
             content = _get(http, f"{url}/{site_id}", params)
             metadata = {
-                "collection": collection,
+                "collection": COLLECTION,
                 "site_names": {site_id: names.get(site_id, "")},
             }
             save(path, content, f"{url}/{site_id}", params, metadata)

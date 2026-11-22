@@ -7,17 +7,12 @@ from typing import Annotated
 import typer
 
 from .. import cosmos
-from ..cosmos import Collection
 from ..errors import ProviderError
 
 app = typer.Typer(
     help="COSMOS-UK soil moisture and meteorology (no credentials needed).",
     no_args_is_help=True,
 )
-
-CollectionOption = Annotated[
-    Collection, typer.Option(help="'1D' for daily data, '30M' for 30-minute data.")
-]
 
 
 def _date_or_datetime(value: str) -> date:
@@ -33,10 +28,10 @@ def _fail(err: Exception) -> typer.Exit:
 
 
 @app.command()
-def sites(collection: CollectionOption = "1D") -> None:
+def sites() -> None:
     """List the sites, with their identifiers and periods of record."""
     try:
-        found = cosmos.sites(collection)
+        found = cosmos.sites()
     except (ProviderError, ValueError) as err:
         raise _fail(err) from None
     for site in found:
@@ -69,12 +64,11 @@ def fetch(
         list[str] | None,
         typer.Option(help="Parameter to request; repeat for several. Default: all."),
     ] = None,
-    collection: CollectionOption = "1D",
     overwrite: Annotated[
         bool, typer.Option(help="Download again even if a file exists.")
     ] = False,
 ) -> None:
-    """Download raw CoverageJSON, one file per site, and print the paths."""
+    """Download raw daily CoverageJSON, one file per site, and print the paths."""
     try:
         paths = cosmos.fetch(
             site_ids,
@@ -82,7 +76,6 @@ def fetch(
             end,
             out,
             parameters=parameter,
-            collection=collection,
             overwrite=overwrite,
         )
     except (ProviderError, ValueError) as err:

@@ -9,8 +9,12 @@
 | Credentials | None |
 | Licence | [Open Government Licence v3](http://www.nationalarchives.gov.uk/doc/open-government-licence), as stated by the API |
 | Cite | [EIDC release](https://doi.org/10.5285/dde10e2b-ee1a-4b2b-a247-176db2f7bb31) (see [Citing the data](#citing-the-data)) |
-| Collections | `1D` (daily), `30M` (30-minute) |
+| Resolution | Daily only |
 | catena section | `[cosmos]` |
+
+!!! warning "Daily data only"
+
+    The API also serves 30-minute data, which xharvest does not fetch or standardise yet ([#8](https://github.com/NERC-CEH/xharvest/issues/8)).
 
 ## Download
 
@@ -33,7 +37,6 @@ xharvest cosmos fetch ALIC1 MOORH --start 2025-01-01 --end 2025-03-31 --out data
 - A file that already holds the same request is skipped; pass `overwrite=True` (`--overwrite`) to download again.
 - `start` and `end` are both included; dates select whole GMT days.
 - `parameters=[...]` (`--parameter`, repeated) requests only some parameters.
-- 30-minute data is about 48 times the size of daily data, and `fetch` makes one request per site, so fetch long 30-minute records in pieces; `standardise` joins them.
 
 ## Standardise
 
@@ -48,7 +51,6 @@ xharvest cosmos standardise data/raw/*_1D_*.json --out data/cosmos.nc
 Sidecars among the paths are skipped, so a glob over the download directory works.
 Files from separate periods can be joined, such as January 2025 and January 2026, and the gap between them stays a gap: `time` holds only what was fetched, rather than NaN for the months nobody asked for.
 A node that depends on regular spacing declares `Freq`, and raises on such a file.
-Standardise each collection into its own file.
 
 The result has dims `(time, site)`:
 
@@ -87,16 +89,15 @@ Nothing converts units, fills gaps, or removes values.
 
 ### Timestamps
 
-A **daily** value stamped `2025-01-01T00:00` covers the GMT day 2025-01-01.
-A **30-minute** value covers the 30 minutes *ending* at its stamp, so `12:30` covers `12:00`–`12:30`.
-Under this reading, the 30-minute precipitation summed over each day matches the daily totals to within rounding.
+A value stamped `2025-01-01T00:00` covers the GMT day 2025-01-01.
+This was checked against the API's 30-minute data, whose values cover the 30 minutes *ending* at their stamps (`12:30` covers `12:00`–`12:30`): under these readings, 30-minute precipitation summed over each day matches the daily totals to within rounding.
 
 ### Snow days
 
 When there is snow on the ground the neutron counts no longer reflect soil moisture alone.
 On those days (`snow == 1`), COSMOS-UK reports a `cosmos_vwc` estimated from the counts before the snow, which shows up as a constant run of values.
 Use the [`cosmos_vwc_snow_masked`](#xharvest.cosmos.nodes.cosmos_vwc_snow_masked) node to drop them.
-The node only applies to daily data: the 30-minute collection has neither `snow` nor `cosmos_vwc`, checked against the parameters returned for ALIC1 on 2025-01-04.
+The API's 30-minute data has neither `snow` nor `cosmos_vwc`, checked against the parameters returned for ALIC1 on 2025-01-04, so the node will stay daily-only once 30-minute data is supported.
 
 ### What the API does not provide
 
@@ -133,10 +134,6 @@ Run `xharvest cosmos <command> --help` for a command's options; they mirror the 
       heading_level: 3
 
 ::: xharvest.cosmos.fetch
-    options:
-      heading_level: 3
-
-::: xharvest.cosmos.Collection
     options:
       heading_level: 3
 
