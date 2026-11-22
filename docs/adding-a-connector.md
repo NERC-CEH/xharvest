@@ -30,7 +30,8 @@ The [design decisions](https://github.com/NERC-CEH/xharvest/tree/main/docs/adr) 
 | `_variables.py` | One contract type per standardised variable, and `VARIABLES`, mapping each variable's name to its type. | `xarray-annotated` |
 | `nodes.py` (optional) | Contract-annotated node functions for source-specific preparation, registered in the `catena.modules` entry-point group. | `xarray-annotated`, `hamilton` |
 
-- `__init__.py` lists the public API in `__all__`; the provider page documents each name in it.
+- `__init__.py` lists the public API in `__all__`; the provider page documents each name in it, as a `:::` reference or by name in backticks.
+  `tests/test_docs.py` checks this, once the page is added to its `PAGES`.
 - The CLI command group in `cli/` calls these functions and adds nothing the Python API cannot do.
 - `tests/test_layout.py` enforces the import rules in the table.
 - A reader for a file format several providers share goes in a private top-level module of nodes, as `xharvest._fluxnet` does for FLUXNET archives, so each provider's graph reuses it.
@@ -113,13 +114,14 @@ Tests must not touch the network or need credentials.
 
 Add a page under `docs/providers/`, to the `zensical.toml` nav, and to the provider tables in `README.md` and `docs/index.md`.
 The page includes the graph `just graphs` draws (`--8<-- "docs/providers/_graphs/<provider>.html"`), whose nodes link to the node reference rendered from the graph's modules, in place of a hand-written list of what `standardise` does; see the [ICOS](providers/icos.md) page.
+It also includes a table of every variable the standardised file can hold (`--8<-- "docs/providers/_variables/<provider>.md"`), which `just variables` draws from the committed fixtures; add a function for the provider to `scripts/render_variables.py`.
 Copy the structure of the [COSMOS-UK](providers/cosmos-uk.md) page.
 Its "About the data" section must say what a timestamp means.
 Check claims like this against the data, not only the provider's docs, and record what was checked and how.
-COSMOS-UK's timestamp convention, for example, was settled by summing 30-minute values into daily ones.
+COSMOS-UK's timestamp convention, for example, was settled by summing the API's 30-minute values into daily ones.
 
 ## Before opening the pull request
 
 - [ ] `uv run just` passes, and `uv run just test-live` passes against the real API.
-- [ ] The provider page is in the nav and the provider tables.
+- [ ] The provider page is in the nav, the provider tables and `PAGES` in `tests/test_docs.py`.
 - [ ] Anything this connector settled that the next one should follow is added to this page.
