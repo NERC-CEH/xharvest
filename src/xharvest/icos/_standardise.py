@@ -1,12 +1,12 @@
 """Standardise FLUXNET archives from the ICOS Carbon Portal into one Dataset.
 
 `standardise` runs a Hamilton graph built from the nodes in
-`xharvest.icos._pipeline` and the shared FLUXNET reader, `xharvest._fluxnet`. Each
+`xharvest.icos._pipeline` and the FLUXNET reader, `xharvest.icos._fluxnet`. Each
 node does one thing, which its docstring and `action` tag say; the provider page
 draws the graph and lists the nodes.
 
 Only the daily (`DD`) files are read, and only a fixed set of variables for soil
-moisture and ecosystem carbon modelling: see `SCALARS`, `PROFILES` and `QC`.
+moisture and ecosystem carbon modelling: see `VARIABLES`.
 
 Examples:
     >>> from pathlib import Path
@@ -20,8 +20,8 @@ from pathlib import Path
 
 import xarray as xr
 
-from .. import _fluxnet, _graph
-from . import _pipeline
+from .. import _graph
+from . import _fluxnet, _pipeline
 
 MODULES = (_fluxnet, _pipeline)
 """The node modules `standardise` builds its graph from."""
@@ -47,7 +47,7 @@ def standardise(paths: Iterable[str | PathLike]) -> xr.Dataset:
             two archives for one site disagree where they overlap.
         FileNotFoundError: If an archive has no provenance sidecar.
         ProviderError: If an archive is not one the connector can read, or a
-            variable has a unit other than the one in `SCALARS` or `PROFILES`.
+            kept variable has a unit other than the one standardise expects.
     """
     return _graph.run(MODULES, "dataset", paths=[Path(p) for p in paths])
 

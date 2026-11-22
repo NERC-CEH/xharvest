@@ -10,7 +10,7 @@
    },
    "id": "ALIC1",
    "properties": {
-    "datetime": "2015-03-06T13:30:00Z/2026-11-01T00:00:00Z",
+    "datetime": "2015-03-06T13:30:00Z/2026-11-21T00:00:00Z",
     "edrqueryendpoint": "https://cosmos-api.ceh.ac.uk/collections/1D/locations/ALIC1",
     "label": "Alice Holt",
     "parameter-name": [
@@ -122,7 +122,7 @@
    },
    "id": "MOORH",
    "properties": {
-    "datetime": "2014-12-04T11:30:00Z/2026-11-01T00:00:00Z",
+    "datetime": "2014-12-04T11:30:00Z/2026-11-21T00:00:00Z",
     "edrqueryendpoint": "https://cosmos-api.ceh.ac.uk/collections/1D/locations/MOORH",
     "label": "Moor House",
     "parameter-name": [
@@ -225,6 +225,1379 @@
    "type": "Feature"
   }
  ],
- "timeStamp": "2026-11-02T13:48:38Z",
+ "parameters": {
+  "albedo": {
+   "data-type": "float",
+   "description": "Mean albedo value between 10:00 and 14:00",
+   "label": "Albedo",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT4H"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/_0-19-1",
+    "label": "Albedo"
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "dimensionless",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/1",
+     "value": "1"
+    }
+   }
+  },
+  "cosmos_vwc": {
+   "data-type": "float",
+   "description": "Daily volumetric water content (soil moisture) over an area of about 12 hectares (about 30 acres). The approximate depth of the measurement is given by d86_75m. Note, snow on the ground affects the measurement, therefore on snow days, the soil moisture is estimated",
+   "label": "COSMOS Volumetric Water Content",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/2-0-9",
+    "label": "Volumetric Water Content"
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "percent",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/percent",
+     "value": "%"
+    }
+   }
+  },
+  "cts_mod_corr": {
+   "data-type": "float",
+   "description": "Daily corrected counts from CRNS tube",
+   "label": "COSMOS Neutron Counts (corrected)",
+   "measurementType": {
+    "method": "sum",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "",
+    "label": "Neutron Counts"
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "count",
+    "symbol": {
+     "type": "http://purl.obolibrary.org/obo/UO_0000189",
+     "value": "count"
+    }
+   }
+  },
+  "d86_75m": {
+   "data-type": "float",
+   "description": "Daily effective depth of COSMOS VWC measurement at 75M radius",
+   "label": "D86 75M",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "",
+    "label": "D86 effective depth"
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "centimetre",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/cm",
+     "value": "cm"
+    }
+   }
+  },
+  "g1": {
+   "data-type": "float",
+   "description": "Daily soil heat flux from heat flux plate 1",
+   "label": "Soil Heat Flux 1",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/2-0-24",
+    "label": "Soil heat flux"
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "watts per square metre",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/W_m-2",
+     "value": "W m-2"
+    }
+   }
+  },
+  "g2": {
+   "data-type": "float",
+   "description": "Daily soil heat flux from heat flux plate 2",
+   "label": "Soil Heat Flux 2",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/2-0-24",
+    "label": "Soil heat flux"
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "watts per square metre",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/W_m-2",
+     "value": "W m-2"
+    }
+   }
+  },
+  "lwin": {
+   "data-type": "float",
+   "description": "Daily incoming longwave radiation",
+   "label": "Longwave Radiation - Incoming",
+   "measurementType": {
+    "method": "sum",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/0-5-3",
+    "label": "Downward long-wave radiation flux"
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "megajoule per square metre per day ",
+    "symbol": {
+     "type": "http://www.ontology-of-units-of-measure.org/resource/om-2/megajoulePerSquareMetreDay",
+     "value": "MJ m-2 day-1"
+    }
+   }
+  },
+  "lwout": {
+   "data-type": "float",
+   "description": "Daily outgoing longwave radiation",
+   "label": "Longwave Radiation - Outgoing",
+   "measurementType": {
+    "method": "sum",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/0-5-4",
+    "label": "Upward long-wave radiation flux"
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "megajoule per square metre per day ",
+    "symbol": {
+     "type": "http://www.ontology-of-units-of-measure.org/resource/om-2/megajoulePerSquareMetreDay",
+     "value": "MJ m-2 day-1"
+    }
+   }
+  },
+  "pa": {
+   "data-type": "float",
+   "description": "Daily atmospheric pressure",
+   "label": "Atmospheric Pressure",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/bufr4/b/10/004",
+    "label": "Atmospheric Pressure"
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "hectopascal",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/hPa",
+     "value": "hPa"
+    }
+   }
+  },
+  "pe": {
+   "data-type": "float",
+   "description": "Daily potential evaporation",
+   "label": "Potential Evaporation",
+   "measurementType": {
+    "method": "sum",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/0-1-40",
+    "label": "Potential evaporation"
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "millimetre",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/mm",
+     "value": "mm"
+    }
+   }
+  },
+  "precip": {
+   "data-type": "float",
+   "description": "Daily precipitation from pluvio gauge",
+   "label": "Precipitation (Pluvio)",
+   "measurementType": {
+    "method": "sum",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/_0-1-8",
+    "label": "Total precipitation"
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "millimetre",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/mm",
+     "value": "mm"
+    }
+   }
+  },
+  "precip_raine": {
+   "data-type": "float",
+   "description": "Daily precipitation from rainE gauge",
+   "label": "Precipitation (rainE)",
+   "measurementType": {
+    "method": "sum",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/_0-1-8",
+    "label": "Total precipitation"
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "millimetre",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/mm",
+     "value": "mm"
+    }
+   }
+  },
+  "precip_tipping": {
+   "data-type": "float",
+   "description": "Daily precipitation from tipping bucket gauge",
+   "label": "Precipitation (Tipping Bucket)",
+   "measurementType": {
+    "method": "sum",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/_0-1-8",
+    "label": "Total precipitation"
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "millimetre",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/mm",
+     "value": "mm"
+    }
+   }
+  },
+  "q": {
+   "data-type": "float",
+   "description": "Daily absolute humidity",
+   "label": "Absolute Humidity",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/0-1-18",
+    "label": "Absolute humidity"
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "gram per cubic metre",
+    "symbol": {
+     "type": "http://www.ontology-of-units-of-measure.org/resource/om-2/gramPerCubicmetre",
+     "value": "g m-3"
+    }
+   }
+  },
+  "rh": {
+   "data-type": "float",
+   "description": "Daily relative humidity",
+   "label": "Relative Humidity",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/bufr4/b/13/009",
+    "label": "Relative Humidity"
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "percent",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/percent",
+     "value": "%"
+    }
+   }
+  },
+  "rn": {
+   "data-type": "float",
+   "description": "Daily net radiation",
+   "label": "Net Radiation",
+   "measurementType": {
+    "method": "sum",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/bufr4/b/14/016",
+    "label": "Net radiation"
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "megajoule per square metre per day ",
+    "symbol": {
+     "type": "http://www.ontology-of-units-of-measure.org/resource/om-2/megajoulePerSquareMetreDay",
+     "value": "MJ m-2 day-1"
+    }
+   }
+  },
+  "snow": {
+   "data-type": "integer",
+   "description": "Whether or not there is signicant snow on the ground (Daily)",
+   "label": "Snow",
+   "measurementType": {
+    "method": "instantaneous",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/0-1-36",
+    "label": "Categorical snow"
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "dimensionless",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/1",
+     "value": "1"
+    }
+   }
+  },
+  "snow_depth": {
+   "data-type": "float",
+   "description": "Daily snow depth (Only given on snow days)",
+   "label": "Snow Depth",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/_0-1-11",
+    "label": "Snow depth"
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "millimetre",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/mm",
+     "value": "mm"
+    }
+   }
+  },
+  "stp_tsoil10": {
+   "data-type": "float",
+   "description": "Daily soil temperature at 10cm. STP sensor",
+   "label": "STP 03 Soil Temperature at 10cm",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/2-0-2",
+    "label": "Soil temperature"
+   },
+   "sensorInfo": {
+    "sensor_depth": {
+     "unit": {
+      "label": "centimetre",
+      "symbol": {
+       "type": "http://codes.wmo.int/common/unit/cm",
+       "value": "cm"
+      }
+     },
+     "value": "10"
+    }
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "degrees Celsius",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/degC",
+     "value": "degC"
+    }
+   }
+  },
+  "stp_tsoil2": {
+   "data-type": "float",
+   "description": "Daily soil temperature at 2cm. STP sensor",
+   "label": "STP 01 Soil Temperature at 2cm",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/2-0-2",
+    "label": "Soil temperature"
+   },
+   "sensorInfo": {
+    "sensor_depth": {
+     "unit": {
+      "label": "centimetre",
+      "symbol": {
+       "type": "http://codes.wmo.int/common/unit/cm",
+       "value": "cm"
+      }
+     },
+     "value": "2"
+    }
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "degrees Celsius",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/degC",
+     "value": "degC"
+    }
+   }
+  },
+  "stp_tsoil20": {
+   "data-type": "float",
+   "description": "Daily soil temperature at 20cm. STP sensor",
+   "label": "STP 04 Soil Temperature at 20cm",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/2-0-2",
+    "label": "Soil temperature"
+   },
+   "sensorInfo": {
+    "sensor_depth": {
+     "unit": {
+      "label": "centimetre",
+      "symbol": {
+       "type": "http://codes.wmo.int/common/unit/cm",
+       "value": "cm"
+      }
+     },
+     "value": "20"
+    }
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "degrees Celsius",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/degC",
+     "value": "degC"
+    }
+   }
+  },
+  "stp_tsoil5": {
+   "data-type": "float",
+   "description": "Daily soil temperature at 5cm. STP sensor",
+   "label": "STP 02 Soil Temperature at 5cm",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/2-0-2",
+    "label": "Soil temperature"
+   },
+   "sensorInfo": {
+    "sensor_depth": {
+     "unit": {
+      "label": "centimetre",
+      "symbol": {
+       "type": "http://codes.wmo.int/common/unit/cm",
+       "value": "cm"
+      }
+     },
+     "value": "5"
+    }
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "degrees Celsius",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/degC",
+     "value": "degC"
+    }
+   }
+  },
+  "stp_tsoil50": {
+   "data-type": "float",
+   "description": "Daily soil temperature at 50cm. STP sensor",
+   "label": "STP 05 Soil Temperature at 50cm",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/2-0-2",
+    "label": "Soil temperature"
+   },
+   "sensorInfo": {
+    "sensor_depth": {
+     "unit": {
+      "label": "centimetre",
+      "symbol": {
+       "type": "http://codes.wmo.int/common/unit/cm",
+       "value": "cm"
+      }
+     },
+     "value": "50"
+    }
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "degrees Celsius",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/degC",
+     "value": "degC"
+    }
+   }
+  },
+  "swe_crns": {
+   "data-type": "float",
+   "description": "Daily snow water equivalent (only given on snow days).  Value at midday (12:00)",
+   "label": "Snow Water Equivalent",
+   "measurementType": {
+    "method": "instantaneous",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/wmdr/ObservedVariableTerrestrial/631",
+    "label": "Water equivalent of snow cover"
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "millimetre",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/mm",
+     "value": "mm"
+    }
+   }
+  },
+  "swin": {
+   "data-type": "float",
+   "description": "Daily incoming shortwave radiation",
+   "label": "Shortwave Radiation - Incoming",
+   "measurementType": {
+    "method": "sum",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/0-4-7",
+    "label": "Downward short-wave radiation flux"
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "megajoule per square metre per day ",
+    "symbol": {
+     "type": "http://www.ontology-of-units-of-measure.org/resource/om-2/megajoulePerSquareMetreDay",
+     "value": "MJ m-2 day-1"
+    }
+   }
+  },
+  "swout": {
+   "data-type": "float",
+   "description": "Daily outgoing shortwave radiation",
+   "label": "Shortwave Radiation - Outgoing",
+   "measurementType": {
+    "method": "sum",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/0-4-8",
+    "label": "Upward short-wave radiation flux"
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "megajoule per square metre per day ",
+    "symbol": {
+     "type": "http://www.ontology-of-units-of-measure.org/resource/om-2/megajoulePerSquareMetreDay",
+     "value": "MJ m-2 day-1"
+    }
+   }
+  },
+  "ta": {
+   "data-type": "float",
+   "description": "Daily air temperature",
+   "label": "Air Temperature",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/common/quantity-kind/airTemperature",
+    "label": "Air Temperature"
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "degrees Celsius",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/degC",
+     "value": "degC"
+    }
+   }
+  },
+  "ta_max": {
+   "data-type": "float",
+   "description": "Daily maximum air temperature",
+   "label": "Air Temperature - Maximum",
+   "measurementType": {
+    "method": "max",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/common/quantity-kind/airTemperature",
+    "label": "Air Temperature"
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "degrees Celsius",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/degC",
+     "value": "degC"
+    }
+   }
+  },
+  "ta_min": {
+   "data-type": "float",
+   "description": "Daily minimum air temperature",
+   "label": "Air Temperature - Minimum",
+   "measurementType": {
+    "method": "min",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/common/quantity-kind/airTemperature",
+    "label": "Air Temperature"
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "degrees Celsius",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/degC",
+     "value": "degC"
+    }
+   }
+  },
+  "tdt10_tsoil": {
+   "data-type": "float",
+   "description": "Daily soil temperature at 50cm*. TDT sensor 10 (*except for Heytesbury site where sensors at 5cm) ",
+   "label": "TDT 10 - Soil Temperature at 50cm",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/2-0-10",
+    "label": "Soil temperature"
+   },
+   "sensorInfo": {
+    "sensor_depth": {
+     "unit": {
+      "label": "centimetre",
+      "symbol": {
+       "type": "http://codes.wmo.int/common/unit/cm",
+       "value": "cm"
+      }
+     },
+     "value": "50"
+    }
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "degrees Celsius",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/degC",
+     "value": "degC"
+    }
+   }
+  },
+  "tdt10_vwc": {
+   "data-type": "float",
+   "description": "Daily volumetric water content at 50cm*. TDT sensor 10 (*except for Heytesbury site where sensors at 5cm) ",
+   "label": "TDT 10 - Volumetric Water Content at 50cm",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/2-0-17",
+    "label": "Volumetric Water Content"
+   },
+   "sensorInfo": {
+    "sensor_depth": {
+     "unit": {
+      "label": "centimetre",
+      "symbol": {
+       "type": "http://codes.wmo.int/common/unit/cm",
+       "value": "cm"
+      }
+     },
+     "value": "50"
+    }
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "percent",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/percent",
+     "value": "%"
+    }
+   }
+  },
+  "tdt1_tsoil": {
+   "data-type": "float",
+   "description": "Daily soil temperature at 10cm. TDT sensor 1",
+   "label": "TDT 01 - Soil Temperature at 10cm",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/2-0-2",
+    "label": "Soil temperature"
+   },
+   "sensorInfo": {
+    "sensor_depth": {
+     "unit": {
+      "label": "centimetre",
+      "symbol": {
+       "type": "http://codes.wmo.int/common/unit/cm",
+       "value": "cm"
+      }
+     },
+     "value": "10"
+    }
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "degrees Celsius",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/degC",
+     "value": "degC"
+    }
+   }
+  },
+  "tdt1_vwc": {
+   "data-type": "float",
+   "description": "Daily volumetric water content at 10cm. TDT sensor 1",
+   "label": "TDT 01 - Volumetric Water Content at 10cm",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/2-0-9",
+    "label": "Volumetric Water Content"
+   },
+   "sensorInfo": {
+    "sensor_depth": {
+     "unit": {
+      "label": "centimetre",
+      "symbol": {
+       "type": "http://codes.wmo.int/common/unit/cm",
+       "value": "cm"
+      }
+     },
+     "value": "10"
+    }
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "percent",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/percent",
+     "value": "%"
+    }
+   }
+  },
+  "tdt2_tsoil": {
+   "data-type": "float",
+   "description": "Daily soil temperature at 10cm. TDT sensor 2",
+   "label": "TDT 02 - Soil Temperature at 10cm",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/2-0-2",
+    "label": "Soil temperature"
+   },
+   "sensorInfo": {
+    "sensor_depth": {
+     "unit": {
+      "label": "centimetre",
+      "symbol": {
+       "type": "http://codes.wmo.int/common/unit/cm",
+       "value": "cm"
+      }
+     },
+     "value": "10"
+    }
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "degrees Celsius",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/degC",
+     "value": "degC"
+    }
+   }
+  },
+  "tdt2_vwc": {
+   "data-type": "float",
+   "description": "Daily volumetric water content at 10cm. TDT sensor 2",
+   "label": "TDT 02 - Volumetric Water Content at 10cm",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/2-0-9",
+    "label": "Volumetric Water Content"
+   },
+   "sensorInfo": {
+    "sensor_depth": {
+     "unit": {
+      "label": "centimetre",
+      "symbol": {
+       "type": "http://codes.wmo.int/common/unit/cm",
+       "value": "cm"
+      }
+     },
+     "value": "10"
+    }
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "percent",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/percent",
+     "value": "%"
+    }
+   }
+  },
+  "tdt3_tsoil": {
+   "data-type": "float",
+   "description": "Daily soil temperature at 5cm. TDT sensor 3",
+   "label": "TDT 03 - Soil Temperature at 5cm",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/2-0-3",
+    "label": "Soil temperature"
+   },
+   "sensorInfo": {
+    "sensor_depth": {
+     "unit": {
+      "label": "centimetre",
+      "symbol": {
+       "type": "http://codes.wmo.int/common/unit/cm",
+       "value": "cm"
+      }
+     },
+     "value": "5"
+    }
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "degrees Celsius",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/degC",
+     "value": "degC"
+    }
+   }
+  },
+  "tdt3_vwc": {
+   "data-type": "float",
+   "description": "Daily volumetric water content at 5cm. TDT sensor 3",
+   "label": "TDT 03 - Volumetric Water Content at 5cm",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/2-0-10",
+    "label": "Volumetric Water Content"
+   },
+   "sensorInfo": {
+    "sensor_depth": {
+     "unit": {
+      "label": "centimetre",
+      "symbol": {
+       "type": "http://codes.wmo.int/common/unit/cm",
+       "value": "cm"
+      }
+     },
+     "value": "5"
+    }
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "percent",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/percent",
+     "value": "%"
+    }
+   }
+  },
+  "tdt4_tsoil": {
+   "data-type": "float",
+   "description": "Daily soil temperature at 5cm. TDT sensor 4",
+   "label": "TDT 04 - Soil Temperature at 5cm",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/2-0-4",
+    "label": "Soil temperature"
+   },
+   "sensorInfo": {
+    "sensor_depth": {
+     "unit": {
+      "label": "centimetre",
+      "symbol": {
+       "type": "http://codes.wmo.int/common/unit/cm",
+       "value": "cm"
+      }
+     },
+     "value": "5"
+    }
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "degrees Celsius",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/degC",
+     "value": "degC"
+    }
+   }
+  },
+  "tdt4_vwc": {
+   "data-type": "float",
+   "description": "Daily volumetric water content at 5cm. TDT sensor 4",
+   "label": "TDT 04 - Volumetric Water Content at 5cm",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/2-0-11",
+    "label": "Volumetric Water Content"
+   },
+   "sensorInfo": {
+    "sensor_depth": {
+     "unit": {
+      "label": "centimetre",
+      "symbol": {
+       "type": "http://codes.wmo.int/common/unit/cm",
+       "value": "cm"
+      }
+     },
+     "value": "5"
+    }
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "percent",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/percent",
+     "value": "%"
+    }
+   }
+  },
+  "tdt5_tsoil": {
+   "data-type": "float",
+   "description": "Daily soil temperature at 15cm. TDT sensor 5",
+   "label": "TDT 05 - Soil Temperature at 15cm",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/2-0-5",
+    "label": "Soil temperature"
+   },
+   "sensorInfo": {
+    "sensor_depth": {
+     "unit": {
+      "label": "centimetre",
+      "symbol": {
+       "type": "http://codes.wmo.int/common/unit/cm",
+       "value": "cm"
+      }
+     },
+     "value": "15"
+    }
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "degrees Celsius",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/degC",
+     "value": "degC"
+    }
+   }
+  },
+  "tdt5_vwc": {
+   "data-type": "float",
+   "description": "Daily volumetric water content at 15cm. TDT sensor 5",
+   "label": "TDT 05 - Volumetric Water Content at 15cm",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/2-0-12",
+    "label": "Volumetric Water Content"
+   },
+   "sensorInfo": {
+    "sensor_depth": {
+     "unit": {
+      "label": "centimetre",
+      "symbol": {
+       "type": "http://codes.wmo.int/common/unit/cm",
+       "value": "cm"
+      }
+     },
+     "value": "15"
+    }
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "percent",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/percent",
+     "value": "%"
+    }
+   }
+  },
+  "tdt6_tsoil": {
+   "data-type": "float",
+   "description": "Daily soil temperature at 15cm. TDT sensor 6",
+   "label": "TDT 06 - Soil Temperature at 15cm",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/2-0-6",
+    "label": "Soil temperature"
+   },
+   "sensorInfo": {
+    "sensor_depth": {
+     "unit": {
+      "label": "centimetre",
+      "symbol": {
+       "type": "http://codes.wmo.int/common/unit/cm",
+       "value": "cm"
+      }
+     },
+     "value": "15"
+    }
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "degrees Celsius",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/degC",
+     "value": "degC"
+    }
+   }
+  },
+  "tdt6_vwc": {
+   "data-type": "float",
+   "description": "Daily volumetric water content at 15cm. TDT sensor 6",
+   "label": "TDT 06 - Volumetric Water Content at 15cm",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/2-0-13",
+    "label": "Volumetric Water Content"
+   },
+   "sensorInfo": {
+    "sensor_depth": {
+     "unit": {
+      "label": "centimetre",
+      "symbol": {
+       "type": "http://codes.wmo.int/common/unit/cm",
+       "value": "cm"
+      }
+     },
+     "value": "15"
+    }
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "percent",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/percent",
+     "value": "%"
+    }
+   }
+  },
+  "tdt7_tsoil": {
+   "data-type": "float",
+   "description": "Daily soil temperature at 25cm. TDT sensor 7",
+   "label": "TDT 07 - Soil Temperature at 25cm",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/2-0-7",
+    "label": "Soil temperature"
+   },
+   "sensorInfo": {
+    "sensor_depth": {
+     "unit": {
+      "label": "centimetre",
+      "symbol": {
+       "type": "http://codes.wmo.int/common/unit/cm",
+       "value": "cm"
+      }
+     },
+     "value": "25"
+    }
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "degrees Celsius",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/degC",
+     "value": "degC"
+    }
+   }
+  },
+  "tdt7_vwc": {
+   "data-type": "float",
+   "description": "Daily volumetric water content at 25cm. TDT sensor 7",
+   "label": "TDT 07 - Volumetric Water Content at 25cm",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/2-0-14",
+    "label": "Volumetric Water Content"
+   },
+   "sensorInfo": {
+    "sensor_depth": {
+     "unit": {
+      "label": "centimetre",
+      "symbol": {
+       "type": "http://codes.wmo.int/common/unit/cm",
+       "value": "cm"
+      }
+     },
+     "value": "25"
+    }
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "percent",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/percent",
+     "value": "%"
+    }
+   }
+  },
+  "tdt8_tsoil": {
+   "data-type": "float",
+   "description": "Daily soil temperature at 25cm. TDT sensor 8",
+   "label": "TDT 08 - Soil Temperature at 25cm",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/2-0-8",
+    "label": "Soil temperature"
+   },
+   "sensorInfo": {
+    "sensor_depth": {
+     "unit": {
+      "label": "centimetre",
+      "symbol": {
+       "type": "http://codes.wmo.int/common/unit/cm",
+       "value": "cm"
+      }
+     },
+     "value": "25"
+    }
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "degrees Celsius",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/degC",
+     "value": "degC"
+    }
+   }
+  },
+  "tdt8_vwc": {
+   "data-type": "float",
+   "description": "Daily volumetric water content at 25cm. TDT sensor 8",
+   "label": "TDT 08 - Volumetric Water Content at 25cm",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/2-0-15",
+    "label": "Volumetric Water Content"
+   },
+   "sensorInfo": {
+    "sensor_depth": {
+     "unit": {
+      "label": "centimetre",
+      "symbol": {
+       "type": "http://codes.wmo.int/common/unit/cm",
+       "value": "cm"
+      }
+     },
+     "value": "25"
+    }
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "percent",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/percent",
+     "value": "%"
+    }
+   }
+  },
+  "tdt9_tsoil": {
+   "data-type": "float",
+   "description": "Daily soil temperature at 50cm*. TDT sensor 9 (*except for Heytesbury site where sensors at 5cm) ",
+   "label": "TDT 09 - Soil Temperature at 50cm",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/2-0-9",
+    "label": "Soil temperature"
+   },
+   "sensorInfo": {
+    "sensor_depth": {
+     "unit": {
+      "label": "centimetre",
+      "symbol": {
+       "type": "http://codes.wmo.int/common/unit/cm",
+       "value": "cm"
+      }
+     },
+     "value": "50"
+    }
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "degrees Celsius",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/degC",
+     "value": "degC"
+    }
+   }
+  },
+  "tdt9_vwc": {
+   "data-type": "float",
+   "description": "Daily volumetric water content at 50cm*. TDT sensor 9 (*except for Heytesbury site where sensors at 5cm) ",
+   "label": "TDT 09 - Volumetric Water Content at 50cm",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/2-0-16",
+    "label": "Volumetric Water Content"
+   },
+   "sensorInfo": {
+    "sensor_depth": {
+     "unit": {
+      "label": "centimetre",
+      "symbol": {
+       "type": "http://codes.wmo.int/common/unit/cm",
+       "value": "cm"
+      }
+     },
+     "value": "50"
+    }
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "percent",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/percent",
+     "value": "%"
+    }
+   }
+  },
+  "wd": {
+   "data-type": "float",
+   "description": "Daily wind direction",
+   "label": "Wind Direction",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/bufr4/b/11/001",
+    "label": "Wind direction"
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "degree (angle)",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/degree_(angle)",
+     "value": "deg"
+    }
+   }
+  },
+  "ws": {
+   "data-type": "float",
+   "description": "Daily wind speed",
+   "label": "Wind Speed",
+   "measurementType": {
+    "method": "mean",
+    "period": "PT1D"
+   },
+   "observedProperty": {
+    "id": "http://codes.wmo.int/grib2/codeflag/4.2/0-2-1",
+    "label": "Wind speed"
+   },
+   "type": "Parameter",
+   "unit": {
+    "label": "metres per second",
+    "symbol": {
+     "type": "http://codes.wmo.int/common/unit/m_s-1",
+     "value": "m s-1"
+    }
+   }
+  }
+ },
+ "timeStamp": "2026-11-22T21:18:22Z",
  "type": "FeatureCollection"
 }

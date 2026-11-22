@@ -3,7 +3,6 @@ from datetime import date, datetime
 
 import pytest
 import xarray as xr
-from click import unstyle
 from typer.testing import CliRunner
 
 from xharvest.cli import main
@@ -100,17 +99,6 @@ def test_bad_dates_are_rejected(mock_api, tmp_path):
     args = ["cosmos", "fetch", "MOORH", "--start", "1 Jan", "--end", "2025-01-02"]
     result = runner.invoke(app, [*args, "--out", str(tmp_path)])
     assert result.exit_code == 2
-
-
-def test_unknown_collection_lists_the_choices(mock_api):
-    # Widen the terminal so Rich does not wrap the choices across lines.
-    args = ["cosmos", "sites", "--collection", "1H"]
-    result = runner.invoke(app, args, env={"COLUMNS": "200"})
-    assert result.exit_code == 2
-    # Typer styles its output when GITHUB_ACTIONS is set, so compare plain text.
-    assert "'1D', '30M'" in unstyle(result.output)
-    help_text = runner.invoke(app, ["cosmos", "sites", "--help"]).output
-    assert "1D|30M" in unstyle(help_text)
 
 
 @pytest.fixture

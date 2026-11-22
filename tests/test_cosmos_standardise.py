@@ -125,15 +125,6 @@ def test_bad_duration(period):
         _duration(period)
 
 
-def test_half_hourly_bounds_end_at_the_stamp(cosmos_raw):
-    path = cosmos_raw[0]
-    _edit(sidecar_path(path), _set_collection("30M"))
-    ds = standardise([path])
-    first = ds.time_bounds.isel(time=0).values
-    assert first[1] == ds.time.values[0]
-    assert (first[1] - first[0]) == np.timedelta64(30, "m")
-
-
 def test_provenance(ds):
     for attr in PROVENANCE_ATTRS:
         assert ds.attrs[attr]
@@ -172,15 +163,14 @@ def test_requires_some_files():
         standardise([])
 
 
-def test_rejects_mixed_collections(cosmos_raw):
+def test_rejects_other_collections(cosmos_raw):
     _edit(sidecar_path(cosmos_raw[0]), _set_collection("30M"))
-    with pytest.raises(ValueError, match=r"mix COSMOS-UK collections \(1D, 30M\)"):
+    with pytest.raises(ValueError, match=r"collection '30M'; only daily \(1D\)"):
         standardise(cosmos_raw)
 
 
-@pytest.mark.parametrize("collection", [None, "1H"])
-def test_requires_the_collection_in_the_sidecar(cosmos_raw, collection):
-    _edit(sidecar_path(cosmos_raw[0]), _set_collection(collection))
+def test_requires_the_collection_in_the_sidecar(cosmos_raw):
+    _edit(sidecar_path(cosmos_raw[0]), _set_collection(None))
     with pytest.raises(ValueError, match="does not name a COSMOS-UK collection"):
         standardise(cosmos_raw)
 
@@ -205,7 +195,7 @@ def test_unreadable_parameter_metadata(cosmos_raw, change, message):
 
 
 @pytest.mark.parametrize("names", [("snow",), ("albedo",)])
-def test_the_period_comes_from_the_collection(cosmos_raw, names):
+def test_every_value_covers_one_day(cosmos_raw, names):
     path = cosmos_raw[0]
     _edit(path, _keep_only(*names))
     ds = standardise([path])

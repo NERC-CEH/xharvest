@@ -36,11 +36,15 @@ doctest:
 graphs:
   python scripts/render_graphs.py
 
+# Tabulate each connector's standardised variables for the docs, from the fixtures.
+variables:
+  python scripts/render_variables.py
+
 # Build the documentation using Zensical, failing on any warning, such as a graph
 # node whose link to its entry does not resolve.
-docs: graphs
+docs: graphs variables
   zensical build --strict
 
 # Serve the documentation locally with live reload.
-docs-serve: graphs
+docs-serve: graphs variables
   zensical serve

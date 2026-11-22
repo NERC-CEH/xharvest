@@ -1,12 +1,13 @@
 """Nodes that standardise FLUXNET archives from the ICOS Carbon Portal.
 
 `standardise` builds its graph from these and the shared FLUXNET reader in
-`xharvest._fluxnet`, and computes `dataset` from `paths`. Every node acts on all
+`xharvest.icos._fluxnet`, and computes `dataset` from `paths`. Every node acts on all
 the archives at once; most take and return a mapping from archive path to that
 archive's part.
 """
 
 from collections import defaultdict
+from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
@@ -14,71 +15,73 @@ import xarray as xr
 from hamilton.function_modifiers import tag
 
 from .. import __version__
-from .._fluxnet import Site, Table, Variable
 from ..errors import ProviderError
 from ..provenance import Retrieval, history_line, is_sidecar, read_sidecar, utc_now
 from ._fetch import DATA_URL
+from ._fluxnet import Site, Table, Variable
 
-SCALARS = {
+
+@dataclass(frozen=True)
+class Kept:
+    """A variable `standardise` keeps, and how.
+
+    Attributes:
+        name: The FLUXNET name, e.g. `"TA_F"`; for a soil profile, the name its
+            sensors share before `_<n>`, e.g. `"SWC_F_MDS"`.
+        units: The CF unit it must have.
+        profile: Whether it is a soil profile, its sensors stacked on `depth`.
+        qc: Whether its `_QC` is kept.
+        mean: Whether it is the daily mean of its half-hourly values.
+    """
+
+    name: str
+    units: str
+    profile: bool = False
+    qc: bool = False
+    mean: bool = True
+
+
+KEPT = (
     # Meteorology
-    "TA_F": "degC",
-    "VPD_F": "hPa",
-    "P_F": "mm d-1",
-    "SW_IN_F": "W m-2",
-    "LW_IN_F": "W m-2",
-    "PA_F": "kPa",
-    "WS_F": "m s-1",
-    "PPFD_IN": "umol m-2 s-1",
-    "NETRAD": "W m-2",
-    "CO2_F_MDS": "umol mol-1",
+    Kept("TA_F", "degC", qc=True),
+    Kept("VPD_F", "hPa", qc=True),
+    Kept("P_F", "mm d-1", qc=True),
+    Kept("SW_IN_F", "W m-2", qc=True),
+    Kept("LW_IN_F", "W m-2", qc=True),
+    Kept("PA_F", "kPa", qc=True),
+    Kept("WS_F", "m s-1", qc=True),
+    Kept("PPFD_IN", "umol m-2 s-1", qc=True),
+    Kept("NETRAD", "W m-2", qc=True),
+    Kept("CO2_F_MDS", "umol mol-1", qc=True),
     # Soil heat flux
-    "G_F_MDS": "W m-2",
+    Kept("G_F_MDS", "W m-2", qc=True),
     # Energy and water
-    "LE_F_MDS": "W m-2",
-    "LE_CORR": "W m-2",
-    "LE_CORR_JOINTUNC": "W m-2",
-    "H_F_MDS": "W m-2",
-    "H_CORR": "W m-2",
+    Kept("LE_F_MDS", "W m-2", qc=True),
+    Kept("LE_CORR", "W m-2", mean=False),
+    Kept("LE_CORR_JOINTUNC", "W m-2", mean=False),
+    Kept("H_F_MDS", "W m-2", qc=True),
+    Kept("H_CORR", "W m-2", mean=False),
     # Carbon
-    "NEE_VUT_REF": "g m-2 d-1",
-    "NEE_VUT_REF_JOINTUNC": "g m-2 d-1",
-    "GPP_NT_VUT_REF": "g m-2 d-1",
-    "GPP_DT_VUT_REF": "g m-2 d-1",
-    "RECO_NT_VUT_REF": "g m-2 d-1",
-    "RECO_DT_VUT_REF": "g m-2 d-1",
-}
-"""Variables on `(time, site)`, with the CF unit each must have."""
+    Kept("NEE_VUT_REF", "g m-2 d-1", qc=True),
+    Kept("NEE_VUT_REF_JOINTUNC", "g m-2 d-1", mean=False),
+    Kept("GPP_NT_VUT_REF", "g m-2 d-1"),
+    Kept("GPP_DT_VUT_REF", "g m-2 d-1"),
+    Kept("RECO_NT_VUT_REF", "g m-2 d-1"),
+    Kept("RECO_DT_VUT_REF", "g m-2 d-1"),
+    # Soil profiles
+    Kept("SWC_F_MDS", "%", profile=True, qc=True),
+    Kept("TS_F_MDS", "degC", profile=True, qc=True),
+)
+"""The variables `standardise` keeps, in the order the Dataset holds them."""
 
-PROFILES = {"SWC_F_MDS": "%", "TS_F_MDS": "degC"}
-"""Soil profiles, stacked from `<name>_<n>` onto `(time, site, depth)`."""
-
-QC = [
-    "TA_F",
-    "VPD_F",
-    "P_F",
-    "SW_IN_F",
-    "LW_IN_F",
-    "PA_F",
-    "WS_F",
-    "PPFD_IN",
-    "NETRAD",
-    "CO2_F_MDS",
-    "G_F_MDS",
-    "LE_F_MDS",
-    "H_F_MDS",
-    "NEE_VUT_REF",
-    *PROFILES,
-]
-"""Variables whose `_QC` is kept: the fraction of the day's half-hours that were
-measured or gap-filled with good quality."""
+_UNITS = {kept.name: kept.units for kept in KEPT}
+_SCALARS = [kept.name for kept in KEPT if not kept.profile]
+_PROFILES = [kept.name for kept in KEPT if kept.profile]
 
 QC_DESCRIPTION = (
     "Quality flag for {}: fraction between 0 and 1 of the day's half-hours that "
     "were measured or gap-filled with good quality"
 )
-
-NOT_MEANS = {"LE_CORR", "H_CORR", "LE_CORR_JOINTUNC", "NEE_VUT_REF_JOINTUNC"}
-"""Variables given no `cell_methods`, as not the daily mean of half-hourly values."""
 
 TITLE = "FLUXNET daily data from the ICOS Carbon Portal"
 
@@ -116,7 +119,7 @@ def retrievals(archive_paths: list[Path]) -> dict[Path, Retrieval]:
 @tag(action="selects")
 def profiled_variables() -> tuple[str, ...]:
     """The soil profiles to stack on `depth`: `SWC_F_MDS` and `TS_F_MDS`."""
-    return tuple(PROFILES)
+    return tuple(_PROFILES)
 
 
 @tag(action="selects")
@@ -125,7 +128,7 @@ def kept_variables(
     described_tables: dict[Path, Table],
     soil_profiles: dict[Path, dict[str, dict[float, str]]],
 ) -> dict[Path, dict[str, Variable]]:
-    """Keep the variables in `SCALARS`, and each sensor of the soil profiles.
+    """Keep the variables in `KEPT`, and each sensor of its soil profiles.
 
     Every other column is dropped, including all `_QC` columns, which
     `kept_flags` keeps separately. A kept variable a site lacks is left out
@@ -133,7 +136,7 @@ def kept_variables(
     """
     result = {}
     for path, table in described_tables.items():
-        names = [name for name in SCALARS if name in table.columns]
+        names = [name for name in _SCALARS if name in table.columns]
         for depths in soil_profiles[path].values():
             names.extend(depths.values())
         result[path] = {name: variables[path][name] for name in names}
@@ -145,10 +148,10 @@ def kept_flags(
     described_tables: dict[Path, Table],
     soil_profiles: dict[Path, dict[str, dict[float, str]]],
 ) -> dict[Path, list[str]]:
-    """Keep the `_QC` columns of the variables in `QC`, and of each soil sensor."""
+    """Keep the `_QC` columns `KEPT` asks for, and those of each soil sensor."""
     result = {}
     for path, table in described_tables.items():
-        names = [f"{base}_QC" for base in QC if base not in PROFILES]
+        names = [f"{k.name}_QC" for k in KEPT if k.qc and not k.profile]
         for depths in soil_profiles[path].values():
             names.extend(f"{column}_QC" for column in depths.values())
         result[path] = [name for name in names if name in table.columns]
@@ -161,15 +164,15 @@ def checked_units(
     kept_variables: dict[Path, dict[str, Variable]],
     soil_profiles: dict[Path, dict[str, dict[float, str]]],
 ) -> dict[Path, dict[str, str]]:
-    """Check that each kept variable has the CF unit `SCALARS` or `PROFILES` expects.
+    """Check that each kept variable has the CF unit `KEPT` expects.
 
     Raises:
         ProviderError: If a variable's unit, renamed to CF, is another.
     """
     for path, units in cf_units.items():
-        expected = dict(SCALARS)
+        expected = {name: _UNITS[name] for name in _SCALARS}
         for base, depths in soil_profiles[path].items():
-            expected.update(dict.fromkeys(depths.values(), PROFILES[base]))
+            expected.update(dict.fromkeys(depths.values(), _UNITS[base]))
         for name, found in units.items():
             if found != expected[name]:
                 raise ProviderError(
@@ -233,7 +236,8 @@ def site_datasets(
 ) -> dict[Path, xr.Dataset]:
     """Arrange each archive's kept columns into a Dataset with one site.
 
-    Variables in `SCALARS` and their `_QC` go on `(time, site)`. Each soil
+    Variables in `KEPT` other than the soil profiles, and their `_QC`, go on
+    `(time, site)`. Each soil
     profile's sensors are stacked on `(time, site, depth)`, over the depths of
     either profile at that site. A kept variable the site lacks, and a depth it
     has no sensor of that variable at, are NaN.
@@ -250,13 +254,13 @@ def site_datasets(
         depths = sorted({d for depth_map in profiles.values() for d in depth_map})
         n = len(table.dates)
         data_vars = {}
-        for name in SCALARS:
+        for name in _SCALARS:
             data_vars[name] = (("time", "site"), column(table, name)[:, None])
-        for base in QC:
-            if base not in PROFILES:
-                values = column(table, f"{base}_QC")[:, None]
-                data_vars[f"{base}_QC"] = (("time", "site"), values)
-        for base in PROFILES:
+        for kept in KEPT:
+            if kept.qc and not kept.profile:
+                values = column(table, f"{kept.name}_QC")[:, None]
+                data_vars[f"{kept.name}_QC"] = (("time", "site"), values)
+        for base in _PROFILES:
             values = np.full((n, 1, len(depths)), np.nan)
             flags = np.full((n, 1, len(depths)), np.nan)
             for depth, name in profiles[base].items():
@@ -357,7 +361,7 @@ def descriptions(
     """
     result: dict[str, dict[str, str]] = {}
     for path, kept in kept_variables.items():
-        sources = {name: name for name in SCALARS}
+        sources = {name: name for name in _SCALARS}
         for base, depths in soil_profiles[path].items():
             if depths:
                 sources[base] = next(iter(depths.values()))
@@ -381,8 +385,9 @@ def flag_attributes() -> dict[str, dict[str, str]]:
     `checked_flags` checks the values are the 0-1 fractions this describes.
     """
     return {
-        f"{base}_QC": {"units": "1", "description": QC_DESCRIPTION.format(base)}
-        for base in QC
+        f"{k.name}_QC": {"units": "1", "description": QC_DESCRIPTION.format(k.name)}
+        for k in KEPT
+        if k.qc
     }
 
 
@@ -391,15 +396,13 @@ def cell_methods() -> dict[str, str]:
     """Say which variables are daily means of their half-hourly values.
 
     A judgement, checked against the half-hourly file at UK-Cvn and ES-Dnn
-    rather than taken from the archive's definitions: every variable in
-    `SCALARS` and `PROFILES` is the mean of the day's half-hours, apart from
-    those in `NOT_MEANS`. The uncertainties are not means, and `LE_CORR` and
+    rather than taken from the archive's definitions: every variable in `KEPT`
+    is the mean of the day's half-hours, apart from those it marks
+    `mean=False`. The uncertainties are not means, and `LE_CORR` and
     `H_CORR`, though defined as "average from half-hourly data", differ from
     the mean of half-hourly values by up to 51 W m-2 at UK-Cvn.
     """
-    return {
-        name: "time: mean" for name in [*SCALARS, *PROFILES] if name not in NOT_MEANS
-    }
+    return {kept.name: "time: mean" for kept in KEPT if kept.mean}
 
 
 @tag(action="annotates")
@@ -412,16 +415,15 @@ def variable_attributes(
     """Collect each variable's attributes: CF `units`, and the interpretations.
 
     `units` is the CF unit `checked_units` confirmed for the variable, or for a
-    soil profile its sensors; a variable no archive has gets the one in
-    `SCALARS`.
+    soil profile its sensors; a variable no archive has gets the one in `KEPT`.
     """
     confirmed = {}
     for units in checked_units.values():
         for column, unit in units.items():
             confirmed.setdefault(column, unit)
     result = {}
-    for name in [*SCALARS, *PROFILES]:
-        attrs = {"units": confirmed.get(name) or {**SCALARS, **PROFILES}[name]}
+    for name in _UNITS:
+        attrs = {"units": confirmed.get(name) or _UNITS[name]}
         attrs.update(descriptions.get(name, {}))
         if name in cell_methods:
             attrs["cell_methods"] = cell_methods[name]

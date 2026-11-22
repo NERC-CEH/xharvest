@@ -13,7 +13,9 @@ def test_require_returns_the_module():
 
 def test_require_names_the_extra(monkeypatch):
     monkeypatch.setitem(sys.modules, "httpx", None)
-    with pytest.raises(ImportError, match=r"pip install xharvest\[cosmos\]"):
+    with pytest.raises(
+        ImportError, match=r'pip install "xharvest\[cosmos\] @ git\+https://'
+    ):
         require("httpx", "cosmos")
 
 

@@ -1,10 +1,10 @@
 """Download and standardise FLUXNET data from the ICOS Carbon Portal.
 
-`sites` and `fetch` need the `icos` extra: `pip install xharvest[icos]`.
+`sites` and `fetch` need the `icos` extra:
+`pip install "xharvest[icos] @ git+https://github.com/NERC-CEH/xharvest"`.
 """
 
 from ._fetch import Site, fetch, sites
-from ._pipeline import PROFILES, QC, SCALARS
 from ._standardise import standardise, to_netcdf
 from ._variables import (
     VARIABLES,
@@ -24,9 +24,6 @@ from ._variables import (
 )
 
 __all__ = [
-    "PROFILES",
-    "QC",
-    "SCALARS",
     "VARIABLES",
     "AirPressure",
     "AirTemperature",

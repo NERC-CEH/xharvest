@@ -1,9 +1,10 @@
 """Download and standardise COSMOS-UK site data.
 
-`sites` and `fetch` need the `cosmos` extra: `pip install xharvest[cosmos]`.
+`sites` and `fetch` need the `cosmos` extra:
+`pip install "xharvest[cosmos] @ git+https://github.com/NERC-CEH/xharvest"`.
 """
 
-from ._fetch import Collection, Site, fetch, sites
+from ._fetch import Site, fetch, sites
 from ._standardise import standardise, to_netcdf
 from ._variables import (
     VARIABLES,
@@ -20,7 +21,6 @@ __all__ = [
     "VARIABLES",
     "AirTemperature",
     "Albedo",
-    "Collection",
     "CosmosVWC",
     "D86Depth",
     "Precip",

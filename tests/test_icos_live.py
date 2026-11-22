@@ -12,8 +12,8 @@ import zipfile
 import numpy as np
 import pytest
 
-from xharvest import _fluxnet as fx
 from xharvest import icos
+from xharvest.icos import _fluxnet as fx
 
 pytestmark = pytest.mark.live
 

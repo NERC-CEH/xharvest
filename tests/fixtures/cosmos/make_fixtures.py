@@ -31,7 +31,11 @@ PARAMETERS = ["albedo", "cosmos_vwc", "d86_75m", "precip", "snow", "ta", "tdt3_v
 
 
 def main() -> None:
-    """Fetch the site files and a trimmed copy of the site list."""
+    """Fetch the site files and a trimmed copy of the site list.
+
+    The site list keeps the API's description of every daily parameter, from
+    which the provider page's variable table is drawn.
+    """
     for site, (start, end) in SITES.items():
         fetch(site, start, end, HERE, parameters=PARAMETERS, overwrite=True)
 
@@ -39,7 +43,6 @@ def main() -> None:
     locations["features"] = [f for f in locations["features"] if f["id"] in SITES]
     for feature in locations["features"]:
         feature["properties"]["parameter-name"] = PARAMETERS
-    locations.pop("parameters", None)
     (HERE / "locations_1D.json").write_text(json.dumps(locations, indent=1) + "\n")
 
 

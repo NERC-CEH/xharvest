@@ -9,6 +9,7 @@ a `Piece`, to that coverage's part.
 import json
 import re
 from collections import defaultdict
+from dataclasses import dataclass
 from datetime import timedelta
 from pathlib import Path
 from typing import Any
@@ -20,7 +21,7 @@ from hamilton.function_modifiers import tag
 from .. import __version__
 from ..errors import ProviderError
 from ..provenance import Retrieval, history_line, is_sidecar, read_sidecar, utc_now
-from ._fetch import API_URL, COLLECTIONS, PERIODS, Collection, Period
+from ._fetch import API_URL, COLLECTION
 
 type Piece = tuple[Path, str]
 """A file and the identifier of one site it covers."""
@@ -37,6 +38,21 @@ CELL_METHODS = {
     "instantaneous": "point",
 }
 """The CF `cell_methods` method for each aggregation method the API names."""
+
+
+@dataclass(frozen=True)
+class Period:
+    """The period each value covers, relative to its stamp.
+
+    Attributes:
+        length: How long each value's period is.
+        stamp_ends: Whether a stamp marks the end of its period rather than
+            the start.
+    """
+
+    length: timedelta
+    stamp_ends: bool
+
 
 _DURATION = re.compile(
     r"^(?P<sign>-)?P(?:(?P<D>\d+)D)?(?:T(?:(?P<H>\d+)H)?(?:(?P<M>\d+)M)?(?:(?P<S>\d+)S)?)?$"
@@ -110,54 +126,42 @@ def retrievals(file_paths: list[Path]) -> dict[Path, Retrieval]:
     return {path: read_sidecar(path) for path in file_paths}
 
 
-@tag(action="reads")
-def collections(retrievals: dict[Path, Retrieval]) -> dict[Path, Collection]:
-    """Read the collection each file was fetched from, from its sidecar.
+@tag(action="checks")
+def collection(retrievals: dict[Path, Retrieval]) -> str:
+    """Check, from its sidecar, that every file is from the daily collection.
+
+    Only daily data is standardised; the 30-minute collection is deferred to
+    NERC-CEH/xharvest#8.
 
     Raises:
-        ValueError: If a sidecar does not name a COSMOS-UK collection.
+        ValueError: If a sidecar names no collection, or another one.
     """
-    result = {}
     for path, retrieval in retrievals.items():
-        collection = retrieval.metadata.get("collection")
-        if collection not in COLLECTIONS:
+        found = retrieval.metadata.get("collection")
+        if found is None:
             raise ValueError(
                 f"the sidecar for {path} does not name a COSMOS-UK collection; "
                 "fetch it again with overwrite=True"
             )
-        result[path] = collection
-    return result
-
-
-@tag(action="checks")
-def collection(collections: dict[Path, Collection]) -> Collection:
-    """Check that every file is from one collection, and return it.
-
-    Daily and 30-minute values cannot share a time axis.
-
-    Raises:
-        ValueError: If the files mix collections.
-    """
-    found = set(collections.values())
-    if len(found) > 1:
-        raise ValueError(
-            f"files mix COSMOS-UK collections ({', '.join(sorted(found))}); "
-            "standardise one collection at a time"
-        )
-    return found.pop()
+        if found != COLLECTION:
+            raise ValueError(
+                f"{path} is from the COSMOS-UK collection {found!r}; only daily "
+                f"({COLLECTION}) data can be standardised"
+            )
+    return COLLECTION
 
 
 @tag(action="interprets")
-def period(collection: Collection) -> Period:
-    """The period each value of the collection covers, relative to its stamp.
+def period(collection: str) -> Period:
+    """The period each daily value covers, relative to its stamp.
 
-    A judgement, as the API does not say: a daily value stamped
-    `2025-01-01T00:00` covers that GMT day, and a 30-minute value covers the 30
-    minutes ending at its stamp. Checked by summing the 30-minute precipitation
-    over each day, which matches the daily totals to within rounding only under
-    this reading.
+    A judgement, as the API does not say: a value stamped `2025-01-01T00:00`
+    covers that GMT day. Checked against the API's 30-minute collection, whose
+    values cover the 30 minutes ending at their stamps: under these readings,
+    30-minute precipitation summed over each day matches the daily totals to
+    within rounding.
     """
-    return PERIODS[collection]
+    return Period(timedelta(days=1), stamp_ends=False)
 
 
 @tag(action="reads")
@@ -249,7 +253,7 @@ def values(
 def parameters(responses: dict[Path, dict[str, Any]]) -> dict[str, dict[str, Any]]:
     """Read each parameter's metadata, from the first file, in path order, with it.
 
-    Every response from one collection describes a parameter the same way.
+    Every daily response describes a parameter the same way.
     """
     result: dict[str, dict[str, Any]] = {}
     for body in responses.values():
@@ -348,7 +352,7 @@ def cell_methods(
     """Write each parameter's aggregation as CF `cell_methods`.
 
     The API gives a method and the period it covers. Where an aggregate covers
-    less than the collection's period, such as albedo averaged over four hours
+    less than the value's period, such as albedo averaged over four hours
     of each day, a comment says so.
 
     Raises:

@@ -24,8 +24,16 @@ from datetime import date
 from xharvest import cosmos
 
 raw = cosmos.fetch("ALIC1", date(2025, 1, 1), date(2025, 1, 14), "data/raw")
-ds = cosmos.standardise(raw)
 cosmos.to_netcdf(raw, "data/cosmos.nc")
+```
+
+`cosmos.standardise(raw)` returns the same dataset without writing it.
+Open the file with xarray:
+
+```python
+import xarray as xr
+
+ds = xr.open_dataset("data/cosmos.nc")
 ```
 
 The same from the command line:
