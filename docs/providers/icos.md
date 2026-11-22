@@ -60,19 +60,18 @@ The result has dims `(time, site, depth)`:
 | `site_name`, `lat`, `lon`, `altitude` | coord on `site` | From the archive's site metadata |
 | `utc_offset`, `igbp`, `network` | coord on `site` | Hours from UTC to the data's clock; IGBP land cover; network code |
 | `time_bounds` | coord on `(time, nv)` | The day each value covers |
-| `SWC_F_MDS`, `TS_F_MDS` and their `_QC` | data, on `(time, site, depth)` | Soil water content and temperature profiles |
-| the other variables below | data, on `(time, site)` | |
-
-| Group | Variables |
-|---|---|
-| Meteorology | `TA_F`, `VPD_F`, `P_F`, `SW_IN_F`, `LW_IN_F`, `PA_F`, `WS_F`, `PPFD_IN`, `NETRAD`, `CO2_F_MDS` |
-| Soil | `SWC_F_MDS`, `TS_F_MDS`, `G_F_MDS` |
-| Energy and water | `LE_F_MDS`, `LE_CORR`, `LE_CORR_JOINTUNC`, `H_F_MDS`, `H_CORR` |
-| Carbon | `NEE_VUT_REF`, `NEE_VUT_REF_JOINTUNC`, `GPP_NT_VUT_REF`, `GPP_DT_VUT_REF`, `RECO_NT_VUT_REF`, `RECO_DT_VUT_REF` |
-| Quality | `_QC` of `TA_F`, `VPD_F`, `P_F`, `SW_IN_F`, `LW_IN_F`, `PA_F`, `WS_F`, `PPFD_IN`, `NETRAD`, `CO2_F_MDS`, `G_F_MDS`, `LE_F_MDS`, `H_F_MDS`, `NEE_VUT_REF`, `SWC_F_MDS`, `TS_F_MDS` |
+| [the variables below](#variables) | data, on `(time, site)`, or `(time, site, depth)` for the soil profiles | |
 
 - Names, values and units are FLUXNET's; each variable's definition from the archive is its `description`.
 - Unit strings that are not valid CF are renamed to the same unit in CF, with the original in `provider_units`: `deg C` is `degC`, `gC m-2 d-1` is `g m-2 d-1`, `µmolCO2 m-2 s-1` is `umol m-2 s-1`. The species (carbon, CO2, photons) is in the description, not the unit.
+
+### Variables
+
+`standardise` keeps these variables, and the `_QC` of those marked, whatever else an archive holds.
+Each `_QC` is the fraction of the day's half-hours that were measured or gap-filled with good quality (see [Quality flags](#quality-flags)).
+Units are the CF units `standardise` writes; descriptions are the archives' own, drawn from the test fixtures (UK-Ags and UK-Cvn).
+
+--8<-- "docs/providers/_variables/icos.md"
 - `-9999` becomes NaN. A variable a site does not measure, and a depth it has no sensor at, are NaN, so every site has the same variables.
 - Global attributes record provenance: `institution`, `source`, `license`, `history`, and every site's citation in `references`.
 

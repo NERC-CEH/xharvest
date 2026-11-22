@@ -62,11 +62,19 @@ The result has dims `(time, site)`:
 | `lat`, `lon` | coord on `site` | Degrees north and east |
 | `altitude` | coord on `site` | The API's `z`, in metres (EPSG:5703) |
 | `time_bounds` | coord on `(time, nv)` | The period each value covers |
-| one per parameter | data, on `(time, site)` | `units`, `long_name`, `description` and `cell_methods` from the API |
+| one per parameter, [listed below](#variables) | data, on `(time, site)` | `units`, `long_name`, `description` and `cell_methods` from the API |
 
 - Values and units are the API's own, e.g. volumetric water content in `%`.
 - Missing values become NaN, including outside a site's record and for sensors a site lacks, so every site has the same variables.
 - Global attributes record provenance: `institution`, `source`, `license` and `history`.
+
+### Variables
+
+`fetch` requests every parameter below unless `parameters` (`--parameter`) names some.
+A site without a parameter's sensor has NaN for it.
+Names, units, aggregation methods and descriptions are the API's own, drawn from the site list in the test fixtures, so the table changes only when the fixtures are regenerated.
+
+--8<-- "docs/providers/_variables/cosmos.md"
 
 ### What standardise changes
 
@@ -158,7 +166,7 @@ The nodes of the graph above, in the order the module defines them.
 
 ## Contract types
 
-`xharvest.cosmos` exports a contract type for each variable in a standardised `1D` file, and `VARIABLES`, which maps each variable's name to its type.
+`xharvest.cosmos` exports a contract type for seven of the [variables](#variables), those the test fixtures cover, and `VARIABLES`, which maps each of their names to its type.
 Annotate a node's input with one and catena checks the file against it before compute.
 Import the module rather than the names, as `from xharvest import cosmos`, and write `cosmos.Precip`: the module keeps them apart from other providers' types.
 Each declares the API's unit and the coordinates `time`, `site`, `lat` and `lon`, which one site selected with `.sel(site=...)` still carries.
