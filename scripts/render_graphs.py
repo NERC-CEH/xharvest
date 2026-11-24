@@ -1,4 +1,4 @@
-"""Draw each connector's standardisation graph for its provider page.
+"""Draw each connector's standardisation graph for its `standardise.md` page.
 
 Run through `just graphs`, which `just docs` runs before each build. Writes
 `docs/providers/_graphs/<provider>.html`, which the page includes and which is

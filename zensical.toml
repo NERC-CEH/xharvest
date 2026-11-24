@@ -14,9 +14,12 @@ copyright = """
 Copyright &copy; 2026 Joe Marsh Rossney
 """
 
-# ADRs are for contributors, read on GitHub, so they are not built.
+# ADRs are for contributors, read on GitHub, so they are not built. The rendered
+# graphs and variable tables are only included into provider pages.
 exclude_docs = """
 adr/
+providers/_graphs/
+providers/_variables/
 """
 
 nav = [
@@ -24,8 +27,20 @@ nav = [
   { "Getting started" = "getting-started.md" },
   { "Adding a connector" = "adding-a-connector.md" },
   { "Providers" = [
-    { "COSMOS-UK" = "providers/cosmos-uk.md" },
-    { "ICOS (FLUXNET)" = "providers/icos.md" },
+    { "COSMOS-UK" = [
+      { "Overview" = "providers/cosmos-uk/index.md" },
+      { "About the data" = "providers/cosmos-uk/data.md" },
+      { "How standardisation works" = "providers/cosmos-uk/standardise.md" },
+      { "Using with catena" = "providers/cosmos-uk/catena.md" },
+      { "Reference" = "providers/cosmos-uk/reference.md" },
+    ] },
+    { "ICOS (FLUXNET)" = [
+      { "Overview" = "providers/icos/index.md" },
+      { "About the data" = "providers/icos/data.md" },
+      { "How standardisation works" = "providers/icos/standardise.md" },
+      { "Using with catena" = "providers/icos/catena.md" },
+      { "Reference" = "providers/icos/reference.md" },
+    ] },
   ] },
 ]
 

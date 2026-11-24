@@ -1,4 +1,4 @@
-"""Tabulate each connector's standardised variables for its provider page.
+"""Tabulate each connector's standardised variables for its overview page.
 
 Run through `just variables`, which `just docs` runs before each build. Writes
 `docs/providers/_variables/<provider>.md`, which the page includes and which is
