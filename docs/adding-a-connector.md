@@ -125,7 +125,7 @@ Each provider has a directory under `docs/providers/` holding the same five page
 
 Copy the [COSMOS-UK](providers/cosmos-uk/index.md) pages, and add them to the `zensical.toml` nav, the provider tables in `README.md` and `docs/index.md`, and `PAGES` in `tests/test_docs.py`.
 
-- `index.md` includes a table of every variable the standardised file can hold (`--8<-- "docs/providers/_variables/<provider>.md"`), which `just variables` draws from the committed fixtures; add a function for the provider to `scripts/render_variables.py`.
+- `index.md` includes a table of every variable the standardised file can hold (`--8<-- "docs/providers/_variables/<provider>.md"`), which `just variables` draws from the committed fixtures; add a function for the provider to `scripts/render_variables.py`, which also prints the standardised fixtures for the page (`<provider>-dataset.md`).
 - `standardise.md` includes the graph `just graphs` draws (`--8<-- "docs/providers/_graphs/<provider>.html"`), in place of a hand-written list of what `standardise` does. Its nodes link to the node reference on the same page, so the two stay together.
 - `data.md` must say what a timestamp means.
   Check claims like this against the data, not only the provider's docs, and record what was checked and how.

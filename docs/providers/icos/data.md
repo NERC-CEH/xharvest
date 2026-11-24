@@ -6,6 +6,15 @@ What follows was checked on 2026-11-19 against UK-Cvn (UTC+0, longitude 0.16° E
 The archives contradict themselves in places.
 Each callout below names a contradiction, says what the data show, and says what `standardise` does about it.
 
+In short:
+
+- `time` is the start, in UTC, of the site's local standard day, so at a UTC+1 site a daily value starts at 23:00 UTC the day before ([Timestamps](#timestamps)).
+- Every variable kept is the mean of the day's half-hours, except `LE_CORR`, `H_CORR` and the uncertainties, which have no `cell_methods` ([Daily aggregation](#daily-aggregation)).
+- Daily `_REF` carbon fluxes may come from a different realisation from the half-hourly ones, so do not compare them with aggregated half-hourly values.
+- `P_F` is the day's mean rate in `mm d-1`, which equals the day's total in millimetres ([Units](#units)).
+- Each `_QC` is the fraction, 0 to 1, of the day's half-hours that were measured or gap-filled with good quality, whatever the archive's variable list says ([Quality flags](#quality-flags)).
+- Soil sensors are stacked on `depth` from their heights; FLUXNET's sensor numbers are not depths ([Soil profiles](#soil-profiles)).
+
 ## Timestamps
 
 Each archive's data keep **local standard time**, UTC plus the `UTC_OFFSET` in its site metadata, with no daylight saving.

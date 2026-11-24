@@ -9,7 +9,8 @@ The [ICOS Carbon Portal](https://www.icos-cp.eu) hosts the FLUXNET data product,
 | Credentials | None |
 | Licence | CC BY 4.0, as each archive's data policy states |
 | Cite | One citation per site (see [Citing the data](#citing-the-data)) |
-| Resolution | Daily only, for now |
+| Resolution | Daily only |
+| catena nodes | None yet (see [Using with catena](catena.md)) |
 
 The connector is partial ([#11](https://github.com/NERC-CEH/xharvest/issues/11)): daily files only, a fixed set of variables for soil moisture and ecosystem carbon modelling, tested on UK sites.
 The archives come from several networks, not only ICOS: the first part of the file name says which (`ICOS`, `EUF` for the European Fluxes Database, `JPF`, `CNF`, `KOF`, `FLX`, `SAEON`).
@@ -36,6 +37,17 @@ xharvest icos fetch UK-Cvn UK-AMo --out data/raw
 - Each download is checked against the SHA-256 the portal publishes.
 - Files keep the portal's name, e.g. `EUF_UK-Cvn_FLUXNET_2023-2024_v1.3_r1.zip`, so a new release arrives as a new file.
 - An archive that already holds the same object is skipped; pass `overwrite=True` (`--overwrite`) to download again.
+
+`sites()` gives each archive's site code, name, location and record, so plain Python picks sites out.
+For example, the UK sites with at least five years of data:
+
+```python
+chosen = [
+    s.id
+    for s in icos.sites()
+    if s.id.startswith("UK-") and s.end.year - s.start.year >= 5
+]
+```
 
 ## Standardise
 
@@ -67,6 +79,11 @@ The result has dims `(time, site, depth)`:
 - `-9999` becomes NaN. A variable a site does not measure, and a depth it has no sensor at, are NaN, so every site has the same variables.
 - Global attributes record provenance: `institution`, `source`, `license`, `history`, and every site's citation in `references`.
 - Nothing converts units, filters on quality flags, or fills gaps; [How standardisation works](standardise.md) shows every step.
+
+Open the file with `xr.open_dataset("data/icos.nc")`.
+The test fixtures, two UK sites over overlapping fortnights, print as:
+
+--8<-- "docs/providers/_variables/icos-dataset.md"
 
 ### Variables
 

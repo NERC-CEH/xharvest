@@ -10,15 +10,15 @@ Types with the same unit are the same object (`cosmos.Albedo is cosmos.Snow`), s
 None declares a `Freq`; add one where it matters, as `Annotated[cosmos.CosmosVWC, Freq("D")]`.
 Their units need `xarray_annotated.units.use_cf_units()`.
 
-| Variable | Type | Unit |
+| Type | Unit | Variables |
 |---|---|---|
-| `albedo` | `Albedo` | `1` |
-| `cosmos_vwc` | `CosmosVWC` | `%` |
-| `d86_75m` | `D86Depth` | `cm` |
-| `precip` | `Precip` | `mm` |
-| `snow` | `Snow` | `1` |
-| `ta` | `AirTemperature` | `degC` |
-| `tdt3_vwc` | `TdtVWC` | `%` |
+| `AirTemperature` | `degC` | `ta` |
+| `Albedo` | `1` | `albedo` |
+| `CosmosVWC` | `%` | `cosmos_vwc` |
+| `D86Depth` | `cm` | `d86_75m` |
+| `Precip` | `mm` | `precip` |
+| `Snow` | `1` | `snow` |
+| `TdtVWC` | `%` | `tdt3_vwc` |
 
 ## Catena nodes
 
