@@ -15,7 +15,8 @@ None of them needs catena, so the package is just as useful for getting data int
 | Provider | Extra | Credentials | |
 |---|---|---|---|
 | COSMOS-UK soil moisture and meteorology | `cosmos` | None | [COSMOS-UK](providers/cosmos-uk/index.md) |
-| FLUXNET daily fluxes and meteorology, from the ICOS Carbon Portal | `icos` | None | [ICOS](providers/icos/index.md) |
+| FLUXNET daily fluxes and meteorology, from the ICOS Carbon Portal | `fluxnet` | None | [FLUXNET](providers/fluxnet/index.md) |
+| ICOS ecosystem stations' LAI, biomass, canopy height and soil measurements | `icos` | None | [ICOS](providers/icos/index.md) |
 
 ## Installation
 

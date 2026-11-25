@@ -8,9 +8,9 @@ import numpy as np
 import pytest
 
 from xharvest.errors import ProviderError
-from xharvest.icos import _fluxnet as fx
+from xharvest.fluxnet import _archive as fx
 
-FIXTURES = Path(__file__).parent / "fixtures" / "icos"
+FIXTURES = Path(__file__).parent / "fixtures" / "fluxnet"
 CVN = FIXTURES / "EUF_UK-Cvn_FLUXNET_2023-2024_v1.3_r1.zip"
 AGS = FIXTURES / "EUF_UK-Ags_FLUXNET_2023-2025_v1.3_r1.zip"
 PROFILED = ("SWC_F_MDS", "TS_F_MDS")

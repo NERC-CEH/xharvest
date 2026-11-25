@@ -2,28 +2,21 @@
 
 ## Contract types
 
-`xharvest.icos` exports a contract type for each unit in a standardised file, and `VARIABLES`, which maps each variable's name to its type.
+`xharvest.icos` exports a contract type for each unit in a standardised Dataset, and `VARIABLES`, which maps each group to its variables and their types.
 Annotate a node's input with one and catena checks the file against it before compute.
-Import the module rather than the names, as `from xharvest import icos`, and write `icos.CarbonFlux`.
-Each declares the CF unit and the coordinates `time`, `site`, `lat` and `lon`, plus `depth` for the soil profiles.
+Import the module rather than the names, as `from xharvest import icos`, and write `icos.AreaIndex`.
+Each declares the CF unit and the coordinates every record carries: `site`, `time`, `lat` and `lon`.
 Types with the same unit and coordinates are the same object, so a type does not tell variables apart.
-None declares a `Freq`; add one where it matters, as `Annotated[icos.CarbonFlux, Freq("D")]`.
+None declares `Dims` or a `Freq`, since the records are irregular measurements rather than series.
 Their units need `xarray_annotated.units.use_cf_units()`.
 
-| Type | Unit | Variables |
-|---|---|---|
-| `AirTemperature` | `degC` | `TA_F` |
-| `VapourPressureDeficit` | `hPa` | `VPD_F` |
-| `Precip` | `mm d-1` | `P_F` |
-| `EnergyFlux` | `W m-2` | `SW_IN_F`, `LW_IN_F`, `NETRAD`, `G_F_MDS`, `LE_F_MDS`, `LE_CORR`, `LE_CORR_JOINTUNC`, `H_F_MDS`, `H_CORR` |
-| `AirPressure` | `kPa` | `PA_F` |
-| `WindSpeed` | `m s-1` | `WS_F` |
-| `PhotonFlux` | `umol m-2 s-1` | `PPFD_IN` |
-| `CO2MoleFraction` | `umol mol-1` | `CO2_F_MDS` |
-| `CarbonFlux` | `g m-2 d-1` | `NEE_VUT_REF`, `NEE_VUT_REF_JOINTUNC`, `GPP_NT_VUT_REF`, `GPP_DT_VUT_REF`, `RECO_NT_VUT_REF`, `RECO_DT_VUT_REF` |
-| `QualityFraction` | `1` | The `_QC` of each variable on `(time, site)` |
-| `SoilWaterContent` | `%` | `SWC_F_MDS` |
-| `SoilTemperature` | `degC` | `TS_F_MDS` |
-| `ProfileQualityFraction` | `1` | `SWC_F_MDS_QC`, `TS_F_MDS_QC` |
+| Type | Unit | Group | Variables |
+|---|---|---|---|
+| `AreaIndex` | `m2 m-2` | `LAI` | `LAI` |
+| `Biomass` | `kg m-2` | `BIOMASS` | `BIOMASS` |
+| `CanopyHeight` | `m` | `HEIGHTC` | `HEIGHTC`, `HEIGHTC_U` |
+| `SoilContent` | `%` | `SOIL_TEX` | `SOIL_TEX_SAND`, `SOIL_TEX_SILT`, `SOIL_TEX_CLAY`, `SOIL_TEX_ROCK`, `SOIL_TEX_FIELD_CAP`, `SOIL_TEX_WILT`, `SOIL_TEX_SAT`, `SOIL_TEX_WATER_HOLD_CAP` |
+| `SoilStock` | `g m-2` | `SOIL_STOCK` | `SOIL_STOCK_C_ORG`, `SOIL_STOCK_N_TOT`, `SOIL_STOCK_P`, `SOIL_STOCK_K` |
 
 There are no catena nodes yet.
+A model's drivers want a value per site, or per site and day, so a pipeline must first select the records it needs, by their qualifiers, and combine them; that choice is the pipeline's to make.

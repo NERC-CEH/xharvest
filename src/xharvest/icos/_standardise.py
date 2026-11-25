@@ -1,17 +1,17 @@
-"""Standardise FLUXNET archives from the ICOS Carbon Portal into one Dataset.
+"""Standardise ICOS ETC L2 archives' ancillary measurements, one group at a time.
 
 `standardise` runs a Hamilton graph built from the nodes in
-`xharvest.icos._pipeline` and the FLUXNET reader, `xharvest.icos._fluxnet`. Each
-node does one thing, which its docstring and `action` tag say; the provider page
-draws the graph and lists the nodes.
+`xharvest.icos._pipeline`. Each node does one thing, which its docstring and
+`action` tag say; the provider page draws the graph and lists the nodes.
 
-Only the daily (`DD`) files are read, and only a fixed set of variables for soil
-moisture and ecosystem carbon modelling: see `VARIABLES`.
+Only the groups in `GROUPS` are read: LAI, biomass, canopy height, soil texture
+and soil stocks.
 
 Examples:
     >>> from pathlib import Path
     >>> from xharvest.icos import to_netcdf
-    >>> to_netcdf(Path("data/icos").glob("*.zip"), "data/icos.nc")  # doctest: +SKIP
+    >>> paths = Path("data/raw").glob("*.zip")
+    >>> to_netcdf(paths, "data/lai.nc", "LAI")  # doctest: +SKIP
 """
 
 from collections.abc import Iterable
@@ -21,48 +21,57 @@ from pathlib import Path
 import xarray as xr
 
 from .. import _graph
-from . import _fluxnet, _pipeline
+from . import _pipeline
 
-MODULES = (_fluxnet, _pipeline)
+MODULES = (_pipeline,)
 """The node modules `standardise` builds its graph from."""
 
+OUTPUT = "datasets"
+"""The node `standardise` computes: one Dataset per group."""
 
-def standardise(paths: Iterable[str | PathLike]) -> xr.Dataset:
-    """Combine FLUXNET archives from the ICOS Carbon Portal into one daily Dataset.
+
+def standardise(paths: Iterable[str | PathLike], group: str) -> xr.Dataset:
+    """Combine one group of ancillary measurements from ETC L2 archives.
 
     Args:
         paths: ZIP archives written by `xharvest.icos.fetch`. Provenance
             sidecars among them are skipped, so a glob over the download
             directory works.
+        group: A group in `GROUPS`, e.g. `"LAI"` or `"SOIL_TEX"`.
 
     Returns:
-        A Dataset with dims `(time, site, depth)`. `depth` is the union of the
-        sites' soil sensor depths, in metres below ground; only the soil
-        profiles use it. Sites are outer-joined on time and depth, so a site
-        with a shorter record or fewer sensors is NaN-padded, and a variable a
-        site does not measure is NaN there.
+        A Dataset with one dim, `record`: one record per measurement, from
+        every station. The group's values are data variables; the station, its
+        location, the measurement's `time` and `time_bounds`, and every
+        qualifier the archive gives (type, statistic, method, species, depth,
+        ...) are coordinates on `record`, to select on.
 
     Raises:
-        ValueError: If no archives are given, the sites' UTC offsets differ, or
-            two archives for one site disagree where they overlap.
+        ValueError: If `group` is not in `GROUPS`, or no archives are given.
         FileNotFoundError: If an archive has no provenance sidecar.
         ProviderError: If an archive is not one the connector can read, or a
-            kept variable has a unit other than the one standardise expects.
+            value is not a number or has a unit the connector does not know.
     """
-    return _graph.run(MODULES, "dataset", paths=[Path(p) for p in paths])
+    if group not in _pipeline.GROUPS:
+        raise ValueError(
+            f"unknown group {group!r}; choose from {', '.join(_pipeline.GROUPS)}"
+        )
+    datasets = _graph.run(MODULES, OUTPUT, paths=[Path(p) for p in paths])
+    return datasets[group]
 
 
-def to_netcdf(paths: Iterable[str | PathLike], out: str | PathLike) -> Path:
-    """Standardise FLUXNET archives and write the result to netCDF.
+def to_netcdf(paths: Iterable[str | PathLike], out: str | PathLike, group: str) -> Path:
+    """Standardise one group of ancillary measurements and write it to netCDF.
 
     Args:
         paths: As for `standardise`.
         out: The netCDF file to write; its directory is created if missing.
+        group: As for `standardise`.
 
     Returns:
         The path written.
     """
     out = Path(out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    standardise(paths).to_netcdf(out)
+    standardise(paths, group).to_netcdf(out)
     return out

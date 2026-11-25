@@ -7,7 +7,7 @@
 
 xharvest is meant to be a transparent tool: a user should be able to see what was done to a provider's data between download and the netCDF file they load.
 Standardisation is where that is hardest.
-For COSMOS-UK it is mostly reshaping, but the ICOS connector's `standardise` makes about fifteen changes, and some are interpretations the provider does not state:
+For COSMOS-UK it is mostly reshaping, but the FLUXNET connector's `standardise` (then named `icos`) makes about fifteen changes, and some are interpretations the provider does not state:
 
 - every `_QC` is given unit `1` because its values are fractions, although the archive labels some of them with their parent variable's unit;
 - `LE_CORR` and `H_CORR` get no `cell_methods`, because the data contradict their definitions;
@@ -25,7 +25,7 @@ Each connector's `standardise` runs a Hamilton graph, built from modules of node
 
 - **Nodes live in a private module of their own**, `xharvest/<provider>/_pipeline.py`, because Hamilton makes a node of every public function in a module it is given.
   `_standardise.py` keeps `standardise(paths)` and `to_netcdf(paths, out)`, with unchanged signatures; `standardise` builds the driver, runs the graph and returns its result.
-  A file format shared between providers keeps its nodes in a shared module, as `xharvest.icos._fluxnet` holds the FLUXNET archive reader, and the graph is built from both modules.
+  A file format shared between providers keeps its nodes in a shared module, as `xharvest.fluxnet._archive` holds the FLUXNET archive reader, and the graph is built from both modules.
 - **One node is one action, applied to every site and variable at once.**
   The graph is static, from one input (`paths`) to one output (`dataset`), with no dynamic fan-out (`Parallelizable`/`Collect`), so it reads the same whatever is being standardised.
   There is never a node per variable or per site.
@@ -53,8 +53,8 @@ Each connector's `standardise` runs a Hamilton graph, built from modules of node
   `apache-hamilton` needs numpy, pandas, typing-extensions and typing-inspect, and all but the last already come with xarray.
   The node modules for catena therefore no longer need to explain a missing Hamilton.
 
-The ICOS connector is converted first.
-COSMOS-UK follows once the ICOS page shows whether the generated documentation reads better than what it replaces.
+The FLUXNET connector is converted first.
+COSMOS-UK follows once the FLUXNET page shows whether the generated documentation reads better than what it replaces.
 
 ### Consequences
 

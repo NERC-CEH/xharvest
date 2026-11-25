@@ -1,5 +1,6 @@
-"""`xharvest icos`: FLUXNET data from the ICOS Carbon Portal."""
+"""`xharvest icos`: ICOS ecosystem stations' ancillary measurements."""
 
+from enum import StrEnum
 from pathlib import Path
 from typing import Annotated
 
@@ -9,10 +10,20 @@ from .. import icos
 from ..errors import ProviderError
 
 app = typer.Typer(
-    help="FLUXNET daily flux and meteorology from the ICOS Carbon Portal "
-    "(no credentials needed).",
+    help="ICOS ecosystem stations' LAI, biomass, canopy height and soil "
+    "measurements, from the ICOS Carbon Portal (no credentials needed).",
     no_args_is_help=True,
 )
+
+
+class Group(StrEnum):
+    """The groups `xharvest.icos.GROUPS` lists, as choices for `--group`."""
+
+    LAI = "LAI"
+    BIOMASS = "BIOMASS"
+    HEIGHTC = "HEIGHTC"
+    SOIL_TEX = "SOIL_TEX"
+    SOIL_STOCK = "SOIL_STOCK"
 
 
 def _fail(err: Exception) -> typer.Exit:
@@ -21,29 +32,29 @@ def _fail(err: Exception) -> typer.Exit:
 
 
 @app.command()
-def sites() -> None:
-    """List the sites with a FLUXNET archive, and the archive's file name."""
+def stations() -> None:
+    """List the stations with an ETC L2 archive, and the archive's file name."""
     try:
-        found = icos.sites()
+        found = icos.stations()
     except ProviderError as err:
         raise _fail(err) from None
-    for site in found:
-        lat = "" if site.lat is None else f"{site.lat:.5f}"
-        lon = "" if site.lon is None else f"{site.lon:.5f}"
-        typer.echo(f"{site.id}\t{site.name}\t{lat}\t{lon}\t{site.file_name}")
+    for station in found:
+        lat = "" if station.lat is None else f"{station.lat:.5f}"
+        lon = "" if station.lon is None else f"{station.lon:.5f}"
+        typer.echo(f"{station.id}\t{station.name}\t{lat}\t{lon}\t{station.file_name}")
 
 
 @app.command()
 def fetch(
-    site_ids: Annotated[list[str], typer.Argument(help="FLUXNET site codes.")],
+    station_ids: Annotated[list[str], typer.Argument(help="ICOS station codes.")],
     out: Annotated[Path, typer.Option(help="Directory to write archives to.")],
     overwrite: Annotated[
         bool, typer.Option(help="Download again even if a file exists.")
     ] = False,
 ) -> None:
-    """Download each site's whole FLUXNET archive, and print the paths."""
+    """Download each station's whole ETC L2 archive, and print the paths."""
     try:
-        paths = icos.fetch(site_ids, out, overwrite=overwrite)
+        paths = icos.fetch(station_ids, out, overwrite=overwrite)
     except (ProviderError, ValueError) as err:
         raise _fail(err) from None
     for path in paths:
@@ -55,11 +66,12 @@ def standardise(
     paths: Annotated[
         list[Path], typer.Argument(help="Archives from `fetch`; sidecars are skipped.")
     ],
+    group: Annotated[Group, typer.Option(help="The group of measurements.")],
     out: Annotated[Path, typer.Option(help="netCDF file to write.")],
 ) -> None:
-    """Standardise the archives' daily data into one netCDF file."""
+    """Standardise one group of the archives' ancillary measurements to netCDF."""
     try:
-        written = icos.to_netcdf(paths, out)
+        written = icos.to_netcdf(paths, out, group.value)
     except (ProviderError, ValueError, FileNotFoundError) as err:
         raise _fail(err) from None
     typer.echo(written)

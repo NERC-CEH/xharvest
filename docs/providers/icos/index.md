@@ -1,110 +1,121 @@
-# ICOS Carbon Portal (FLUXNET)
+# ICOS (ecosystem stations)
 
-The [ICOS Carbon Portal](https://www.icos-cp.eu) hosts the FLUXNET data product, eddy-covariance fluxes and meteorology processed with [ONEFlux](https://github.com/fluxnet/ONEFlux) v1.3, for several hundred sites.
-`xharvest.icos` downloads it and standardises the daily files for catena and xarray.
+[ICOS](https://www.icos-cp.eu) ecosystem stations measure more than fluxes: their teams also sample leaf area, biomass, canopy height and soil properties, and the Ecosystem Thematic Centre (ETC) publishes these ancillary measurements in each station's ETC L2 archive on the ICOS Carbon Portal.
+`xharvest.icos` downloads those archives and standardises the ancillary measurements for catena and xarray.
+For the stations' fluxes and meteorology, use [FLUXNET](../fluxnet/index.md), which serves the FLUXNET release for ICOS and other networks alike.
 
 | | |
 |---|---|
 | Install | `pip install "xharvest[icos] @ git+https://github.com/NERC-CEH/xharvest"` |
 | Credentials | None |
-| Licence | CC BY 4.0, as each archive's data policy states |
-| Cite | One citation per site (see [Citing the data](#citing-the-data)) |
-| Resolution | Daily only |
+| Licence | ICOS CC BY 4.0 data licence, as the portal states for each archive |
+| Cite | One citation per station (see [Citing the data](#citing-the-data)) |
+| Groups | LAI, biomass, canopy height, soil texture, soil stocks |
 | catena nodes | None yet (see [Using with catena](catena.md)) |
 
-The connector is partial ([#11](https://github.com/NERC-CEH/xharvest/issues/11)): daily files only, a fixed set of variables for soil moisture and ecosystem carbon modelling, tested on UK sites.
-The archives come from several networks, not only ICOS: the first part of the file name says which (`ICOS`, `EUF` for the European Fluxes Database, `JPF`, `CNF`, `KOF`, `FLX`, `SAEON`).
-In the UK only UK-AMo is an ICOS station; the other UK sites are `EUF`.
+Of the 93 stations with a current ETC L2 archive, 84 have ancillary measurements, but not all of every kind: 82 report LAI, 80 biomass, 54 soil texture and 31 soil stocks (see [Coverage](data.md#coverage)).
+In the UK only UK-AMo is an ICOS ecosystem station, and it has no soil measurements.
+
+The connector is a first implementation for research use, and takes shortcuts listed under [Limitations](#limitations).
 
 ## Download
 
 ```python
 from xharvest import icos
 
-icos.sites()  # site codes, names, locations, records and file names
-raw = icos.fetch(["UK-Cvn", "UK-AMo"], "data/raw")
+icos.stations()  # station codes, names, locations, records and file names
+raw = icos.fetch(["UK-AMo", "DE-Har"], "data/raw")
 ```
 
 or from the command line:
 
 ```sh
-xharvest icos sites
-xharvest icos fetch UK-Cvn UK-AMo --out data/raw
+xharvest icos stations
+xharvest icos fetch UK-AMo DE-Har --out data/raw
 ```
 
-- `fetch` downloads each site's whole archive (20-250 MB), with a `.meta.json` provenance sidecar recording the archive's citation and persistent identifier.
-- There is no date range: the portal serves whole-site archives only. Select a period after standardising.
+- `fetch` downloads each station's whole archive (5-330 MB), which also holds its fluxes and meteorology, with a `.meta.json` provenance sidecar recording the archive's citation, licence and persistent identifier.
 - Each download is checked against the SHA-256 the portal publishes.
-- Files keep the portal's name, e.g. `EUF_UK-Cvn_FLUXNET_2023-2024_v1.3_r1.zip`, so a new release arrives as a new file.
-- An archive that already holds the same object is skipped; pass `overwrite=True` (`--overwrite`) to download again.
-
-`sites()` gives each archive's site code, name, location and record, so plain Python picks sites out.
-For example, the UK sites with at least five years of data:
-
-```python
-chosen = [
-    s.id
-    for s in icos.sites()
-    if s.id.startswith("UK-") and s.end.year - s.start.year >= 5
-]
-```
+- A station has one current archive: its final L2 archive, or the interim one, updated monthly, that supersedes it. Where the portal lists both as current, `stations` takes the one whose record ends later.
+- Files keep the portal's name, e.g. `ICOSETC_UK-AMo_ARCHIVE_INTERIM_L2.zip`, which stays the same from one monthly version to the next. Once the portal has a newer version, fetching into the same directory raises until you pass `overwrite=True` (`--overwrite`).
 
 ## Standardise
 
+`standardise` reads one group of measurements at a time, from any number of archives:
+
 ```python
-icos.to_netcdf(raw, "data/icos.nc")
+lai = icos.standardise(raw, "LAI")
+icos.to_netcdf(raw, "data/soil_tex.nc", "SOIL_TEX")
 ```
 
 ```sh
-xharvest icos standardise data/raw/*.zip --out data/icos.nc
+xharvest icos standardise data/raw/*.zip --group LAI --out data/lai.nc
 ```
 
+`GROUPS` lists the groups and their value variables: `LAI`, `BIOMASS`, `HEIGHTC`, `SOIL_TEX` and `SOIL_STOCK`, the archive's BIF group names without `GRP_`.
 Sidecars among the paths are skipped, so a glob over the download directory works.
-Sites whose data keep different local standard times (see [Timestamps](data.md#timestamps)) cannot share a file, and raise; the UK sites are all UTC+0.
+An archive with no ancillary file raises.
 
-The result has dims `(time, site, depth)`:
+Each measurement is one record, as the archive gives it.
+Nothing is averaged, pivoted into time series, or classified, because the archive tells measurements of different things apart only by qualifiers that are partly free text (see [Telling records apart](data.md#telling-records-apart)).
+Select records on the qualifiers instead:
+
+```python
+mean_gai = lai.where(
+    (lai.LAI_TYPE == "GAI") & (lai.LAI_STATISTIC == "Mean") & (lai.LAI_SPP == ""),
+    drop=True,
+)
+```
+
+The result has one dim, `record`, over every station's records:
 
 | Name | Kind | Notes |
 |---|---|---|
-| `time` | dim | UTC start of the site's local standard day, as naive `datetime64` |
-| `site` | dim | FLUXNET site code, e.g. `UK-Cvn` |
-| `depth` | dim | Soil sensor depth, metres below ground, positive down |
-| `site_name`, `lat`, `lon`, `altitude` | coord on `site` | From the archive's site metadata |
-| `utc_offset`, `igbp`, `network` | coord on `site` | Hours from UTC to the data's clock; IGBP land cover; network code |
-| `time_bounds` | coord on `(time, nv)` | The day each value covers |
-| [the variables below](#variables) | data, on `(time, site)`, or `(time, site, depth)` for the soil profiles | |
+| `record` | dim | One per measurement, with no coordinate |
+| `site`, `site_name`, `lat`, `lon` | coord on `record` | The station, from the archive's site metadata |
+| `time` | coord on `record` | The measurement's local date, as the archive gives it, not converted to UTC |
+| `time_bounds` | coord on `(record, nv)` | The period the measurement's dates name (see [Dates](data.md#dates)) |
+| Qualifiers, e.g. `LAI_TYPE`, `LAI_STATISTIC`, `SOIL_TEX_PROFILE_MIN` | coord on `record` | Every other variable the archive gives for the measurement: strings, empty where unset, or numbers for depths, counts and uncertainties, NaN where unset |
+| [The group's value variables](#variables) | data on `record` | NaN where a record does not give one |
 
-- Names, values and units are FLUXNET's; each variable's definition from the archive is its `description`.
-- Unit strings that are not valid CF are renamed to the same unit in CF, with the original in `provider_units`: `deg C` is `degC`, `gC m-2 d-1` is `g m-2 d-1`, `µmolCO2 m-2 s-1` is `umol m-2 s-1`. The species (carbon, CO2, photons) is in the description, not the unit.
-- `-9999` becomes NaN. A variable a site does not measure, and a depth it has no sensor at, are NaN, so every site has the same variables.
-- Global attributes record provenance: `institution`, `source`, `license`, `history`, and every site's citation in `references`.
-- Nothing converts units, filters on quality flags, or fills gaps; [How standardisation works](standardise.md) shows every step.
+- Names and values are the archive's.
+  Units come from the archive's variable dictionary, `BIF_Ancillary_Variables.csv`, renamed to CF with the original kept in `provider_units`: `%vol` is `%`, `g C m-2` is `g m-2`, `kgDM m-2` is `kg m-2`.
+  What is weighed and what a percentage is of are in the `description`, not the unit.
+- A qualifier one station gives and another does not is empty, or NaN, at the other's records, so every station has the same coordinates.
+- Global attributes record provenance: `institution`, `source`, `license`, `history`, and every station's citation in `references`.
+- Nothing converts units or interpolates between measurement dates; [How standardisation works](standardise.md) shows every step.
 
-Open the file with `xr.open_dataset("data/icos.nc")`.
-The test fixtures, two UK sites over overlapping fortnights, print as:
+The test fixtures' LAI, from UK-AMo in 2023 and DE-Har, prints as:
 
 --8<-- "docs/providers/_variables/icos-dataset.md"
 
 ### Variables
 
-`standardise` keeps these variables, and the `_QC` of those marked, whatever else an archive holds.
-Each `_QC` is the fraction of the day's half-hours that were measured or gap-filled with good quality (see [Quality flags](data.md#quality-flags)).
-Units are the CF units `standardise` writes; descriptions are the archives' own, drawn from the test fixtures (UK-Ags and UK-Cvn).
+Units are the CF units `standardise` writes; descriptions are the archive's own, from its variable dictionary.
 
 --8<-- "docs/providers/_variables/icos.md"
 
+## Limitations
+
+The first implementation takes these shortcuts:
+
+- Records are not combined into `(time, site)` series, and their approaches are not classified: moss cover, for example, is reported as GAI ([#18](https://github.com/NERC-CEH/xharvest/issues/18)).
+- Biomass in carbon (`gC m-2`, 101 of 17,273 records) is dropped, keeping dry matter only ([#19](https://github.com/NERC-CEH/xharvest/issues/19)).
+- Biomass organs are free text and are not normalised: `total AG`, `Total AG` and `Total aboveground` are kept as written ([#20](https://github.com/NERC-CEH/xharvest/issues/20)).
+- Only five groups are read; soil chemistry, litter, roots, tree counts and the rest are not ([#21](https://github.com/NERC-CEH/xharvest/issues/21)).
+- `time` is the station's local date, not a UTC time ([#22](https://github.com/NERC-CEH/xharvest/issues/22)).
+- The archive's fluxes, meteorology and FLUXNET files are not read; use [FLUXNET](../fluxnet/index.md) ([#23](https://github.com/NERC-CEH/xharvest/issues/23)).
+
 ## Citing the data
 
-The licence requires a citation for every site used.
+The licence requires a citation for every station used.
 `fetch` records each archive's citation, as the portal gives it, in its sidecar, and `standardise` lists them in the `references` attribute, for example:
 
-> D'Acunha, B., Evans, C., Morrison, R., Riutta, T., Shuckburgh, E., van den Berg, M. (2026). Fluxnet Archive Product from Coveney, 2023–2024, FLUXNET, <https://hdl.handle.net/11676/37X3GrWRM7AEcdIt8WRasg1l>
-
-Each archive's `DATA_POLICY_LICENSE_AND_INSTRUCTIONS.txt` gives the acknowledgements each network also requires.
+> Nemitz, E., Callaghan, N., Cash, J., Coyle, M., Coyle, M., Fincham, W., Grenier, M., Harvey, D., Helfter, C., Jones, M., Leeson, S., Levy, P., Mullinger, N., Ocallaghan, F., van Dijk, N., Vandome, E., Yeung, K. (2026). ETC L2 ARCHIVE from Auchencorth Moss, 2021-01-01–2026-08-31, ICOS RI, <https://hdl.handle.net/11676/M6gyVbSMpTn4eDb_usFEuYhN>
 
 ## More
 
-- [About the data](data.md): timestamps, daily aggregation, units, quality flags and soil profiles, where the archives contradict themselves, as checked against the data.
-- [How standardisation works](standardise.md): every step from the downloaded files to the netCDF, and the judgement calls xharvest makes.
+- [About the data](data.md): coverage, how to tell records apart, dates, and units, as checked against the data.
+- [How standardisation works](standardise.md): every step from the downloaded archives to the netCDF, and the judgement calls xharvest makes.
 - [Using with catena](catena.md): contract types; there are no nodes yet.
 - [Reference](reference.md): the CLI and the Python API.

@@ -1,46 +1,36 @@
-"""Download and standardise FLUXNET data from the ICOS Carbon Portal.
+"""Download and standardise ICOS ecosystem stations' ancillary measurements.
 
-`sites` and `fetch` need the `icos` extra:
+The ETC L2 archives on the ICOS Carbon Portal hold, besides each station's
+fluxes, its ancillary measurements: LAI, biomass, canopy height and soil
+properties. `standardise` reads one group of them at a time, as records.
+
+`stations` and `fetch` need the `icos` extra:
 `pip install "xharvest[icos] @ git+https://github.com/NERC-CEH/xharvest"`.
 """
 
-from ._fetch import Site, fetch, sites
+from ._fetch import Station, fetch, stations
+from ._pipeline import GROUPS
 from ._standardise import standardise, to_netcdf
 from ._variables import (
     VARIABLES,
-    AirPressure,
-    AirTemperature,
-    CarbonFlux,
-    CO2MoleFraction,
-    EnergyFlux,
-    PhotonFlux,
-    Precip,
-    ProfileQualityFraction,
-    QualityFraction,
-    SoilTemperature,
-    SoilWaterContent,
-    VapourPressureDeficit,
-    WindSpeed,
+    AreaIndex,
+    Biomass,
+    CanopyHeight,
+    SoilContent,
+    SoilStock,
 )
 
 __all__ = [
+    "GROUPS",
     "VARIABLES",
-    "AirPressure",
-    "AirTemperature",
-    "CO2MoleFraction",
-    "CarbonFlux",
-    "EnergyFlux",
-    "PhotonFlux",
-    "Precip",
-    "ProfileQualityFraction",
-    "QualityFraction",
-    "Site",
-    "SoilTemperature",
-    "SoilWaterContent",
-    "VapourPressureDeficit",
-    "WindSpeed",
+    "AreaIndex",
+    "Biomass",
+    "CanopyHeight",
+    "SoilContent",
+    "SoilStock",
+    "Station",
     "fetch",
-    "sites",
     "standardise",
+    "stations",
     "to_netcdf",
 ]

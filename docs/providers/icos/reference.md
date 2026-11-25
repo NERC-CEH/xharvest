@@ -14,11 +14,11 @@ Run `xharvest icos <command> --help` for a command's options; they mirror the Py
 
 ## Python API
 
-::: xharvest.icos.sites
+::: xharvest.icos.stations
     options:
       heading_level: 3
 
-::: xharvest.icos.Site
+::: xharvest.icos.Station
     options:
       heading_level: 3
 
@@ -31,5 +31,9 @@ Run `xharvest icos <command> --help` for a command's options; they mirror the Py
       heading_level: 3
 
 ::: xharvest.icos.to_netcdf
+    options:
+      heading_level: 3
+
+::: xharvest.icos.GROUPS
     options:
       heading_level: 3

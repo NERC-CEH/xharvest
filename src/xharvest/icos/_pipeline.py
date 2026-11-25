@@ -1,12 +1,20 @@
-"""Nodes that standardise FLUXNET archives from the ICOS Carbon Portal.
+"""Nodes that standardise the ancillary measurements in ICOS ETC L2 archives.
 
-`standardise` builds its graph from these and the shared FLUXNET reader in
-`xharvest.icos._fluxnet`, and computes `dataset` from `paths`. Every node acts on all
-the archives at once; most take and return a mapping from archive path to that
-archive's part.
+`standardise` builds its graph from these and computes `datasets`, one Dataset per
+BIF group in `GROUPS`, from `paths`. Every node acts on all the archives and
+groups at once; most take and return a mapping from archive path to that
+archive's part. BIF is read with `xharvest.fluxnet._bif` (ADR 3).
+
+Each measurement stays one record, as the archive gives it: nothing is averaged,
+pivoted into series, or classified, so the qualifiers that tell records apart
+(type, statistic, method, species, organ, approach, depth) are kept beside the
+values for the user to select on.
 """
 
-from collections import defaultdict
+import csv
+import io
+import re
+import zipfile
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -16,76 +24,163 @@ from hamilton.function_modifiers import tag
 
 from .. import __version__
 from ..errors import ProviderError
+from ..fluxnet import _bif
+from ..fluxnet._fetch import DATA_URL
 from ..provenance import Retrieval, history_line, is_sidecar, read_sidecar, utc_now
-from ._fetch import DATA_URL
-from ._fluxnet import Site, Table, Variable
+
+GROUPS = {
+    "LAI": ("LAI",),
+    "BIOMASS": ("BIOMASS",),
+    "HEIGHTC": ("HEIGHTC", "HEIGHTC_U"),
+    "SOIL_TEX": (
+        "SOIL_TEX_SAND",
+        "SOIL_TEX_SILT",
+        "SOIL_TEX_CLAY",
+        "SOIL_TEX_ROCK",
+        "SOIL_TEX_FIELD_CAP",
+        "SOIL_TEX_WILT",
+        "SOIL_TEX_SAT",
+        "SOIL_TEX_WATER_HOLD_CAP",
+    ),
+    "SOIL_STOCK": (
+        "SOIL_STOCK_C_ORG",
+        "SOIL_STOCK_N_TOT",
+        "SOIL_STOCK_P",
+        "SOIL_STOCK_K",
+    ),
+}
+"""The BIF groups `standardise` keeps, without their `GRP_` prefix, and the
+variables in each that hold measured values. Every other variable of a kept
+group is a qualifier, kept as a coordinate."""
+
+CF_UNITS = {
+    "m2 m-2": "m2 m-2",
+    "m": "m",
+    "%": "%",
+    "%vol": "%",
+    "g C m-2": "g m-2",
+    "g N m-2": "g m-2",
+    "g P m-2": "g m-2",
+    "g K m-2": "g m-2",
+    "kgDM m-2": "kg m-2",
+    "cm": "cm",
+    "days": "d",
+}
+"""CF equivalents of the unit strings the variable dictionary uses.
+
+Renaming only: each pair is the same unit, so values are unchanged. What is
+weighed (carbon, nitrogen, dry matter) and what a percentage is of (mass, or
+volume for `%vol`) is not part of the CF unit; it is in each variable's
+description, and the original string is kept as `provider_units`.
+"""
+
+NUMERIC_QUALIFIER_UNITS = {"cm", "days", "integer number", "decimal number"}
+"""Dictionary units of qualifiers kept as numbers rather than strings."""
+
+DRY_MATTER = "kgDM m-2"
+
+TITLE = "ICOS ecosystem station ancillary data: {}"
+
+_DATE = re.compile(r"_DATE(_START|_END)?$")
 
 
 @dataclass(frozen=True)
-class Kept:
-    """A variable `standardise` keeps, and how.
+class ArchiveText:
+    """The text of the files in one archive that standardisation reads.
 
     Attributes:
-        name: The FLUXNET name, e.g. `"TA_F"`; for a soil profile, the name its
-            sensors share before `_<n>`, e.g. `"SWC_F_MDS"`.
-        units: The CF unit it must have.
-        profile: Whether it is a soil profile, its sensors stacked on `depth`.
-        qc: Whether its `_QC` is kept.
-        mean: Whether it is the daily mean of its half-hourly values.
+        ancillary: The station's ancillary measurements, in BIF.
+        site_info: The station's site metadata, in BIF.
+        dictionary: `BIF_Ancillary_Variables.csv`: the description and unit of
+            every ancillary variable.
     """
 
-    name: str
-    units: str
-    profile: bool = False
-    qc: bool = False
-    mean: bool = True
+    ancillary: str
+    site_info: str
+    dictionary: str
 
 
-KEPT = (
-    # Meteorology
-    Kept("TA_F", "degC", qc=True),
-    Kept("VPD_F", "hPa", qc=True),
-    Kept("P_F", "mm d-1", qc=True),
-    Kept("SW_IN_F", "W m-2", qc=True),
-    Kept("LW_IN_F", "W m-2", qc=True),
-    Kept("PA_F", "kPa", qc=True),
-    Kept("WS_F", "m s-1", qc=True),
-    Kept("PPFD_IN", "umol m-2 s-1", qc=True),
-    Kept("NETRAD", "W m-2", qc=True),
-    Kept("CO2_F_MDS", "umol mol-1", qc=True),
-    # Soil heat flux
-    Kept("G_F_MDS", "W m-2", qc=True),
-    # Energy and water
-    Kept("LE_F_MDS", "W m-2", qc=True),
-    Kept("LE_CORR", "W m-2", mean=False),
-    Kept("LE_CORR_JOINTUNC", "W m-2", mean=False),
-    Kept("H_F_MDS", "W m-2", qc=True),
-    Kept("H_CORR", "W m-2", mean=False),
-    # Carbon
-    Kept("NEE_VUT_REF", "g m-2 d-1", qc=True),
-    Kept("NEE_VUT_REF_JOINTUNC", "g m-2 d-1", mean=False),
-    Kept("GPP_NT_VUT_REF", "g m-2 d-1"),
-    Kept("GPP_DT_VUT_REF", "g m-2 d-1"),
-    Kept("RECO_NT_VUT_REF", "g m-2 d-1"),
-    Kept("RECO_DT_VUT_REF", "g m-2 d-1"),
-    # Soil profiles
-    Kept("SWC_F_MDS", "%", profile=True, qc=True),
-    Kept("TS_F_MDS", "degC", profile=True, qc=True),
-)
-"""The variables `standardise` keeps, in the order the Dataset holds them."""
+@dataclass(frozen=True)
+class Site:
+    """A station, as its archive's site metadata describes it.
 
-_UNITS = {kept.name: kept.units for kept in KEPT}
-_SCALARS = [kept.name for kept in KEPT if not kept.profile]
-_PROFILES = [kept.name for kept in KEPT if kept.profile]
+    Attributes:
+        site: The station code, e.g. `"UK-AMo"`.
+        site_name: The station's name, e.g. `"Auchencorth Moss"`.
+        lat: Latitude, in degrees north.
+        lon: Longitude, in degrees east.
+    """
 
-QC_DESCRIPTION = (
-    "Quality flag for {}: fraction between 0 and 1 of the day's half-hours that "
-    "were measured or gap-filled with good quality"
-)
+    site: str
+    site_name: str
+    lat: float
+    lon: float
 
-TITLE = "FLUXNET daily data from the ICOS Carbon Portal"
 
-_DAY = np.timedelta64(1, "D")
+@dataclass(frozen=True)
+class Entry:
+    """One variable in the dictionary.
+
+    Attributes:
+        description: What the variable is.
+        unit: Its unit, or for a qualifier what kind of value it takes, e.g.
+            `"free text"` or `"LIST(STATISTIC)"`.
+    """
+
+    description: str
+    unit: str
+
+
+def _read_archive(path: Path) -> ArchiveText:
+    try:
+        archive = zipfile.ZipFile(path)
+    except zipfile.BadZipFile:
+        raise ProviderError(f"{path} is not a ZIP archive") from None
+    with archive:
+
+        def read(pattern: str) -> str:
+            return _bif.decode(archive.read(_bif.member(archive, path, pattern)))
+
+        return ArchiveText(
+            ancillary=read(r"_ANCILLARY_(INTERIM_)?L2\.csv$"),
+            site_info=read(r"_SITEINFO_(INTERIM_)?L2\.csv$"),
+            dictionary=read(r"^BIF_Ancillary_Variables\.csv$"),
+        )
+
+
+def _number(value: str) -> float:
+    # A decimal comma is read as a decimal point; see `values`.
+    if value.count(",") == 1 and "." not in value:
+        value = value.replace(",", ".")
+    return float(value)
+
+
+_NAT = np.datetime64("NaT", "ns")
+
+_PRECISION = {
+    4: np.timedelta64(1, "Y"),
+    6: np.timedelta64(1, "M"),
+    8: np.timedelta64(1, "D"),
+    10: np.timedelta64(1, "h"),
+    12: None,
+    14: None,
+}
+"""The period a BIF date of each length names, from its start; None for an instant."""
+
+
+def _period(value: str) -> tuple[np.datetime64, np.datetime64]:
+    """The start and end of the period a BIF date string names."""
+    if not value.isdigit() or len(value) not in _PRECISION:
+        return _NAT, _NAT
+    # ISO 8601 to the string's precision, which numpy keeps as the unit.
+    text = value[:4]
+    for i, sep in [(4, "-"), (6, "-"), (8, "T"), (10, ":"), (12, ":")]:
+        if len(value) > i:
+            text += sep + value[i : i + 2]
+    start = np.datetime64(text)
+    step = _PRECISION[len(value)]
+    end = start if step is None else start + step
+    return start.astype("datetime64[ns]"), end.astype("datetime64[ns]")
 
 
 @tag(action="selects")
@@ -99,7 +194,7 @@ def archive_paths(paths: list[Path]) -> list[Path]:
     """
     archives = sorted(p for p in paths if not is_sidecar(p))
     if not archives:
-        raise ValueError("no ICOS FLUXNET archives to standardise")
+        raise ValueError("no ETC L2 archives to standardise")
     return archives
 
 
@@ -108,7 +203,8 @@ def retrievals(archive_paths: list[Path]) -> dict[Path, Retrieval]:
     """Read each archive's provenance sidecar, written by `fetch`.
 
     The sidecar records where and when the archive was downloaded, and the
-    citation the portal gives for it, none of which the archive itself holds.
+    citation and licence the portal gives for it, none of which the archive
+    itself holds.
 
     Raises:
         FileNotFoundError: If an archive has no sidecar.
@@ -116,411 +212,447 @@ def retrievals(archive_paths: list[Path]) -> dict[Path, Retrieval]:
     return {path: read_sidecar(path) for path in archive_paths}
 
 
-@tag(action="selects")
-def profiled_variables() -> tuple[str, ...]:
-    """The soil profiles to stack on `depth`: `SWC_F_MDS` and `TS_F_MDS`."""
-    return tuple(_PROFILES)
+@tag(action="reads")
+def archive_texts(archive_paths: list[Path]) -> dict[Path, ArchiveText]:
+    """Read the ancillary file, site metadata and variable dictionary, as text.
 
-
-@tag(action="selects")
-def kept_variables(
-    variables: dict[Path, dict[str, Variable]],
-    described_tables: dict[Path, Table],
-    soil_profiles: dict[Path, dict[str, dict[float, str]]],
-) -> dict[Path, dict[str, Variable]]:
-    """Keep the variables in `KEPT`, and each sensor of its soil profiles.
-
-    Every other column is dropped, including all `_QC` columns, which
-    `kept_flags` keeps separately. A kept variable a site lacks is left out
-    here and becomes NaN in `site_datasets`.
-    """
-    result = {}
-    for path, table in described_tables.items():
-        names = [name for name in _SCALARS if name in table.columns]
-        for depths in soil_profiles[path].values():
-            names.extend(depths.values())
-        result[path] = {name: variables[path][name] for name in names}
-    return result
-
-
-@tag(action="selects")
-def kept_flags(
-    described_tables: dict[Path, Table],
-    soil_profiles: dict[Path, dict[str, dict[float, str]]],
-) -> dict[Path, list[str]]:
-    """Keep the `_QC` columns `KEPT` asks for, and those of each soil sensor."""
-    result = {}
-    for path, table in described_tables.items():
-        names = [f"{k.name}_QC" for k in KEPT if k.qc and not k.profile]
-        for depths in soil_profiles[path].values():
-            names.extend(f"{column}_QC" for column in depths.values())
-        result[path] = [name for name in names if name in table.columns]
-    return result
-
-
-@tag(action="checks")
-def checked_units(
-    cf_units: dict[Path, dict[str, str]],
-    kept_variables: dict[Path, dict[str, Variable]],
-    soil_profiles: dict[Path, dict[str, dict[float, str]]],
-) -> dict[Path, dict[str, str]]:
-    """Check that each kept variable has the CF unit `KEPT` expects.
+    The archives are read in place, without extracting them.
 
     Raises:
-        ProviderError: If a variable's unit, renamed to CF, is another.
+        ProviderError: If a path is not a ZIP archive, or an archive does not
+            hold exactly one of each file. About one station in ten has no
+            ancillary file.
     """
-    for path, units in cf_units.items():
-        expected = {name: _UNITS[name] for name in _SCALARS}
-        for base, depths in soil_profiles[path].items():
-            expected.update(dict.fromkeys(depths.values(), _UNITS[base]))
-        for name, found in units.items():
-            if found != expected[name]:
-                raise ProviderError(
-                    f"{path}: {name} has unit {kept_variables[path][name].units!r} "
-                    f"({found}), not {expected[name]}"
-                )
-    return cf_units
+    return {path: _read_archive(path) for path in archive_paths}
 
 
-@tag(action="checks")
-def checked_flags(
-    described_tables: dict[Path, Table], kept_flags: dict[Path, list[str]]
-) -> dict[Path, Table]:
-    """Check that every kept `_QC` value lies between 0 and 1.
-
-    The archive's variable list gives some `_QC` columns their parent's unit
-    and definition (`SWC_F_MDS_1_QC` as `%`), so it cannot say what they are;
-    their values can. A daily `_QC` should be a fraction.
+@tag(action="reads")
+def sites(archive_texts: dict[Path, ArchiveText]) -> dict[Path, Site]:
+    """Read each station's code, name and location from its site metadata.
 
     Raises:
-        ProviderError: If a kept `_QC` has a value outside 0-1.
+        ProviderError: If the metadata lacks a header or a location.
     """
-    for path, names in kept_flags.items():
-        for name in names:
-            values = described_tables[path].columns[name]
-            if np.any((values < 0) | (values > 1)):
-                raise ProviderError(
-                    f"{path}: {name} has values outside 0-1, so it is not the "
-                    "fraction a daily _QC should be"
-                )
-    return described_tables
-
-
-@tag(action="checks")
-def checked_sites(sites: dict[Path, Site]) -> dict[Path, Site]:
-    """Check that every site keeps the same local standard time.
-
-    A daily value covers the site's local day, so sites with different UTC
-    offsets have days that start at different times, and cannot share a time
-    axis.
-
-    Raises:
-        ValueError: If the sites' UTC offsets differ.
-    """
-    if len({site.utc_offset for site in sites.values()}) > 1:
-        by_offset = sorted({(s.utc_offset, s.site) for s in sites.values()})
-        listed = ", ".join(f"{site} (UTC{offset:+g})" for offset, site in by_offset)
-        raise ValueError(
-            "the sites keep different local standard times, so their days do not "
-            f"line up: {listed}; standardise sites with one UTC offset at a time"
-        )
-    return sites
-
-
-@tag(action="reshapes")
-def site_datasets(
-    checked_flags: dict[Path, Table],
-    times: dict[Path, np.ndarray],
-    soil_profiles: dict[Path, dict[str, dict[float, str]]],
-    checked_sites: dict[Path, Site],
-) -> dict[Path, xr.Dataset]:
-    """Arrange each archive's kept columns into a Dataset with one site.
-
-    Variables in `KEPT` other than the soil profiles, and their `_QC`, go on
-    `(time, site)`. Each soil
-    profile's sensors are stacked on `(time, site, depth)`, over the depths of
-    either profile at that site. A kept variable the site lacks, and a depth it
-    has no sensor of that variable at, are NaN.
-    """
-
-    def column(table: Table, name: str) -> np.ndarray:
-        if name in table.columns:
-            return table.columns[name]
-        return np.full(len(table.dates), np.nan)
-
     result = {}
-    for path, table in checked_flags.items():
-        profiles = soil_profiles[path]
-        depths = sorted({d for depth_map in profiles.values() for d in depth_map})
-        n = len(table.dates)
-        data_vars = {}
-        for name in _SCALARS:
-            data_vars[name] = (("time", "site"), column(table, name)[:, None])
-        for kept in KEPT:
-            if kept.qc and not kept.profile:
-                values = column(table, f"{kept.name}_QC")[:, None]
-                data_vars[f"{kept.name}_QC"] = (("time", "site"), values)
-        for base in _PROFILES:
-            values = np.full((n, 1, len(depths)), np.nan)
-            flags = np.full((n, 1, len(depths)), np.nan)
-            for depth, name in profiles[base].items():
-                i = depths.index(depth)
-                values[:, 0, i] = column(table, name)
-                flags[:, 0, i] = column(table, f"{name}_QC")
-            data_vars[base] = (("time", "site", "depth"), values)
-            data_vars[f"{base}_QC"] = (("time", "site", "depth"), flags)
-        site = checked_sites[path]
-        result[path] = xr.Dataset(
-            data_vars,
-            coords={
-                "time": times[path],
-                "site": [site.site],
-                "depth": np.array(depths, dtype=float),
-                "site_name": ("site", [site.site_name]),
-                "lat": ("site", [site.lat]),
-                "lon": ("site", [site.lon]),
-                "altitude": (
-                    "site",
-                    [np.nan if site.elevation is None else site.elevation],
-                ),
-                "utc_offset": ("site", [site.utc_offset]),
-                "igbp": ("site", [site.igbp]),
-                "network": ("site", [site.network]),
-            },
+    for path, text in archive_texts.items():
+        groups = _bif.entries(text.site_info)
+        header = _bif.one(groups, "GRP_HEADER", path)
+        location = _bif.one(groups, "GRP_LOCATION", path)
+        lat = _bif.number(location.get("LOCATION_LAT"))
+        lon = _bif.number(location.get("LOCATION_LONG"))
+        if lat is None or lon is None:
+            raise ProviderError(f"{path}: the site metadata lacks a location")
+        result[path] = Site(
+            site=header["SITE_ID"],
+            site_name=header.get("SITE_NAME", ""),
+            lat=lat,
+            lon=lon,
         )
     return result
 
 
-@tag(action="reshapes")
-def site_records(
-    site_datasets: dict[Path, xr.Dataset], checked_sites: dict[Path, Site]
-) -> list[xr.Dataset]:
-    """Join each site's archives into one record, a site per Dataset.
-
-    Archives of one site from different releases are outer-joined on time.
-
-    Raises:
-        ValueError: If two archives of one site disagree where both have a
-            value, as releases that revised the data do.
-    """
-    pieces: dict[str, list[xr.Dataset]] = defaultdict(list)
-    for path, ds in site_datasets.items():
-        pieces[checked_sites[path].site].append(ds)
-    records = []
-    for site, site_pieces in pieces.items():
-        if len(site_pieces) == 1:
-            records.append(site_pieces[0])
-            continue
-        try:
-            records.append(
-                xr.merge(
-                    site_pieces,
-                    compat="no_conflicts",
-                    join="outer",
-                    combine_attrs="override",
-                )
+@tag(action="reads")
+def dictionaries(
+    archive_texts: dict[Path, ArchiveText],
+) -> dict[Path, dict[str, Entry]]:
+    """Read each archive's variable dictionary: description and unit by name."""
+    result = {}
+    for path, text in archive_texts.items():
+        rows = csv.DictReader(io.StringIO(text.dictionary))
+        result[path] = {
+            row["VARIABLE NAME"].strip(): Entry(
+                description=row["VARIABLE DESCRIPTION"].strip(),
+                unit=row["UNIT"].strip(),
             )
-        except xr.MergeError as err:
-            raise ValueError(
-                f"archives for site {site} disagree where they overlap, as releases "
-                f"that revised the data do; standardise one release at a time ({err})"
-            ) from None
-    return records
+            for row in rows
+        }
+    return result
 
 
-@tag(action="reshapes")
-def combined(site_records: list[xr.Dataset]) -> xr.Dataset:
-    """Join the sites on `time` and `depth`, padding each with NaN.
+@tag(action="reads")
+def entries(
+    archive_texts: dict[Path, ArchiveText],
+) -> dict[Path, dict[str, list[dict[str, str]]]]:
+    """Read every ancillary entry, grouped by its BIF group, e.g. `GRP_LAI`.
 
-    A site with a shorter record, or fewer soil sensors, is NaN where it has no
-    value, so every site has the same variables, times and depths.
+    An entry is the rows sharing a `GROUP_ID`: one measurement and its
+    qualifiers.
     """
-    ds = xr.concat(
-        site_records,
-        dim="site",
-        join="outer",
-        combine_attrs="override",
-        data_vars="all",
-    )
-    return ds.sortby("time").sortby("depth")
+    return {path: _bif.entries(text.ancillary) for path, text in archive_texts.items()}
 
 
-@tag(action="interprets")
-def descriptions(
-    kept_variables: dict[Path, dict[str, Variable]],
-    soil_profiles: dict[Path, dict[str, dict[float, str]]],
-) -> dict[str, dict[str, str]]:
-    """Take each variable's unit string and definition from one archive.
+@tag(action="selects")
+def kept_entries(
+    entries: dict[Path, dict[str, list[dict[str, str]]]],
+) -> dict[Path, dict[str, list[dict[str, str]]]]:
+    """Keep the groups in `GROUPS`, and in each the entries holding a value.
 
-    A judgement: they come from the first archive, in path order, that has the
-    variable, and for a soil profile from its shallowest sensor there. Other
-    archives' wordings are not kept. A variable no archive has gets neither.
+    An entry none of whose value variables is set describes a sample without
+    reporting a measurement of it, so it is dropped. Every other group, such as
+    soil chemistry, litter or tree counts, is dropped.
 
     Returns:
-        `{variable: {"provider_units": ..., "description": ...}}`.
+        `{path: {group: [entry, ...]}}`, with every group in `GROUPS`, empty
+        where the station has no entry.
     """
-    result: dict[str, dict[str, str]] = {}
-    for path, kept in kept_variables.items():
-        sources = {name: name for name in _SCALARS}
-        for base, depths in soil_profiles[path].items():
-            if depths:
-                sources[base] = next(iter(depths.values()))
-        for name, column in sources.items():
-            if name in result or column not in kept:
-                continue
-            variable = kept[column]
-            result[name] = {
-                "provider_units": variable.units,
-                "description": variable.definition,
-            }
+    result = {}
+    for path, groups in entries.items():
+        kept = {}
+        for group, value_names in GROUPS.items():
+            kept[group] = [
+                entry
+                for entry in groups.get(f"GRP_{group}", [])
+                if any(entry.get(name, "") != "" for name in value_names)
+            ]
+        result[path] = kept
+    return result
+
+
+@tag(action="selects")
+def dry_matter_entries(
+    kept_entries: dict[Path, dict[str, list[dict[str, str]]]],
+) -> dict[Path, dict[str, list[dict[str, str]]]]:
+    """Keep only the biomass entries in dry matter, `kgDM m-2`.
+
+    `BIOMASS_UNIT` varies by entry, and a few are in carbon, `gC m-2`, which
+    weighs something else, so cannot share a variable with dry matter. Those
+    are dropped for now.
+
+    Raises:
+        ProviderError: If a biomass entry has neither unit.
+    """
+    result = {}
+    for path, groups in kept_entries.items():
+        biomass = []
+        for entry in groups["BIOMASS"]:
+            unit = entry.get("BIOMASS_UNIT", "")
+            if unit == DRY_MATTER:
+                biomass.append(entry)
+            elif unit != "gC m-2":
+                raise ProviderError(
+                    f"{path}: a biomass entry has unit {unit!r}, which xharvest "
+                    "does not know"
+                )
+        result[path] = {**groups, "BIOMASS": biomass}
+    return result
+
+
+@tag(action="checks")
+def checked_dictionaries(
+    dictionaries: dict[Path, dict[str, Entry]],
+) -> dict[Path, dict[str, Entry]]:
+    """Check that every value variable is in each dictionary, with a known unit.
+
+    The unit of each value comes from the dictionary, and is renamed to CF from
+    `CF_UNITS`; biomass has its own per-entry unit, checked by
+    `dry_matter_entries`.
+
+    Raises:
+        ProviderError: If a value variable is missing from a dictionary, or its
+            unit has no known CF equivalent.
+    """
+    for path, dictionary in dictionaries.items():
+        for group, names in GROUPS.items():
+            for name in names:
+                if group == "BIOMASS":
+                    continue
+                entry = dictionary.get(name)
+                if entry is None:
+                    raise ProviderError(f"{path}: the dictionary lacks {name}")
+                if entry.unit not in CF_UNITS:
+                    raise ProviderError(
+                        f"{path}: {name} has unit {entry.unit!r}, which xharvest "
+                        "does not know a CF equivalent for"
+                    )
+    return dictionaries
+
+
+@tag(action="interprets")
+def values(
+    dry_matter_entries: dict[Path, dict[str, list[dict[str, str]]]],
+) -> dict[Path, dict[str, dict[str, np.ndarray]]]:
+    """Read each value variable as a number, one per entry; NaN where unset.
+
+    A judgement: a value with one comma and no point, such as `7,9`, is read as
+    a decimal comma, `7.9`. One biomass value is written so, among about 17,000.
+
+    Returns:
+        `{path: {group: {variable: values}}}`.
+
+    Raises:
+        ProviderError: If a value is not a number.
+    """
+    result = {}
+    for path, groups in dry_matter_entries.items():
+        by_group = {}
+        for group, group_entries in groups.items():
+            columns = {}
+            for name in GROUPS[group]:
+                column = np.full(len(group_entries), np.nan)
+                for i, entry in enumerate(group_entries):
+                    raw = entry.get(name, "")
+                    if raw == "":
+                        continue
+                    try:
+                        column[i] = _number(raw)
+                    except ValueError:
+                        raise ProviderError(
+                            f"{path}: {name} has the value {raw!r}, which is not "
+                            "a number"
+                        ) from None
+                columns[name] = column
+            by_group[group] = columns
+        result[path] = by_group
     return result
 
 
 @tag(action="interprets")
-def flag_attributes() -> dict[str, dict[str, str]]:
-    """Give every kept `_QC` the unit `1` and a description written here.
+def periods(
+    dry_matter_entries: dict[Path, dict[str, list[dict[str, str]]]],
+) -> dict[Path, dict[str, tuple[np.ndarray, np.ndarray, np.ndarray]]]:
+    """Give each entry a time, and the period it covers, from its date strings.
 
-    A judgement: the archive's variable list mislabels some `_QC` columns as
-    their parent variable, so neither its unit nor its definition is used.
-    `checked_flags` checks the values are the 0-1 fractions this describes.
+    A judgement: a BIF date is as precise as it is long, so `2023` names that
+    year, `202306` that month, `20230615` that day, and `202306151200` an
+    instant. An entry's period runs from the start of `<group>_DATE_START` to
+    the end of `<group>_DATE_END` where it gives both, and otherwise is the
+    period `<group>_DATE` names. Its time is the start of `<group>_DATE` if
+    given, else of its period. A date that is missing or not digits is NaT.
+
+    Dates are the station's local dates, as the archive writes them: they are
+    not converted to UTC.
+
+    Returns:
+        `{path: {group: (time, start, end)}}`.
     """
-    return {
-        f"{k.name}_QC": {"units": "1", "description": QC_DESCRIPTION.format(k.name)}
-        for k in KEPT
-        if k.qc
-    }
+    result = {}
+    for path, groups in dry_matter_entries.items():
+        by_group = {}
+        for group, group_entries in groups.items():
+            n = len(group_entries)
+            time = np.full(n, np.datetime64("NaT", "ns"))
+            start = np.full(n, np.datetime64("NaT", "ns"))
+            end = np.full(n, np.datetime64("NaT", "ns"))
+            for i, entry in enumerate(group_entries):
+                date = _period(entry.get(f"{group}_DATE", ""))
+                first = _period(entry.get(f"{group}_DATE_START", ""))
+                last = _period(entry.get(f"{group}_DATE_END", ""))
+                if not (np.isnat(first[0]) or np.isnat(last[1])):
+                    start[i], end[i] = first[0], last[1]
+                else:
+                    start[i], end[i] = date
+                time[i] = date[0] if not np.isnat(date[0]) else start[i]
+            by_group[group] = (time, start, end)
+        result[path] = by_group
+    return result
 
 
-@tag(action="interprets")
-def cell_methods() -> dict[str, str]:
-    """Say which variables are daily means of their half-hourly values.
+@tag(action="reshapes")
+def qualifiers(
+    dry_matter_entries: dict[Path, dict[str, list[dict[str, str]]]],
+    checked_dictionaries: dict[Path, dict[str, Entry]],
+) -> dict[Path, dict[str, dict[str, np.ndarray]]]:
+    """Collect every other variable of each entry, as a column per variable.
 
-    A judgement, checked against the half-hourly file at UK-Cvn and ES-Dnn
-    rather than taken from the archive's definitions: every variable in `KEPT`
-    is the mean of the day's half-hours, apart from those it marks
-    `mean=False`. The uncertainties are not means, and `LE_CORR` and
-    `H_CORR`, though defined as "average from half-hourly data", differ from
-    the mean of half-hourly values by up to 51 W m-2 at UK-Cvn.
+    Every variable an entry gives besides its values, dates and biomass unit
+    becomes a qualifier column, so nothing the archive says about a
+    measurement is lost. A qualifier whose dictionary unit is numeric (`cm`,
+    `days`, `integer number` or `decimal number`), such as a depth or a count,
+    is a float, NaN where unset; every other is a string, empty where unset.
+
+    Returns:
+        `{path: {group: {qualifier: column}}}`.
+
+    Raises:
+        ProviderError: If a numeric qualifier is not a number.
     """
-    return {kept.name: "time: mean" for kept in KEPT if kept.mean}
+    result = {}
+    for path, groups in dry_matter_entries.items():
+        dictionary = checked_dictionaries[path]
+        by_group = {}
+        for group, group_entries in groups.items():
+            skipped = {*GROUPS[group], "SITE_ID", "BIOMASS_UNIT"}
+            names = sorted(
+                {
+                    name
+                    for entry in group_entries
+                    for name in entry
+                    if name not in skipped and not _DATE.search(name)
+                }
+            )
+            columns = {}
+            for name in names:
+                raw = [entry.get(name, "") for entry in group_entries]
+                entry = dictionary.get(name)
+                if entry is not None and entry.unit in NUMERIC_QUALIFIER_UNITS:
+                    try:
+                        columns[name] = np.array(
+                            [np.nan if r == "" else _number(r) for r in raw]
+                        )
+                    except ValueError:
+                        raise ProviderError(
+                            f"{path}: {name} has a value that is not a number"
+                        ) from None
+                else:
+                    columns[name] = np.array(raw, dtype=str)
+            by_group[group] = columns
+        result[path] = by_group
+    return result
+
+
+@tag(action="reshapes")
+def records(
+    values: dict[Path, dict[str, dict[str, np.ndarray]]],
+    periods: dict[Path, dict[str, tuple[np.ndarray, np.ndarray, np.ndarray]]],
+    qualifiers: dict[Path, dict[str, dict[str, np.ndarray]]],
+    sites: dict[Path, Site],
+) -> dict[str, xr.Dataset]:
+    """Arrange each group's entries, from every archive, along one `record` dim.
+
+    Each entry is one record. Its values are data variables; its station,
+    location, time, period and qualifiers are coordinates on `record`. A
+    qualifier one station gives and another does not is empty, or NaN, at the
+    other's records.
+    """
+    result = {}
+    for group, names in GROUPS.items():
+        numeric: dict[str, bool] = {}
+        for by_group in qualifiers.values():
+            for name, column in by_group[group].items():
+                numeric[name] = numeric.get(name, False) or column.dtype.kind == "f"
+        pieces = []
+        for path, site in sites.items():
+            time, start, end = periods[path][group]
+            n = len(time)
+            coords = {
+                "site": ("record", np.full(n, site.site, dtype=object)),
+                "site_name": ("record", np.full(n, site.site_name, dtype=object)),
+                "lat": ("record", np.full(n, site.lat)),
+                "lon": ("record", np.full(n, site.lon)),
+                "time": ("record", time),
+                "time_bounds": (("record", "nv"), np.stack([start, end], axis=-1)),
+            }
+            given = qualifiers[path][group]
+            for name in sorted(numeric):
+                if name in given:
+                    column = given[name]
+                elif numeric[name]:
+                    column = np.full(n, np.nan)
+                else:
+                    column = np.full(n, "")
+                kind = float if numeric[name] else object
+                coords[name] = ("record", column.astype(kind))
+            data_vars = {name: ("record", values[path][group][name]) for name in names}
+            pieces.append(xr.Dataset(data_vars, coords=coords))
+        ds = xr.concat(pieces, dim="record", data_vars="all", coords="all")
+        for name, coord in ds.coords.items():
+            if coord.dtype == object:
+                ds.coords[name] = coord.astype(str)
+        result[group] = ds
+    return result
 
 
 @tag(action="annotates")
 def variable_attributes(
-    checked_units: dict[Path, dict[str, str]],
-    descriptions: dict[str, dict[str, str]],
-    flag_attributes: dict[str, dict[str, str]],
-    cell_methods: dict[str, str],
+    checked_dictionaries: dict[Path, dict[str, Entry]],
 ) -> dict[str, dict[str, str]]:
-    """Collect each variable's attributes: CF `units`, and the interpretations.
+    """Collect each value variable's CF `units`, provider unit and description.
 
-    `units` is the CF unit `checked_units` confirmed for the variable, or for a
-    soil profile its sensors; a variable no archive has gets the one in `KEPT`.
+    Taken from the first archive's dictionary, in path order; the dictionary is
+    the same file in every archive. Biomass is in dry matter, as
+    `dry_matter_entries` keeps it.
     """
-    confirmed = {}
-    for units in checked_units.values():
-        for column, unit in units.items():
-            confirmed.setdefault(column, unit)
+    dictionary = next(iter(checked_dictionaries.values()))
     result = {}
-    for name in _UNITS:
-        attrs = {"units": confirmed.get(name) or _UNITS[name]}
-        attrs.update(descriptions.get(name, {}))
-        if name in cell_methods:
-            attrs["cell_methods"] = cell_methods[name]
-        result[name] = attrs
-    result.update(flag_attributes)
+    for group, names in GROUPS.items():
+        for name in names:
+            if group == "BIOMASS":
+                description = dictionary.get(name, Entry("Biomass", "")).description
+                result[name] = {
+                    "units": CF_UNITS[DRY_MATTER],
+                    "provider_units": DRY_MATTER,
+                    "description": f"{description}, as dry matter",
+                }
+                continue
+            entry = dictionary[name]
+            result[name] = {
+                "units": CF_UNITS[entry.unit],
+                "provider_units": entry.unit,
+                "description": entry.description,
+            }
     return result
 
 
 @tag(action="annotates")
-def annotated(
-    combined: xr.Dataset, variable_attributes: dict[str, dict[str, str]]
-) -> xr.Dataset:
-    """Set each variable's attributes."""
-    ds = combined.copy()
-    for name in ds.data_vars:
-        ds[name].attrs = dict(variable_attributes[str(name)])
-    return ds
+def coordinate_attributes(
+    checked_dictionaries: dict[Path, dict[str, Entry]],
+) -> dict[str, dict[str, str]]:
+    """Describe each qualifier from the dictionary, with a CF unit where it has one.
 
-
-@tag(action="annotates")
-def bounded(annotated: xr.Dataset) -> xr.Dataset:
-    """Add `time_bounds`, the local day each value covers, in UTC.
-
-    `time` is the start of the day, so the bounds are `time` and a day later.
-    `time` and its bounds share one encoding, as CF requires.
+    A qualifier the dictionary does not list gets no attributes.
     """
-    start = annotated.time.values
-    ds = annotated.assign_coords(
-        time_bounds=(("time", "nv"), np.stack([start, start + _DAY], axis=-1))
-    )
-    ds.time.encoding["units"] = "minutes since 1970-01-01 00:00:00"
-    ds.time.attrs.update(
-        standard_name="time",
-        long_name="time (UTC) at the start of the site's local standard day",
-        bounds="time_bounds",
-    )
-    return ds
+    dictionary = next(iter(checked_dictionaries.values()))
+    result = {}
+    for name, entry in dictionary.items():
+        attrs = {"description": entry.description}
+        if entry.unit in CF_UNITS:
+            attrs.update(units=CF_UNITS[entry.unit], provider_units=entry.unit)
+        result[name] = attrs
+    return result
 
 
 @tag(action="annotates")
-def global_attributes(
-    retrievals: dict[Path, Retrieval],
-    checked_sites: dict[Path, Site],
-    licences: dict[Path, str],
-) -> dict[str, str]:
-    """Collect the provenance attributes, and every site's citation.
+def global_attributes(retrievals: dict[Path, Retrieval]) -> dict[str, str]:
+    """Collect the provenance attributes, and every station's citation.
 
     `history` has a line per download, from the sidecars, and one for this
-    standardisation; `references` has each archive's citation, as the portal
-    gives it, since the licence requires one per site.
+    standardisation; `references` has each archive's citation, and `license`
+    each licence, as the portal gives them.
     """
     history = sorted(history_line(r) for r in retrievals.values())
     history.append(f"{utc_now()} standardised (xharvest {__version__})")
     citations = sorted({r.metadata.get("citation", "") for r in retrievals.values()})
-    sites = checked_sites.values()
-    versions = ", ".join(sorted({s.oneflux_version for s in sites}))
+    licences = sorted({r.metadata.get("licence", "") for r in retrievals.values()})
     return {
-        "title": TITLE,
-        "institution": "; ".join(
-            sorted(
-                {
-                    f"{s.network} network, processed by {s.processing_center}"
-                    for s in sites
-                }
-            )
-        ),
-        "source": f"FLUXNET data product (ONEFlux {versions}), ICOS Carbon Portal, "
-        f"{DATA_URL}",
-        "license": "; ".join(sorted(set(licences.values()))),
+        "institution": "ICOS Ecosystem Thematic Centre (ETC)",
+        "source": f"ICOS ETC L2 archive, ICOS Carbon Portal, {DATA_URL}",
+        "license": "; ".join(lic for lic in licences if lic),
         "references": "\n".join(c for c in citations if c),
         "history": "\n".join(history),
     }
 
 
 @tag(action="annotates")
-def dataset(bounded: xr.Dataset, global_attributes: dict[str, str]) -> xr.Dataset:
-    """Describe the coordinates, and set the global attributes."""
-    ds = bounded.copy()
-    ds.depth.attrs.update(
-        standard_name="depth",
-        long_name="depth of soil sensor below the surface",
-        units="m",
-        positive="down",
-    )
-    ds.site.attrs.update(long_name="FLUXNET site code", cf_role="timeseries_id")
-    ds.site_name.attrs.update(long_name="site name")
-    ds.lat.attrs.update(standard_name="latitude", units="degrees_north")
-    ds.lon.attrs.update(standard_name="longitude", units="degrees_east")
-    ds.altitude.attrs.update(
-        standard_name="height_above_mean_sea_level",
-        units="m",
-        comment="LOCATION_ELEV from the archive's site metadata",
-    )
-    ds.utc_offset.attrs.update(
-        long_name="offset of the data's local standard time from UTC", units="h"
-    )
-    ds.igbp.attrs.update(long_name="IGBP land cover class")
-    ds.network.attrs.update(long_name="FLUXNET network that prepared the data")
-    ds.attrs = dict(global_attributes)
-    return ds
+def datasets(
+    records: dict[str, xr.Dataset],
+    variable_attributes: dict[str, dict[str, str]],
+    coordinate_attributes: dict[str, dict[str, str]],
+    global_attributes: dict[str, str],
+) -> dict[str, xr.Dataset]:
+    """Set the attributes of each group's Dataset.
+
+    `time` carries `bounds = "time_bounds"`, and `time` and its bounds share one
+    encoding, as CF requires.
+    """
+    result = {}
+    for group, ds in records.items():
+        ds = ds.copy()
+        for name in ds.data_vars:
+            ds[name].attrs = dict(variable_attributes[str(name)])
+        for name in ds.coords:
+            if name in coordinate_attributes:
+                ds[name].attrs = dict(coordinate_attributes[str(name)])
+        ds.site.attrs.update(long_name="ICOS station code")
+        ds.site_name.attrs.update(long_name="station name")
+        ds.lat.attrs.update(standard_name="latitude", units="degrees_north")
+        ds.lon.attrs.update(standard_name="longitude", units="degrees_east")
+        ds.time.attrs.update(
+            standard_name="time",
+            long_name="local date of the measurement, as the archive gives it, "
+            "not converted to UTC",
+            bounds="time_bounds",
+        )
+        ds.time.encoding["units"] = "minutes since 1970-01-01 00:00:00"
+        ds.attrs = {"title": TITLE.format(group), **global_attributes}
+        result[group] = ds
+    return result

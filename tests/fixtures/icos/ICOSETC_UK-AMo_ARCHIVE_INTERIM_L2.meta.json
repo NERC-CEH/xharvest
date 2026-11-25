@@ -1,0 +1,15 @@
+{
+  "url": "https://data.icos-cp.eu/objects/M6gyVbSMpTn4eDb_usFEuYhN",
+  "params": {},
+  "retrieved": "2026-11-25T11:15:03Z",
+  "agent": "xharvest 0.2.0.dev1",
+  "metadata": {
+    "station_id": "UK-AMo",
+    "station_name": "Auchencorth Moss",
+    "object": "https://meta.icos-cp.eu/objects/M6gyVbSMpTn4eDb_usFEuYhN",
+    "pid": "https://hdl.handle.net/11676/M6gyVbSMpTn4eDb_usFEuYhN",
+    "sha256": "M6gyVbSMpTn4eDb/usFEuYhNNlmz6IsLVrekyPnBLeA",
+    "citation": "Nemitz, E., Callaghan, N., Cash, J., Coyle, M., Coyle, M., Fincham, W., Grenier, M., Harvey, D., Helfter, C., Jones, M., Leeson, S., Levy, P., Mullinger, N., Ocallaghan, F., van Dijk, N., Vandome, E., Yeung, K. (2026). ETC L2 ARCHIVE from Auchencorth Moss, 2021-01-01\u20132026-08-31, ICOS RI, https://hdl.handle.net/11676/M6gyVbSMpTn4eDb_usFEuYhN",
+    "licence": "ICOS CCBY4 Data Licence (https://creativecommons.org/licenses/by/4.0)"
+  }
+}

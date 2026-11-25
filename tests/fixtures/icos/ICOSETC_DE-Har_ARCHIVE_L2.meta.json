@@ -1,0 +1,15 @@
+{
+  "url": "https://data.icos-cp.eu/objects/wjvno8_AXs-_4ubvBGS7Uz6L",
+  "params": {},
+  "retrieved": "2026-11-25T11:15:14Z",
+  "agent": "xharvest 0.2.0.dev1",
+  "metadata": {
+    "station_id": "DE-Har",
+    "station_name": "Hartheim",
+    "object": "https://meta.icos-cp.eu/objects/wjvno8_AXs-_4ubvBGS7Uz6L",
+    "pid": "https://hdl.handle.net/11676/wjvno8_AXs-_4ubvBGS7Uz6L",
+    "sha256": "wjvno8/AXs+/4ubvBGS7Uz6LuZgxHmyZDwPQSBeFJRw",
+    "citation": "Christen, A., Baab, F., Kolbe, S., Plapp, T., Redepenning, D., Schindler, D. (2026). ETC L2 ARCHIVE from Hartheim, 2020\u20132025, ICOS RI, https://hdl.handle.net/11676/wjvno8_AXs-_4ubvBGS7Uz6L",
+    "licence": "ICOS CCBY4 Data Licence (https://creativecommons.org/licenses/by/4.0)"
+  }
+}

@@ -2,7 +2,7 @@
 
 Each connector's `standardise` is a graph built from modules of nodes (see ADR 2):
 its own `_pipeline` module and any module for a file format, such as
-`icos._fluxnet`. Every
+`fluxnet._archive`. Every
 node does one thing and says what kind of thing with an `action` tag, from
 `ACTIONS`; the provider's documentation draws the graph coloured by it
 (`scripts/render_graphs.py`).
