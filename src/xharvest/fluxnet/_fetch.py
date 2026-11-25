@@ -75,7 +75,7 @@ class Site:
             `"EUF_UK-Cvn_FLUXNET_2023-2024_v1.3_r1.zip"`; the first part names
             the network that prepared the data.
         object_uri: The portal's landing page for the archive.
-        sha256: The archive's SHA-256, as unpadded URL-safe base64.
+        sha256: The archive's SHA-256, as unpadded standard base64.
         citation: How to cite the archive, as the portal gives it.
     """
 
@@ -189,9 +189,13 @@ def sites(*, client: "httpx.Client | None" = None) -> list[Site]:
 
 
 def sha256(content: bytes) -> str:
-    """The SHA-256 of `content` in the portal's form: unpadded URL-safe base64."""
+    """The SHA-256 of `content` in the portal's form: unpadded standard base64.
+
+    Standard, with `+` and `/`, not URL-safe: the portal's object id is the
+    URL-safe form of the hash's first 18 bytes, but `cpmeta:hasSha256sum` is not.
+    """
     digest = hashlib.sha256(content).digest()
-    return base64.urlsafe_b64encode(digest).decode().rstrip("=")
+    return base64.b64encode(digest).decode().rstrip("=")
 
 
 def download(

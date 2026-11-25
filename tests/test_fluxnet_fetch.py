@@ -87,6 +87,12 @@ def test_fetch_rejects_an_unknown_site(icos_portal, tmp_path):
     assert not icos_portal.downloads
 
 
+def test_sha256_is_in_the_portals_form():
+    # The portal's `cpmeta:hasSha256sum` is standard base64, unpadded: this is the
+    # empty file's hash, which has both `+` and `/`.
+    assert sha256(b"") == "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU"
+
+
 def test_fetch_rejects_a_download_that_fails_its_hash(make_icos_portal, tmp_path):
     portal = make_icos_portal(corrupt="UK-Cvn")
     with pytest.raises(ProviderError, match="SHA-256"):
