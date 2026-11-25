@@ -25,7 +25,7 @@ Each connector's `standardise` runs a Hamilton graph, built from modules of node
 
 - **Nodes live in a private module of their own**, `xharvest/<provider>/_pipeline.py`, because Hamilton makes a node of every public function in a module it is given.
   `_standardise.py` keeps `standardise(paths)` and `to_netcdf(paths, out)`, with unchanged signatures; `standardise` builds the driver, runs the graph and returns its result.
-  A file format shared between providers keeps its nodes in a shared module, as `xharvest._fluxnet` holds the FLUXNET archive reader, and the graph is built from both modules.
+  A file format shared between providers keeps its nodes in a shared module, as `xharvest.icos._fluxnet` holds the FLUXNET archive reader, and the graph is built from both modules.
 - **One node is one action, applied to every site and variable at once.**
   The graph is static, from one input (`paths`) to one output (`dataset`), with no dynamic fan-out (`Parallelizable`/`Collect`), so it reads the same whatever is being standardised.
   There is never a node per variable or per site.
