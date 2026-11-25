@@ -96,17 +96,32 @@ class Site:
         return self.object_uri.rsplit("/", 1)[-1]
 
 
-def _client(
-    client: "httpx.Client | None",
+# The ICOS Carbon Portal's plumbing below is shared with `xharvest.icos`, which
+# serves other products from the same portal.
+
+
+def portal_client(
+    client: "httpx.Client | None", extra: str = "fluxnet"
 ) -> "AbstractContextManager[httpx.Client]":
-    # A caller's client is left open; one created here is closed after use.
+    """`client` if given, left open; else a new client, closed after use.
+
+    `extra` names the package extra that provides `httpx`, for the error raised
+    if it is missing.
+    """
     if client is not None:
         return nullcontext(client)
-    httpx = require("httpx", "fluxnet")
+    httpx = require("httpx", extra)
     return httpx.Client(timeout=_TIMEOUT)
 
 
-def _request(client: "httpx.Client", method: str, url: str, **kwargs: Any) -> bytes:
+def portal_request(
+    client: "httpx.Client", method: str, url: str, **kwargs: Any
+) -> bytes:
+    """Send a request to the portal and return the response body.
+
+    Raises:
+        ProviderError: If the portal cannot be reached or returns an error.
+    """
     httpx = require("httpx", "fluxnet")
     try:
         response = client.request(method, url, follow_redirects=True, **kwargs)
@@ -156,8 +171,8 @@ def sites(*, client: "httpx.Client | None" = None) -> list[Site]:
     Raises:
         ProviderError: If the portal cannot be reached or returns an error.
     """
-    with _client(client) as http:
-        body = _request(
+    with portal_client(client) as http:
+        body = portal_request(
             http,
             "POST",
             SPARQL_URL,
@@ -177,6 +192,39 @@ def sha256(content: bytes) -> str:
     """The SHA-256 of `content` in the portal's form: unpadded URL-safe base64."""
     digest = hashlib.sha256(content).digest()
     return base64.urlsafe_b64encode(digest).decode().rstrip("=")
+
+
+def download(
+    client: "httpx.Client", object_uri: str, expected_sha256: str, label: str
+) -> bytes:
+    """Download a data object, accepting its licence, and check its SHA-256.
+
+    The licence link records acceptance in a cookie, then redirects to the
+    object itself, so no account is needed.
+
+    Args:
+        client: The client to download with.
+        object_uri: The object's landing page, e.g.
+            `"https://meta.icos-cp.eu/objects/<id>"`.
+        expected_sha256: The SHA-256 the portal publishes, in its form.
+        label: What the object is for, e.g. a site code, for the error message.
+
+    Raises:
+        ProviderError: If the download fails or does not match the SHA-256.
+    """
+    object_id = object_uri.rsplit("/", 1)[-1]
+    content = portal_request(
+        client,
+        "GET",
+        f"{DATA_URL}/licence_accept",
+        params={"ids": json.dumps([object_id])},
+    )
+    if sha256(content) != expected_sha256:
+        raise ProviderError(
+            f"the archive downloaded for {label} does not match the "
+            f"SHA-256 the ICOS Carbon Portal publishes ({object_uri})"
+        )
+    return content
 
 
 def fetch(
@@ -218,7 +266,7 @@ def fetch(
     site_ids = [site_ids] if isinstance(site_ids, str) else list(site_ids)
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
-    with _client(client) as http:
+    with portal_client(client) as http:
         available = {s.id: s for s in sites(client=http)}
         missing = [s for s in site_ids if s not in available]
         if missing:
@@ -234,19 +282,7 @@ def fetch(
             paths.append(path)
             if not overwrite and is_fetched(path, url, {}):
                 continue
-            # The licence link records acceptance in a cookie, then redirects
-            # to the object itself.
-            content = _request(
-                http,
-                "GET",
-                f"{DATA_URL}/licence_accept",
-                params={"ids": json.dumps([site.object_id])},
-            )
-            if sha256(content) != site.sha256:
-                raise ProviderError(
-                    f"the archive downloaded for {site_id} does not match the "
-                    f"SHA-256 the ICOS Carbon Portal publishes ({site.object_uri})"
-                )
+            content = download(http, site.object_uri, site.sha256, site_id)
             metadata = {
                 "site_id": site.id,
                 "site_name": site.name,

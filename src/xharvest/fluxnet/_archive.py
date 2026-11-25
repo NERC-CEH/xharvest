@@ -29,6 +29,7 @@ import numpy as np
 from hamilton.function_modifiers import tag
 
 from ..errors import ProviderError
+from . import _bif
 
 FILL_VALUE = -9999.0
 
@@ -136,53 +137,6 @@ class Table:
     columns: dict[str, np.ndarray]
 
 
-def _decode(raw: bytes) -> str:
-    # Some networks write Latin-1 (µ as 0xB5), others UTF-8.
-    try:
-        return raw.decode("utf-8")
-    except UnicodeDecodeError:
-        return raw.decode("latin-1")
-
-
-def _member(archive: zipfile.ZipFile, path: Path, pattern: str) -> str:
-    names = [n for n in archive.namelist() if re.search(pattern, Path(n).name)]
-    if len(names) != 1:
-        found = "none" if not names else ", ".join(names)
-        raise ProviderError(
-            f"{path} should hold one file matching {pattern!r}; found {found}"
-        )
-    return names[0]
-
-
-def _bif_groups(text: str) -> dict[str, list[dict[str, str]]]:
-    """Group BIF rows into `{VARIABLE_GROUP: [{VARIABLE: DATAVALUE}, ...]}`.
-
-    The `SITE_ID` column becomes a `SITE_ID` entry in every group.
-    """
-    groups: dict[tuple[str, str], dict[str, str]] = defaultdict(dict)
-    for row in csv.DictReader(io.StringIO(text)):
-        group = groups[row["VARIABLE_GROUP"], row["GROUP_ID"]]
-        group["SITE_ID"] = row["SITE_ID"]
-        group.setdefault(row["VARIABLE"], row["DATAVALUE"])
-    result: dict[str, list[dict[str, str]]] = defaultdict(list)
-    for (name, _), values in groups.items():
-        result[name].append(values)
-    return result
-
-
-def _one(groups: dict[str, list[dict[str, str]]], group: str, path: Path):
-    entries = groups.get(group, [])
-    if len(entries) != 1:
-        raise ProviderError(
-            f"{path}: expected one {group} entry in the site BIF, found {len(entries)}"
-        )
-    return entries[0]
-
-
-def _float(value: str | None) -> float | None:
-    return None if value in (None, "") else float(value)
-
-
 def _read_archive(path: Path) -> ArchiveText:
     try:
         archive = zipfile.ZipFile(path)
@@ -191,7 +145,7 @@ def _read_archive(path: Path) -> ArchiveText:
     with archive:
 
         def read(pattern: str) -> str:
-            return _decode(archive.read(_member(archive, path, pattern)))
+            return _bif.decode(archive.read(_bif.member(archive, path, pattern)))
 
         return ArchiveText(
             data=read(r"_FLUXMET_DD_.*\.csv$"),
@@ -226,13 +180,13 @@ def sites(archive_texts: dict[Path, ArchiveText]) -> dict[Path, Site]:
     """
     result = {}
     for path, text in archive_texts.items():
-        groups = _bif_groups(text.site_info)
-        header = _one(groups, "GRP_HEADER", path)
-        location = _one(groups, "GRP_LOCATION", path)
-        oneflux = _one(groups, "GRP_ONEFLUX", path)
-        lat = _float(location.get("LOCATION_LAT"))
-        lon = _float(location.get("LOCATION_LONG"))
-        offset = _float(_one(groups, "GRP_UTC_OFFSET", path).get("UTC_OFFSET"))
+        groups = _bif.entries(text.site_info)
+        header = _bif.one(groups, "GRP_HEADER", path)
+        location = _bif.one(groups, "GRP_LOCATION", path)
+        oneflux = _bif.one(groups, "GRP_ONEFLUX", path)
+        lat = _bif.number(location.get("LOCATION_LAT"))
+        lon = _bif.number(location.get("LOCATION_LONG"))
+        offset = _bif.number(_bif.one(groups, "GRP_UTC_OFFSET", path).get("UTC_OFFSET"))
         if lat is None or lon is None or offset is None:
             raise ProviderError(f"{path}: the site BIF lacks a location or UTC offset")
         result[path] = Site(
@@ -240,9 +194,9 @@ def sites(archive_texts: dict[Path, ArchiveText]) -> dict[Path, Site]:
             site_name=header.get("SITE_NAME", ""),
             lat=lat,
             lon=lon,
-            elevation=_float(location.get("LOCATION_ELEV")),
+            elevation=_bif.number(location.get("LOCATION_ELEV")),
             utc_offset=offset,
-            igbp=_one(groups, "GRP_IGBP", path).get("IGBP", ""),
+            igbp=_bif.one(groups, "GRP_IGBP", path).get("IGBP", ""),
             network=oneflux.get("PRODUCT_SOURCE_NETWORK", ""),
             processing_center=oneflux.get("PRODUCT_PROCESSING_CENTER", ""),
             oneflux_version=oneflux.get("PRODUCT_ONEFLUX_VERSION", ""),
@@ -278,14 +232,14 @@ def variable_entries(
     result = {}
     for path, text in archive_texts.items():
         entries: dict[str, list[Variable]] = defaultdict(list)
-        for entry in _bif_groups(text.variable_info).get("GRP_VAR_INFO", []):
+        for entry in _bif.entries(text.variable_info).get("GRP_VAR_INFO", []):
             name = entry["VAR_INFO_VARNAME"]
             entries[name].append(
                 Variable(
                     name=name,
                     units=entry.get("VAR_INFO_UNIT", ""),
                     definition=entry.get("VAR_INFO_DEFINITION", ""),
-                    height=_float(entry.get("VAR_INFO_HEIGHT")),
+                    height=_bif.number(entry.get("VAR_INFO_HEIGHT")),
                 )
             )
         result[path] = dict(entries)

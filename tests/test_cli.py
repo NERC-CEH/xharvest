@@ -106,7 +106,7 @@ def mock_portal(monkeypatch, icos_portal):
     from xharvest.fluxnet import _fetch as fluxnet_fetch
 
     client = icos_portal.client()
-    monkeypatch.setattr(fluxnet_fetch, "_client", lambda _: nullcontext(client))
+    monkeypatch.setattr(fluxnet_fetch, "portal_client", lambda *_: nullcontext(client))
     return icos_portal
 
 
