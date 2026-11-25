@@ -1,9 +1,9 @@
-"""Contract types for the variables of a standardised ICOS FLUXNET Dataset.
+"""Contract types for the variables of a standardised FLUXNET Dataset.
 
 Each type declares the CF unit `standardise` writes and the coordinates the variable
 carries: `time`, `site`, `lat` and `lon`, and `depth` for the soil profiles. They
 declare no `Dims`, so one site selected out of the `site` dim passes too, and no
-`Freq`; add one where it matters, as `Annotated[icos.CarbonFlux, Freq("D")]`.
+`Freq`; add one where it matters, as `Annotated[fluxnet.CarbonFlux, Freq("D")]`.
 
 `VARIABLES` maps each standardised variable to its type.
 

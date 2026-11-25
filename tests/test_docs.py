@@ -11,7 +11,7 @@ ROOT = Path(__file__).parents[1]
 SRC = ROOT / "src" / "xharvest"
 DOCS = ROOT / "docs"
 
-PAGES = {"cosmos": "providers/cosmos-uk", "icos": "providers/icos"}
+PAGES = {"cosmos": "providers/cosmos-uk", "fluxnet": "providers/fluxnet"}
 """Each connector's directory of provider pages, relative to `docs/`."""
 
 SECTIONS = ["index.md", "data.md", "standardise.md", "catena.md", "reference.md"]
@@ -45,7 +45,7 @@ def test_every_connector_has_the_same_pages_in_the_nav(connector):
 
 
 def _documented(name: str, connector: str, text: str) -> bool:
-    # Rendered from its docstring, or named in code: `fetch`, `icos.CarbonFlux`.
+    # Rendered from its docstring, or named in code: `fetch`, `fluxnet.CarbonFlux`.
     directive = rf"^::: xharvest\.{connector}\.{re.escape(name)}$"
     named = rf"`(?:{connector}\.)?{re.escape(name)}`"
     return any(re.search(p, text, re.MULTILINE) for p in (directive, named))

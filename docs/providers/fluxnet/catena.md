@@ -1,13 +1,13 @@
-# ICOS with catena
+# FLUXNET with catena
 
 ## Contract types
 
-`xharvest.icos` exports a contract type for each unit in a standardised file, and `VARIABLES`, which maps each variable's name to its type.
+`xharvest.fluxnet` exports a contract type for each unit in a standardised file, and `VARIABLES`, which maps each variable's name to its type.
 Annotate a node's input with one and catena checks the file against it before compute.
-Import the module rather than the names, as `from xharvest import icos`, and write `icos.CarbonFlux`.
+Import the module rather than the names, as `from xharvest import fluxnet`, and write `fluxnet.CarbonFlux`.
 Each declares the CF unit and the coordinates `time`, `site`, `lat` and `lon`, plus `depth` for the soil profiles.
 Types with the same unit and coordinates are the same object, so a type does not tell variables apart.
-None declares a `Freq`; add one where it matters, as `Annotated[icos.CarbonFlux, Freq("D")]`.
+None declares a `Freq`; add one where it matters, as `Annotated[fluxnet.CarbonFlux, Freq("D")]`.
 Their units need `xarray_annotated.units.use_cf_units()`.
 
 | Type | Unit | Variables |

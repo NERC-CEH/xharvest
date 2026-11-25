@@ -6,8 +6,8 @@ import pytest
 import xarray as xr
 
 from xharvest.errors import ProviderError
-from xharvest.icos import VARIABLES, standardise, to_netcdf
-from xharvest.icos import _fluxnet as fx
+from xharvest.fluxnet import VARIABLES, standardise, to_netcdf
+from xharvest.fluxnet import _archive as fx
 from xharvest.provenance import PROVENANCE_ATTRS, sidecar_path
 
 
@@ -21,8 +21,8 @@ def _copy_with_sidecar(path, dest):
     return dest
 
 
-def test_dims_and_variables(icos_raw):
-    ds = standardise(icos_raw)
+def test_dims_and_variables(fluxnet_raw):
+    ds = standardise(fluxnet_raw)
     assert set(ds.site.values) == {"UK-Ags", "UK-Cvn"}
     assert set(ds.data_vars) == set(VARIABLES)
     assert ds.TA_F.dims == ("time", "site")
@@ -30,8 +30,8 @@ def test_dims_and_variables(icos_raw):
     assert ds.TS_F_MDS_QC.dims == ("time", "site", "depth")
 
 
-def test_time_is_the_union_of_the_sites_days(icos_raw):
-    ds = standardise(icos_raw)
+def test_time_is_the_union_of_the_sites_days(fluxnet_raw):
+    ds = standardise(fluxnet_raw)
     assert ds.time.values[0] == np.datetime64("2023-09-01")
     assert ds.time.values[-1] == np.datetime64("2023-09-21")
     assert len(ds.time) == 21
@@ -40,16 +40,16 @@ def test_time_is_the_union_of_the_sites_days(icos_raw):
     assert cvn.sel(time="2023-09-15").isnull()
 
 
-def test_time_bounds_cover_one_day(icos_raw):
-    ds = standardise(icos_raw)
+def test_time_bounds_cover_one_day(fluxnet_raw):
+    ds = standardise(fluxnet_raw)
     assert ds.time.attrs["bounds"] == "time_bounds"
     bounds = ds.time_bounds.values
     np.testing.assert_array_equal(bounds[:, 0], ds.time.values)
     np.testing.assert_array_equal(bounds[:, 1] - bounds[:, 0], np.timedelta64(1, "D"))
 
 
-def test_depth_is_the_union_of_the_sites_sensors(icos_raw):
-    ds = standardise(icos_raw)
+def test_depth_is_the_union_of_the_sites_sensors(fluxnet_raw):
+    ds = standardise(fluxnet_raw)
     np.testing.assert_allclose(
         ds.depth.values, [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5]
     )
@@ -62,9 +62,9 @@ def test_depth_is_the_union_of_the_sites_sensors(icos_raw):
     assert ags.sel(depth=0.15).isnull()
 
 
-def test_values_are_the_archives_own(icos_raw):
-    ds = standardise(icos_raw)
-    path = _by_site(icos_raw)["UK-Cvn"]
+def test_values_are_the_archives_own(fluxnet_raw):
+    ds = standardise(fluxnet_raw)
+    path = _by_site(fluxnet_raw)["UK-Cvn"]
     columns = fx.tables(fx.raw_tables(fx.archive_texts([path])))[path].columns
     cvn = ds.sel(site="UK-Cvn", time=slice("2023-09-01", "2023-09-14"))
     np.testing.assert_array_equal(cvn.TA_F.values, columns["TA_F"])
@@ -78,8 +78,8 @@ def test_values_are_the_archives_own(icos_raw):
     )
 
 
-def test_variable_attributes(icos_raw):
-    ds = standardise(icos_raw)
+def test_variable_attributes(fluxnet_raw):
+    ds = standardise(fluxnet_raw)
     assert ds.TA_F.attrs["units"] == "degC"
     assert ds.TA_F.attrs["provider_units"] == "deg C"
     assert ds.NEE_VUT_REF.attrs["units"] == "g m-2 d-1"
@@ -92,9 +92,9 @@ def test_variable_attributes(icos_raw):
     assert "Precipitation" in ds.P_F.attrs["description"]
 
 
-def test_qc_attributes_ignore_the_archives_mislabelling(icos_raw):
+def test_qc_attributes_ignore_the_archives_mislabelling(fluxnet_raw):
     # BIFVARINFO gives SWC_F_MDS_<n>_QC the unit % and SWC_F_MDS's definition.
-    ds = standardise(icos_raw)
+    ds = standardise(fluxnet_raw)
     attrs = ds.SWC_F_MDS_QC.attrs
     assert attrs["units"] == "1"
     assert attrs["description"].startswith("Quality flag for SWC_F_MDS")
@@ -105,8 +105,8 @@ def test_qc_attributes_ignore_the_archives_mislabelling(icos_raw):
     assert np.nanmax(values) <= 1
 
 
-def test_site_coordinates(icos_raw):
-    ds = standardise(icos_raw)
+def test_site_coordinates(fluxnet_raw):
+    ds = standardise(fluxnet_raw)
     cvn = ds.sel(site="UK-Cvn")
     assert cvn.site_name.item() == "Coveney"
     assert (cvn.lat.item(), cvn.lon.item()) == pytest.approx((52.43339, 0.162177))
@@ -115,8 +115,8 @@ def test_site_coordinates(icos_raw):
     assert (cvn.igbp.item(), cvn.network.item()) == ("GRA", "EUF")
 
 
-def test_global_attributes(icos_raw):
-    ds = standardise(icos_raw)
+def test_global_attributes(fluxnet_raw):
+    ds = standardise(fluxnet_raw)
     for attr in PROVENANCE_ATTRS:
         assert ds.attrs[attr]
     assert ds.attrs["license"] == "CC-BY-4.0"
@@ -127,26 +127,26 @@ def test_global_attributes(icos_raw):
     assert ds.attrs["history"].count("retrieved https://data.icos-cp.eu/") == 2
 
 
-def test_sidecars_among_the_paths_are_skipped(icos_raw):
-    paths = [*icos_raw, *(sidecar_path(p) for p in icos_raw)]
+def test_sidecars_among_the_paths_are_skipped(fluxnet_raw):
+    paths = [*fluxnet_raw, *(sidecar_path(p) for p in fluxnet_raw)]
     assert set(standardise(paths).site.values) == {"UK-Ags", "UK-Cvn"}
 
 
 def test_no_paths_raise():
-    with pytest.raises(ValueError, match="no ICOS"):
+    with pytest.raises(ValueError, match="no FLUXNET"):
         standardise([])
 
 
-def test_missing_sidecar_raises(icos_raw):
-    sidecar_path(icos_raw[0]).unlink()
+def test_missing_sidecar_raises(fluxnet_raw):
+    sidecar_path(fluxnet_raw[0]).unlink()
     with pytest.raises(FileNotFoundError, match="sidecar"):
-        standardise(icos_raw)
+        standardise(fluxnet_raw)
 
 
 def test_sites_with_different_utc_offsets_are_refused(
-    icos_raw, rewrite_archive, tmp_path
+    fluxnet_raw, rewrite_archive, tmp_path
 ):
-    ags = _by_site(icos_raw)["UK-Ags"]
+    ags = _by_site(fluxnet_raw)["UK-Ags"]
     (tmp_path / "x").mkdir()
     shifted = rewrite_archive(
         ags,
@@ -156,11 +156,11 @@ def test_sites_with_different_utc_offsets_are_refused(
     )
     shutil.copy(sidecar_path(ags), sidecar_path(shifted))
     with pytest.raises(ValueError, match=r"UK-Cvn \(UTC\+0\), UK-Ags \(UTC\+1\)"):
-        standardise([shifted, _by_site(icos_raw)["UK-Cvn"]])
+        standardise([shifted, _by_site(fluxnet_raw)["UK-Cvn"]])
 
 
-def test_an_unexpected_unit_raises(icos_raw, rewrite_archive, tmp_path):
-    cvn = _by_site(icos_raw)["UK-Cvn"]
+def test_an_unexpected_unit_raises(fluxnet_raw, rewrite_archive, tmp_path):
+    cvn = _by_site(fluxnet_raw)["UK-Cvn"]
     (tmp_path / "x").mkdir()
     changed = rewrite_archive(
         cvn,
@@ -175,8 +175,8 @@ def test_an_unexpected_unit_raises(icos_raw, rewrite_archive, tmp_path):
         standardise([changed])
 
 
-def test_qc_outside_zero_to_one_raises(icos_raw, rewrite_archive, tmp_path):
-    cvn = _by_site(icos_raw)["UK-Cvn"]
+def test_qc_outside_zero_to_one_raises(fluxnet_raw, rewrite_archive, tmp_path):
+    cvn = _by_site(fluxnet_raw)["UK-Cvn"]
     (tmp_path / "x").mkdir()
 
     def scale_ta_f_qc(text):
@@ -195,16 +195,16 @@ def test_qc_outside_zero_to_one_raises(icos_raw, rewrite_archive, tmp_path):
         standardise([changed])
 
 
-def test_overlapping_archives_of_one_site_are_joined(icos_raw, tmp_path):
-    cvn = _by_site(icos_raw)["UK-Cvn"]
+def test_overlapping_archives_of_one_site_are_joined(fluxnet_raw, tmp_path):
+    cvn = _by_site(fluxnet_raw)["UK-Cvn"]
     copy = _copy_with_sidecar(cvn, tmp_path / "EUF_UK-Cvn_FLUXNET_copy.zip")
     ds = standardise([cvn, copy])
     assert list(ds.site.values) == ["UK-Cvn"]
     assert len(ds.time) == 14
 
 
-def test_conflicting_archives_of_one_site_raise(icos_raw, rewrite_archive, tmp_path):
-    cvn = _by_site(icos_raw)["UK-Cvn"]
+def test_conflicting_archives_of_one_site_raise(fluxnet_raw, rewrite_archive, tmp_path):
+    cvn = _by_site(fluxnet_raw)["UK-Cvn"]
 
     def change_first_ta_f(text):
         lines = text.splitlines(keepends=True)
@@ -222,8 +222,8 @@ def test_conflicting_archives_of_one_site_raise(icos_raw, rewrite_archive, tmp_p
         standardise([cvn, revised])
 
 
-def test_to_netcdf_round_trips(icos_raw, tmp_path):
-    out = to_netcdf(icos_raw, tmp_path / "out" / "icos.nc")
+def test_to_netcdf_round_trips(fluxnet_raw, tmp_path):
+    out = to_netcdf(fluxnet_raw, tmp_path / "out" / "fluxnet.nc")
     with xr.open_dataset(out) as ds:
         assert ds.SWC_F_MDS.dims == ("time", "site", "depth")
         assert ds.time.encoding["units"] == "minutes since 1970-01-01"

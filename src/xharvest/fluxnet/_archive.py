@@ -1,9 +1,8 @@
 """Nodes that read FLUXNET data products, the archives ONEFlux v1.3 writes per site.
 
 Every regional network publishes the same archive layout, so these nodes are kept
-apart from the ICOS-specific ones in `_pipeline`, ready to move to a FLUXNET
-subpackage when a connector for another hub needs them. An archive holds, among
-other files:
+apart from the hub-specific ones in `_pipeline`, and other connectors import them
+from here (ADR 3). An archive holds, among other files:
 
 - `<N>_<site>_FLUXNET_FLUXMET_<res>_<years>_<version>.csv`: the data, one file
   per resolution (`HH`, `DD`, `WW`, `MM`, `YY`);

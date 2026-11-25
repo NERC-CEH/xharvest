@@ -34,12 +34,12 @@ nav = [
       { "Using with catena" = "providers/cosmos-uk/catena.md" },
       { "Reference" = "providers/cosmos-uk/reference.md" },
     ] },
-    { "ICOS (FLUXNET)" = [
-      { "Overview" = "providers/icos/index.md" },
-      { "About the data" = "providers/icos/data.md" },
-      { "How standardisation works" = "providers/icos/standardise.md" },
-      { "Using with catena" = "providers/icos/catena.md" },
-      { "Reference" = "providers/icos/reference.md" },
+    { "FLUXNET" = [
+      { "Overview" = "providers/fluxnet/index.md" },
+      { "About the data" = "providers/fluxnet/data.md" },
+      { "How standardisation works" = "providers/fluxnet/standardise.md" },
+      { "Using with catena" = "providers/fluxnet/catena.md" },
+      { "Reference" = "providers/fluxnet/reference.md" },
     ] },
   ] },
 ]

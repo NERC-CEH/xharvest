@@ -1,11 +1,11 @@
-# ICOS Carbon Portal (FLUXNET)
+# FLUXNET
 
 The [ICOS Carbon Portal](https://www.icos-cp.eu) hosts the FLUXNET data product, eddy-covariance fluxes and meteorology processed with [ONEFlux](https://github.com/fluxnet/ONEFlux) v1.3, for several hundred sites.
-`xharvest.icos` downloads it and standardises the daily files for catena and xarray.
+`xharvest.fluxnet` downloads it and standardises the daily files for catena and xarray.
 
 | | |
 |---|---|
-| Install | `pip install "xharvest[icos] @ git+https://github.com/NERC-CEH/xharvest"` |
+| Install | `pip install "xharvest[fluxnet] @ git+https://github.com/NERC-CEH/xharvest"` |
 | Credentials | None |
 | Licence | CC BY 4.0, as each archive's data policy states |
 | Cite | One citation per site (see [Citing the data](#citing-the-data)) |
@@ -19,17 +19,17 @@ In the UK only UK-AMo is an ICOS station; the other UK sites are `EUF`.
 ## Download
 
 ```python
-from xharvest import icos
+from xharvest import fluxnet
 
-icos.sites()  # site codes, names, locations, records and file names
-raw = icos.fetch(["UK-Cvn", "UK-AMo"], "data/raw")
+fluxnet.sites()  # site codes, names, locations, records and file names
+raw = fluxnet.fetch(["UK-Cvn", "UK-AMo"], "data/raw")
 ```
 
 or from the command line:
 
 ```sh
-xharvest icos sites
-xharvest icos fetch UK-Cvn UK-AMo --out data/raw
+xharvest fluxnet sites
+xharvest fluxnet fetch UK-Cvn UK-AMo --out data/raw
 ```
 
 - `fetch` downloads each site's whole archive (20-250 MB), with a `.meta.json` provenance sidecar recording the archive's citation and persistent identifier.
@@ -44,7 +44,7 @@ For example, the UK sites with at least five years of data:
 ```python
 chosen = [
     s.id
-    for s in icos.sites()
+    for s in fluxnet.sites()
     if s.id.startswith("UK-") and s.end.year - s.start.year >= 5
 ]
 ```
@@ -52,11 +52,11 @@ chosen = [
 ## Standardise
 
 ```python
-icos.to_netcdf(raw, "data/icos.nc")
+fluxnet.to_netcdf(raw, "data/fluxnet.nc")
 ```
 
 ```sh
-xharvest icos standardise data/raw/*.zip --out data/icos.nc
+xharvest fluxnet standardise data/raw/*.zip --out data/fluxnet.nc
 ```
 
 Sidecars among the paths are skipped, so a glob over the download directory works.
@@ -80,10 +80,10 @@ The result has dims `(time, site, depth)`:
 - Global attributes record provenance: `institution`, `source`, `license`, `history`, and every site's citation in `references`.
 - Nothing converts units, filters on quality flags, or fills gaps; [How standardisation works](standardise.md) shows every step.
 
-Open the file with `xr.open_dataset("data/icos.nc")`.
+Open the file with `xr.open_dataset("data/fluxnet.nc")`.
 The test fixtures, two UK sites over overlapping fortnights, print as:
 
---8<-- "docs/providers/_variables/icos-dataset.md"
+--8<-- "docs/providers/_variables/fluxnet-dataset.md"
 
 ### Variables
 
@@ -91,7 +91,7 @@ The test fixtures, two UK sites over overlapping fortnights, print as:
 Each `_QC` is the fraction of the day's half-hours that were measured or gap-filled with good quality (see [Quality flags](data.md#quality-flags)).
 Units are the CF units `standardise` writes; descriptions are the archives' own, drawn from the test fixtures (UK-Ags and UK-Cvn).
 
---8<-- "docs/providers/_variables/icos.md"
+--8<-- "docs/providers/_variables/fluxnet.md"
 
 ## Citing the data
 

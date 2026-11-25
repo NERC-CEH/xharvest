@@ -39,10 +39,10 @@ Documentation = "https://nerc-ceh.github.io/xharvest"
 cosmos = [
     "httpx>=0.28.1",
 ]
-icos = [
+fluxnet = [
     "httpx>=0.28.1",
 ]
-all = ["xharvest[cosmos,icos]"]
+all = ["xharvest[cosmos,fluxnet]"]
 
 [project.scripts]
 xharvest = "xharvest.cli:main"

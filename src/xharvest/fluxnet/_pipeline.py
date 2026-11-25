@@ -1,7 +1,7 @@
 """Nodes that standardise FLUXNET archives from the ICOS Carbon Portal.
 
 `standardise` builds its graph from these and the shared FLUXNET reader in
-`xharvest.icos._fluxnet`, and computes `dataset` from `paths`. Every node acts on all
+`xharvest.fluxnet._archive`, and computes `dataset` from `paths`. Every node acts on all
 the archives at once; most take and return a mapping from archive path to that
 archive's part.
 """
@@ -17,8 +17,8 @@ from hamilton.function_modifiers import tag
 from .. import __version__
 from ..errors import ProviderError
 from ..provenance import Retrieval, history_line, is_sidecar, read_sidecar, utc_now
+from ._archive import Site, Table, Variable
 from ._fetch import DATA_URL
-from ._fluxnet import Site, Table, Variable
 
 
 @dataclass(frozen=True)
@@ -99,7 +99,7 @@ def archive_paths(paths: list[Path]) -> list[Path]:
     """
     archives = sorted(p for p in paths if not is_sidecar(p))
     if not archives:
-        raise ValueError("no ICOS FLUXNET archives to standardise")
+        raise ValueError("no FLUXNET archives to standardise")
     return archives
 
 

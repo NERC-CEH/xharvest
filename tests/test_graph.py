@@ -10,9 +10,9 @@ import pytest
 
 from xharvest import _graph
 from xharvest.cosmos import _standardise as cosmos_standardise
-from xharvest.icos import _standardise as icos_standardise
+from xharvest.fluxnet import _standardise as fluxnet_standardise
 
-GRAPHS = {"cosmos": cosmos_standardise.MODULES, "icos": icos_standardise.MODULES}
+GRAPHS = {"cosmos": cosmos_standardise.MODULES, "fluxnet": fluxnet_standardise.MODULES}
 
 
 def _nodes(modules):
@@ -70,8 +70,8 @@ def test_pipeline_modules_are_not_catena_modules():
 
 def test_run_raises_the_node_error_quietly(caplog):
     # `archive_paths` raises inside the graph; Hamilton would log it too.
-    with caplog.at_level(logging.DEBUG), pytest.raises(ValueError, match="no ICOS"):
-        icos_standardise.standardise([])
+    with caplog.at_level(logging.DEBUG), pytest.raises(ValueError, match="no FLUXNET"):
+        fluxnet_standardise.standardise([])
     assert not [r for r in caplog.records if r.name.startswith("hamilton")]
     assert not logging.getLogger("hamilton.driver").disabled
 

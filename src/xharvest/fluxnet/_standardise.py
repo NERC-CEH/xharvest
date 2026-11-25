@@ -1,7 +1,7 @@
 """Standardise FLUXNET archives from the ICOS Carbon Portal into one Dataset.
 
 `standardise` runs a Hamilton graph built from the nodes in
-`xharvest.icos._pipeline` and the FLUXNET reader, `xharvest.icos._fluxnet`. Each
+`xharvest.fluxnet._pipeline` and the FLUXNET reader, `xharvest.fluxnet._archive`. Each
 node does one thing, which its docstring and `action` tag say; the provider page
 draws the graph and lists the nodes.
 
@@ -10,8 +10,8 @@ moisture and ecosystem carbon modelling: see `VARIABLES`.
 
 Examples:
     >>> from pathlib import Path
-    >>> from xharvest.icos import to_netcdf
-    >>> to_netcdf(Path("data/icos").glob("*.zip"), "data/icos.nc")  # doctest: +SKIP
+    >>> from xharvest.fluxnet import to_netcdf
+    >>> to_netcdf(Path("data/raw").glob("*.zip"), "data/fluxnet.nc")  # doctest: +SKIP
 """
 
 from collections.abc import Iterable
@@ -21,9 +21,9 @@ from pathlib import Path
 import xarray as xr
 
 from .. import _graph
-from . import _fluxnet, _pipeline
+from . import _archive, _pipeline
 
-MODULES = (_fluxnet, _pipeline)
+MODULES = (_archive, _pipeline)
 """The node modules `standardise` builds its graph from."""
 
 
@@ -31,7 +31,7 @@ def standardise(paths: Iterable[str | PathLike]) -> xr.Dataset:
     """Combine FLUXNET archives from the ICOS Carbon Portal into one daily Dataset.
 
     Args:
-        paths: ZIP archives written by `xharvest.icos.fetch`. Provenance
+        paths: ZIP archives written by `xharvest.fluxnet.fetch`. Provenance
             sidecars among them are skipped, so a glob over the download
             directory works.
 

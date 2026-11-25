@@ -1,7 +1,7 @@
-# About the ICOS data
+# About the FLUXNET data
 
 What follows was checked on 2026-11-19 against UK-Cvn (UTC+0, longitude 0.16° E) and ES-Dnn (UTC+1, longitude 6.51° W), by comparing each archive's daily file with its half-hourly one.
-`tests/test_icos_live.py` repeats the timestamp check, and the aggregation check for `TA_F`, `SW_IN_F` and `P_F`, on UK-Cvn.
+`tests/test_fluxnet_live.py` repeats the timestamp check, and the aggregation check for `TA_F`, `SW_IN_F` and `P_F`, on UK-Cvn.
 
 The archives contradict themselves in places.
 Each callout below names a contradiction, says what the data show, and says what `standardise` does about it.

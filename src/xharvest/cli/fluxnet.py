@@ -1,11 +1,11 @@
-"""`xharvest icos`: FLUXNET data from the ICOS Carbon Portal."""
+"""`xharvest fluxnet`: FLUXNET data from the ICOS Carbon Portal."""
 
 from pathlib import Path
 from typing import Annotated
 
 import typer
 
-from .. import icos
+from .. import fluxnet
 from ..errors import ProviderError
 
 app = typer.Typer(
@@ -24,7 +24,7 @@ def _fail(err: Exception) -> typer.Exit:
 def sites() -> None:
     """List the sites with a FLUXNET archive, and the archive's file name."""
     try:
-        found = icos.sites()
+        found = fluxnet.sites()
     except ProviderError as err:
         raise _fail(err) from None
     for site in found:
@@ -43,7 +43,7 @@ def fetch(
 ) -> None:
     """Download each site's whole FLUXNET archive, and print the paths."""
     try:
-        paths = icos.fetch(site_ids, out, overwrite=overwrite)
+        paths = fluxnet.fetch(site_ids, out, overwrite=overwrite)
     except (ProviderError, ValueError) as err:
         raise _fail(err) from None
     for path in paths:
@@ -59,7 +59,7 @@ def standardise(
 ) -> None:
     """Standardise the archives' daily data into one netCDF file."""
     try:
-        written = icos.to_netcdf(paths, out)
+        written = fluxnet.to_netcdf(paths, out)
     except (ProviderError, ValueError, FileNotFoundError) as err:
         raise _fail(err) from None
     typer.echo(written)

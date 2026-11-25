@@ -1,12 +1,12 @@
-"""Regenerate the ICOS test fixtures from the live ICOS Carbon Portal.
+"""Regenerate the FLUXNET test fixtures from the live ICOS Carbon Portal.
 
 Run by hand, from the repository root, when the fixtures need refreshing:
 
-    uv run python tests/fixtures/icos/make_fixtures.py
+    uv run python tests/fixtures/fluxnet/make_fixtures.py
 
-It downloads each site's whole archive with `xharvest.icos.fetch` (27 and 38 MB),
+It downloads each site's whole archive with `xharvest.fluxnet.fetch` (27 and 38 MB),
 then writes a trimmed copy under the same name, holding only what
-`xharvest.icos.standardise` reads:
+`xharvest.fluxnet.standardise` reads:
 
 - the daily data file, cut to the site's window below;
 - `BIFVARINFO_DD`, whole;
@@ -36,8 +36,8 @@ from pathlib import Path
 
 import httpx
 
-from xharvest.icos import fetch
-from xharvest.icos._fetch import SITES_QUERY, SPARQL_URL
+from xharvest.fluxnet import fetch
+from xharvest.fluxnet._fetch import SITES_QUERY, SPARQL_URL
 from xharvest.provenance import sidecar_path
 
 HERE = Path(__file__).parent

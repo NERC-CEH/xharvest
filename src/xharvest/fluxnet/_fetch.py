@@ -8,8 +8,8 @@ provenance sidecar, checks it against the SHA-256 the portal publishes, and skip
 archives already present.
 
 Examples:
-    >>> from xharvest.icos import fetch
-    >>> paths = fetch(["UK-Cvn", "UK-AMo"], "data/icos")  # doctest: +SKIP
+    >>> from xharvest.fluxnet import fetch
+    >>> paths = fetch(["UK-Cvn", "UK-AMo"], "data/raw")  # doctest: +SKIP
 """
 
 import base64
@@ -102,12 +102,12 @@ def _client(
     # A caller's client is left open; one created here is closed after use.
     if client is not None:
         return nullcontext(client)
-    httpx = require("httpx", "icos")
+    httpx = require("httpx", "fluxnet")
     return httpx.Client(timeout=_TIMEOUT)
 
 
 def _request(client: "httpx.Client", method: str, url: str, **kwargs: Any) -> bytes:
-    httpx = require("httpx", "icos")
+    httpx = require("httpx", "fluxnet")
     try:
         response = client.request(method, url, follow_redirects=True, **kwargs)
     except httpx.TransportError as err:
@@ -194,7 +194,7 @@ def fetch(
     e.g. `EUF_UK-Cvn_FLUXNET_2023-2024_v1.3_r1.zip`, so a new release is a new
     file. Each has a provenance sidecar next to it (see `xharvest.provenance`),
     which also records the archive's citation. Pass the returned paths to
-    `xharvest.icos.standardise`.
+    `xharvest.fluxnet.standardise`.
 
     Args:
         site_ids: FLUXNET site codes, e.g. `"UK-Cvn"` or `["UK-Cvn", "UK-AMo"]`.

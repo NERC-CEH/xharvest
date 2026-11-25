@@ -34,13 +34,13 @@ The [design decisions](https://github.com/NERC-CEH/xharvest/tree/main/docs/adr) 
   `tests/test_docs.py` checks this, once the page is added to its `PAGES`.
 - The CLI command group in `cli/` calls these functions and adds nothing the Python API cannot do.
 - `tests/test_layout.py` enforces the import rules in the table.
-- A reader for a file format other providers also serve goes in its own module of nodes, apart from `_pipeline`, as `xharvest.icos._fluxnet` does for FLUXNET archives.
-  It moves to a subpackage of its own when a second connector needs it.
+- A reader for a file format other providers also serve goes in its own module of nodes, apart from `_pipeline`, as `xharvest.fluxnet._archive` does for FLUXNET archives.
+  It lives in the connector named for the format, and other connectors import it from there ([ADR 3](https://github.com/NERC-CEH/xharvest/blob/main/docs/adr/0003-fluxnet-and-icos-connectors.md)).
 
 ### Standardisation graph
 
 `standardise` runs a Hamilton graph built from `_pipeline.py` and any shared format module, from one input, `paths`, to one output, `dataset`, so a reader can see each thing done to the provider's data.
-[ADR 2](https://github.com/NERC-CEH/xharvest/blob/main/docs/adr/0002-standardise-as-hamilton-graph.md) gives the reasons; `xharvest.cosmos` is the simplest example, and `xharvest.icos` shows a graph built with a shared format module.
+[ADR 2](https://github.com/NERC-CEH/xharvest/blob/main/docs/adr/0002-standardise-as-hamilton-graph.md) gives the reasons; `xharvest.cosmos` is the simplest example, and `xharvest.fluxnet` shows a graph built with a shared format module.
 
 - One node does one thing, to every site and variable at once: never a node per site or per variable, and no dynamic fan-out.
 - Every node has a docstring saying what it does and why, and an `action` tag from `xharvest._graph.ACTIONS`.
@@ -96,7 +96,7 @@ Make settings keyword-only; they keep their names.
 
 - Raise `xharvest.errors.ProviderError` when a provider cannot be reached, rejects a request, or returns something unreadable, with the provider's own message where it gives one.
 - Re-raise the client library's transport errors (e.g. `httpx.TransportError`) as `ProviderError`, so callers handle one exception.
-- Where the provider publishes a checksum, verify each download against it and raise `ProviderError` on a mismatch, as `icos.fetch` does.
+- Where the provider publishes a checksum, verify each download against it and raise `ProviderError` on a mismatch, as `fluxnet.fetch` does.
 
 ### Tests
 

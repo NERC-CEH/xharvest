@@ -12,8 +12,8 @@ import zipfile
 import numpy as np
 import pytest
 
-from xharvest import icos
-from xharvest.icos import _fluxnet as fx
+from xharvest import fluxnet
+from xharvest.fluxnet import _archive as fx
 
 pytestmark = pytest.mark.live
 
@@ -22,7 +22,7 @@ SITE = "UK-Cvn"
 
 @pytest.fixture(scope="module")
 def archive_path(tmp_path_factory):
-    (path,) = icos.fetch(SITE, tmp_path_factory.mktemp("icos"))
+    (path,) = fluxnet.fetch(SITE, tmp_path_factory.mktemp("fluxnet"))
     return path
 
 
@@ -46,13 +46,13 @@ def half_hourly(archive_path):
 
 
 def test_sites():
-    found = {s.id: s for s in icos.sites()}
+    found = {s.id: s for s in fluxnet.sites()}
     assert found[SITE].name == "Coveney"
     assert found[SITE].file_name.startswith("EUF_UK-Cvn_FLUXNET_")
 
 
 def test_fetch_and_standardise(archive_path):
-    ds = icos.standardise([archive_path])
+    ds = fluxnet.standardise([archive_path])
     assert ds.sizes["time"] >= 365
     assert ds.TA_F.attrs["units"] == "degC"
     assert ds.SWC_F_MDS.notnull().any()

@@ -5,11 +5,11 @@ import httpx
 import pytest
 
 from xharvest.errors import ProviderError
-from xharvest.icos import fetch, sites
-from xharvest.icos._fetch import sha256
+from xharvest.fluxnet import fetch, sites
+from xharvest.fluxnet._fetch import sha256
 from xharvest.provenance import read_sidecar, sidecar_path
 
-FIXTURES = Path(__file__).parent / "fixtures" / "icos"
+FIXTURES = Path(__file__).parent / "fixtures" / "fluxnet"
 CVN_FILE = "EUF_UK-Cvn_FLUXNET_2023-2024_v1.3_r1.zip"
 
 

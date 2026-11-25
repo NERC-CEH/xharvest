@@ -11,7 +11,7 @@ table changes only when the fixtures are regenerated:
 - COSMOS-UK: every daily parameter the API describes, from the site list that
   `tests/fixtures/cosmos/make_fixtures.py` saves. `fetch` requests them all
   unless told otherwise.
-- ICOS: the variables of the fixture archives, standardised, with the unit and
+- FLUXNET: the variables of the fixture archives, standardised, with the unit and
   description `standardise` writes.
 """
 
@@ -22,7 +22,7 @@ from pathlib import Path
 import xarray as xr
 
 from xharvest.cosmos import standardise as cosmos_standardise
-from xharvest.icos import standardise as icos_standardise
+from xharvest.fluxnet import standardise as fluxnet_standardise
 
 ROOT = Path(__file__).parents[1]
 FIXTURES = ROOT / "tests" / "fixtures"
@@ -62,9 +62,9 @@ def cosmos() -> str:
     return _table(["Name", "Unit", "Method", "Description"], rows)
 
 
-def icos() -> str:
+def fluxnet() -> str:
     """The variables `standardise` keeps from FLUXNET archives."""
-    ds = icos_standardise(sorted((FIXTURES / "icos").glob("*.zip")))
+    ds = fluxnet_standardise(sorted((FIXTURES / "fluxnet").glob("*.zip")))
     rows = []
     for name, variable in ds.data_vars.items():
         if str(name).endswith("_QC"):
@@ -90,11 +90,11 @@ def main() -> None:
     """Write every provider's table and printed fixtures."""
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / "cosmos.md").write_text(cosmos())
-    (OUT / "icos.md").write_text(icos())
+    (OUT / "fluxnet.md").write_text(fluxnet())
     cosmos_raw = sorted((FIXTURES / "cosmos").glob("*_1D_*.json"))
     (OUT / "cosmos-dataset.md").write_text(printed(cosmos_standardise(cosmos_raw)))
-    icos_raw = sorted((FIXTURES / "icos").glob("*.zip"))
-    (OUT / "icos-dataset.md").write_text(printed(icos_standardise(icos_raw)))
+    fluxnet_raw = sorted((FIXTURES / "fluxnet").glob("*.zip"))
+    (OUT / "fluxnet-dataset.md").write_text(printed(fluxnet_standardise(fluxnet_raw)))
 
 
 if __name__ == "__main__":

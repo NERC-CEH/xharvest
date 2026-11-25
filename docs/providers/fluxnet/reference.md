@@ -1,35 +1,35 @@
-# ICOS reference
+# FLUXNET reference
 
 ## CLI
 
 ::: mkdocs-typer2
     :module: xharvest.cli.app
     :name: xharvest
-    :command: icos
+    :command: fluxnet
     :termynal: true
     :width: 80
     :prompt: ❯
 
-Run `xharvest icos <command> --help` for a command's options; they mirror the Python API below.
+Run `xharvest fluxnet <command> --help` for a command's options; they mirror the Python API below.
 
 ## Python API
 
-::: xharvest.icos.sites
+::: xharvest.fluxnet.sites
     options:
       heading_level: 3
 
-::: xharvest.icos.Site
+::: xharvest.fluxnet.Site
     options:
       heading_level: 3
 
-::: xharvest.icos.fetch
+::: xharvest.fluxnet.fetch
     options:
       heading_level: 3
 
-::: xharvest.icos.standardise
+::: xharvest.fluxnet.standardise
     options:
       heading_level: 3
 
-::: xharvest.icos.to_netcdf
+::: xharvest.fluxnet.to_netcdf
     options:
       heading_level: 3

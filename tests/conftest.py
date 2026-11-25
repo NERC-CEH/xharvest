@@ -65,14 +65,14 @@ def load_json(path):
     return json.loads(Path(path).read_text())
 
 
-ICOS_FIXTURES = Path(__file__).parent / "fixtures" / "icos"
+FLUXNET_FIXTURES = Path(__file__).parent / "fixtures" / "fluxnet"
 
 
 @pytest.fixture
-def icos_raw(tmp_path):
-    """Copies of the trimmed ICOS FLUXNET archives and their sidecars."""
+def fluxnet_raw(tmp_path):
+    """Copies of the trimmed FLUXNET archives and their sidecars."""
     paths = []
-    for src in sorted(ICOS_FIXTURES.glob("*.zip")):
+    for src in sorted(FLUXNET_FIXTURES.glob("*.zip")):
         sidecar = src.with_name(src.stem + ".meta.json")
         (tmp_path / sidecar.name).write_bytes(sidecar.read_bytes())
         (tmp_path / src.name).write_bytes(src.read_bytes())
@@ -88,14 +88,14 @@ class IcosPortal:
     """
 
     def __init__(self, corrupt: str | None = None):
-        from xharvest.icos._fetch import sha256
+        from xharvest.fluxnet._fetch import sha256
 
         self.requests: list[httpx.Request] = []
-        self.sites = load_json(ICOS_FIXTURES / "sites.json")
+        self.sites = load_json(FLUXNET_FIXTURES / "sites.json")
         self.archives: dict[str, bytes] = {}
         for binding in self.sites["results"]["bindings"]:
             object_id = binding["dobj"]["value"].rsplit("/", 1)[-1]
-            content = (ICOS_FIXTURES / binding["fileName"]["value"]).read_bytes()
+            content = (FLUXNET_FIXTURES / binding["fileName"]["value"]).read_bytes()
             self.archives[object_id] = content
             if binding["siteId"]["value"] != corrupt:
                 binding["sha256"]["value"] = sha256(content)
