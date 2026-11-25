@@ -42,7 +42,10 @@ cosmos = [
 fluxnet = [
     "httpx>=0.28.1",
 ]
-all = ["xharvest[cosmos,fluxnet]"]
+icos = [
+    "httpx>=0.28.1",
+]
+all = ["xharvest[cosmos,fluxnet,icos]"]
 
 [project.scripts]
 xharvest = "xharvest.cli:main"

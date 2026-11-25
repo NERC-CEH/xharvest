@@ -104,9 +104,11 @@ def test_bad_dates_are_rejected(mock_api, tmp_path):
 @pytest.fixture
 def mock_portal(monkeypatch, icos_portal):
     from xharvest.fluxnet import _fetch as fluxnet_fetch
+    from xharvest.icos import _fetch as icos_fetch
 
     client = icos_portal.client()
-    monkeypatch.setattr(fluxnet_fetch, "portal_client", lambda *_: nullcontext(client))
+    for module in (fluxnet_fetch, icos_fetch):
+        monkeypatch.setattr(module, "portal_client", lambda *_: nullcontext(client))
     return icos_portal
 
 
@@ -147,3 +149,59 @@ def test_fluxnet_errors_exit_cleanly(mock_portal, tmp_path, monkeypatch, args):
     result = runner.invoke(app, ["fluxnet", *args])
     assert result.exit_code == 1
     assert result.output.startswith("Error: ")
+
+
+def test_icos_stations(mock_portal):
+    result = runner.invoke(app, ["icos", "stations"])
+    assert result.exit_code == 0, result.output
+    assert (
+        "UK-AMo\tAuchencorth Moss\t55.79254\t-3.24369\t"
+        "ICOSETC_UK-AMo_ARCHIVE_INTERIM_L2.zip" in result.output
+    )
+
+
+def test_icos_fetch_then_standardise(mock_portal, tmp_path):
+    raw = tmp_path / "raw"
+    result = runner.invoke(
+        app, ["icos", "fetch", "UK-AMo", "DE-Har", "--out", str(raw)]
+    )
+    assert result.exit_code == 0, result.output
+    assert len(result.output.splitlines()) == 2
+
+    out = tmp_path / "lai.nc"
+    files = [str(p) for p in raw.iterdir()]
+    result = runner.invoke(
+        app, ["icos", "standardise", *files, "--group", "LAI", "--out", str(out)]
+    )
+    assert result.exit_code == 0, result.output
+    with xr.open_dataset(out) as ds:
+        assert set(ds.site.values) == {"UK-AMo", "DE-Har"}
+        assert "LAI" in ds
+
+
+@pytest.mark.parametrize(
+    "args",
+    [
+        ["fetch", "UK-Xyz", "--out", "x"],
+        ["standardise", "missing.zip", "--group", "LAI", "--out", "x.nc"],
+    ],
+)
+def test_icos_errors_exit_cleanly(mock_portal, tmp_path, monkeypatch, args):
+    monkeypatch.chdir(tmp_path)
+    result = runner.invoke(app, ["icos", *args])
+    assert result.exit_code == 1
+    assert result.output.startswith("Error: ")
+
+
+def test_icos_standardise_rejects_an_unknown_group(tmp_path):
+    result = runner.invoke(
+        app, ["icos", "standardise", "a.zip", "--group", "GRP_LAI", "--out", "x.nc"]
+    )
+    assert result.exit_code == 2
+
+
+def test_icos_group_choices_are_the_groups():
+    from xharvest import icos
+    from xharvest.cli.icos import Group
+
+    assert [g.value for g in Group] == list(icos.GROUPS)

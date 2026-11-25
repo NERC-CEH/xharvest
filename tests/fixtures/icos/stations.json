@@ -1,0 +1,132 @@
+{
+ "head": {
+  "vars": [
+   "dobj",
+   "fileName",
+   "sha256",
+   "stationId",
+   "stationName",
+   "lat",
+   "lon",
+   "timeStart",
+   "timeEnd",
+   "citation",
+   "licenceName",
+   "licence"
+  ]
+ },
+ "results": {
+  "bindings": [
+   {
+    "stationId": {
+     "type": "literal",
+     "value": "DE-Har"
+    },
+    "dobj": {
+     "type": "uri",
+     "value": "https://meta.icos-cp.eu/objects/wjvno8_AXs-_4ubvBGS7Uz6L"
+    },
+    "sha256": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#base64Binary",
+     "type": "literal",
+     "value": "wjvno8/AXs+/4ubvBGS7Uz6LuZgxHmyZDwPQSBeFJRw"
+    },
+    "stationName": {
+     "type": "literal",
+     "value": "Hartheim"
+    },
+    "lat": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#double",
+     "type": "literal",
+     "value": "47.93391"
+    },
+    "lon": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#double",
+     "type": "literal",
+     "value": "7.59814"
+    },
+    "citation": {
+     "type": "literal",
+     "value": "Christen, A., Baab, F., Kolbe, S., Plapp, T., Redepenning, D., Schindler, D. (2026). ETC L2 ARCHIVE from Hartheim, 2020\u20132025, ICOS RI, https://hdl.handle.net/11676/wjvno8_AXs-_4ubvBGS7Uz6L"
+    },
+    "licenceName": {
+     "type": "literal",
+     "value": "ICOS CCBY4 Data Licence"
+    },
+    "licence": {
+     "type": "uri",
+     "value": "https://creativecommons.org/licenses/by/4.0"
+    },
+    "fileName": {
+     "type": "literal",
+     "value": "ICOSETC_DE-Har_ARCHIVE_L2.zip"
+    },
+    "timeStart": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "2020-01-01T00:00:00Z"
+    },
+    "timeEnd": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "2026-01-01T00:00:00Z"
+    }
+   },
+   {
+    "stationId": {
+     "type": "literal",
+     "value": "UK-AMo"
+    },
+    "dobj": {
+     "type": "uri",
+     "value": "https://meta.icos-cp.eu/objects/M6gyVbSMpTn4eDb_usFEuYhN"
+    },
+    "sha256": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#base64Binary",
+     "type": "literal",
+     "value": "M6gyVbSMpTn4eDb/usFEuYhNNlmz6IsLVrekyPnBLeA"
+    },
+    "stationName": {
+     "type": "literal",
+     "value": "Auchencorth Moss"
+    },
+    "lat": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#double",
+     "type": "literal",
+     "value": "55.792545"
+    },
+    "lon": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#double",
+     "type": "literal",
+     "value": "-3.2436917"
+    },
+    "citation": {
+     "type": "literal",
+     "value": "Nemitz, E., Callaghan, N., Cash, J., Coyle, M., Coyle, M., Fincham, W., Grenier, M., Harvey, D., Helfter, C., Jones, M., Leeson, S., Levy, P., Mullinger, N., Ocallaghan, F., van Dijk, N., Vandome, E., Yeung, K. (2026). ETC L2 ARCHIVE from Auchencorth Moss, 2021-01-01\u20132026-08-31, ICOS RI, https://hdl.handle.net/11676/M6gyVbSMpTn4eDb_usFEuYhN"
+    },
+    "licenceName": {
+     "type": "literal",
+     "value": "ICOS CCBY4 Data Licence"
+    },
+    "licence": {
+     "type": "uri",
+     "value": "https://creativecommons.org/licenses/by/4.0"
+    },
+    "fileName": {
+     "type": "literal",
+     "value": "ICOSETC_UK-AMo_ARCHIVE_INTERIM_L2.zip"
+    },
+    "timeStart": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "2021-01-01T00:00:00Z"
+    },
+    "timeEnd": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "2026-09-01T00:00:00Z"
+    }
+   }
+  ]
+ }
+}

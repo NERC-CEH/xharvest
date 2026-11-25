@@ -29,8 +29,13 @@ from hamilton.graph_types import HamiltonNode
 from xharvest import _graph
 from xharvest.cosmos import _standardise as cosmos
 from xharvest.fluxnet import _standardise as fluxnet
+from xharvest.icos import _standardise as icos
 
-GRAPHS = {"cosmos": cosmos.MODULES, "fluxnet": fluxnet.MODULES}
+GRAPHS = {
+    "cosmos": cosmos.MODULES,
+    "fluxnet": fluxnet.MODULES,
+    "icos": icos.MODULES,
+}
 OUT = Path(__file__).parents[1] / "docs" / "providers" / "_graphs"
 
 # Each light fill to its dark counterpart; Hamilton fills input nodes white.

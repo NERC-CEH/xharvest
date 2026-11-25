@@ -13,6 +13,8 @@ table changes only when the fixtures are regenerated:
   unless told otherwise.
 - FLUXNET: the variables of the fixture archives, standardised, with the unit and
   description `standardise` writes.
+- ICOS: the value variables of each group, from the fixture archives, with the
+  unit and description `standardise` writes.
 """
 
 import json
@@ -23,6 +25,8 @@ import xarray as xr
 
 from xharvest.cosmos import standardise as cosmos_standardise
 from xharvest.fluxnet import standardise as fluxnet_standardise
+from xharvest.icos import GROUPS
+from xharvest.icos import standardise as icos_standardise
 
 ROOT = Path(__file__).parents[1]
 FIXTURES = ROOT / "tests" / "fixtures"
@@ -81,6 +85,25 @@ def fluxnet() -> str:
     return _table(["Name", "Unit", "Profile", "`_QC`", "Description"], rows)
 
 
+def icos() -> str:
+    """The value variables of each group `standardise` reads from ETC archives."""
+    raw = sorted((FIXTURES / "icos").glob("*.zip"))
+    rows = []
+    for group in GROUPS:
+        ds = icos_standardise(raw, group)
+        for name, variable in ds.data_vars.items():
+            rows.append(
+                [
+                    f"`{group}`",
+                    f"`{name}`",
+                    f"`{variable.attrs['units']}`",
+                    f"`{variable.attrs['provider_units']}`",
+                    _text(variable.attrs.get("description", "")),
+                ]
+            )
+    return _table(["Group", "Name", "Unit", "Provider unit", "Description"], rows)
+
+
 def printed(ds: xr.Dataset) -> str:
     """The Dataset as `print` shows it, in a code block."""
     return f"```text\n{ds}\n```\n"
@@ -95,6 +118,9 @@ def main() -> None:
     (OUT / "cosmos-dataset.md").write_text(printed(cosmos_standardise(cosmos_raw)))
     fluxnet_raw = sorted((FIXTURES / "fluxnet").glob("*.zip"))
     (OUT / "fluxnet-dataset.md").write_text(printed(fluxnet_standardise(fluxnet_raw)))
+    (OUT / "icos.md").write_text(icos())
+    icos_raw = sorted((FIXTURES / "icos").glob("*.zip"))
+    (OUT / "icos-dataset.md").write_text(printed(icos_standardise(icos_raw, "LAI")))
 
 
 if __name__ == "__main__":

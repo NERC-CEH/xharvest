@@ -80,11 +80,27 @@ def fluxnet_raw(tmp_path):
     return paths
 
 
+ICOS_FIXTURES = Path(__file__).parent / "fixtures" / "icos"
+
+
+@pytest.fixture
+def icos_raw(tmp_path):
+    """Copies of the trimmed ICOS ETC L2 archives and their sidecars."""
+    paths = []
+    for src in sorted(ICOS_FIXTURES.glob("*.zip")):
+        sidecar = src.with_name(src.stem + ".meta.json")
+        (tmp_path / sidecar.name).write_bytes(sidecar.read_bytes())
+        (tmp_path / src.name).write_bytes(src.read_bytes())
+        paths.append(tmp_path / src.name)
+    return paths
+
+
 class IcosPortal:
     """A stand-in for the ICOS Carbon Portal, serving the fixture archives.
 
-    The site list is the real one, except that each archive's SHA-256 is that of
-    the trimmed fixture it serves, unless `corrupt` names the site.
+    It answers the FLUXNET site query and the ICOS station query with the real
+    lists, except that each archive's SHA-256 is that of the trimmed fixture it
+    serves, unless `corrupt` names the site or station.
     """
 
     def __init__(self, corrupt: str | None = None):
@@ -92,17 +108,27 @@ class IcosPortal:
 
         self.requests: list[httpx.Request] = []
         self.sites = load_json(FLUXNET_FIXTURES / "sites.json")
+        self.stations = load_json(ICOS_FIXTURES / "stations.json")
         self.archives: dict[str, bytes] = {}
-        for binding in self.sites["results"]["bindings"]:
-            object_id = binding["dobj"]["value"].rsplit("/", 1)[-1]
-            content = (FLUXNET_FIXTURES / binding["fileName"]["value"]).read_bytes()
-            self.archives[object_id] = content
-            if binding["siteId"]["value"] != corrupt:
-                binding["sha256"]["value"] = sha256(content)
+        for listing, fixtures, key in [
+            (self.sites, FLUXNET_FIXTURES, "siteId"),
+            (self.stations, ICOS_FIXTURES, "stationId"),
+        ]:
+            for binding in listing["results"]["bindings"]:
+                object_id = binding["dobj"]["value"].rsplit("/", 1)[-1]
+                fixture = fixtures / binding["fileName"]["value"]
+                if not fixture.exists():
+                    continue
+                content = fixture.read_bytes()
+                self.archives[object_id] = content
+                if binding[key]["value"] != corrupt:
+                    binding["sha256"]["value"] = sha256(content)
 
     def __call__(self, request: httpx.Request) -> httpx.Response:
         self.requests.append(request)
         if request.url.host == "meta.icos-cp.eu" and request.url.path == "/sparql":
+            if b"etcArchiveProduct" in request.content:
+                return httpx.Response(200, json=self.stations)
             return httpx.Response(200, json=self.sites)
         if request.url.path == "/licence_accept":
             (object_id,) = json.loads(request.url.params["ids"])

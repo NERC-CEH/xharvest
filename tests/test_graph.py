@@ -11,8 +11,16 @@ import pytest
 from xharvest import _graph
 from xharvest.cosmos import _standardise as cosmos_standardise
 from xharvest.fluxnet import _standardise as fluxnet_standardise
+from xharvest.icos import _standardise as icos_standardise
 
-GRAPHS = {"cosmos": cosmos_standardise.MODULES, "fluxnet": fluxnet_standardise.MODULES}
+GRAPHS = {
+    "cosmos": cosmos_standardise.MODULES,
+    "fluxnet": fluxnet_standardise.MODULES,
+    "icos": icos_standardise.MODULES,
+}
+
+OUTPUTS = {"icos": icos_standardise.OUTPUT}
+"""Each graph's final node, where it is not `dataset`."""
 
 
 def _nodes(modules):
@@ -55,11 +63,13 @@ def test_every_action_has_a_colour():
 
 
 @pytest.mark.parametrize("name", GRAPHS)
-def test_the_graph_has_one_input_and_ends_in_dataset(name):
+def test_the_graph_has_one_input_and_ends_in_its_output(name):
     dr = _graph.build(*GRAPHS[name])
     inputs = [v.name for v in dr.list_available_variables() if v.is_external_input]
     assert inputs == ["paths"]
-    assert "dataset" in {v.name for v in dr.list_available_variables()}
+    assert OUTPUTS.get(name, "dataset") in {
+        v.name for v in dr.list_available_variables()
+    }
 
 
 def test_pipeline_modules_are_not_catena_modules():

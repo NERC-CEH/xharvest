@@ -11,7 +11,11 @@ ROOT = Path(__file__).parents[1]
 SRC = ROOT / "src" / "xharvest"
 DOCS = ROOT / "docs"
 
-PAGES = {"cosmos": "providers/cosmos-uk", "fluxnet": "providers/fluxnet"}
+PAGES = {
+    "cosmos": "providers/cosmos-uk",
+    "fluxnet": "providers/fluxnet",
+    "icos": "providers/icos",
+}
 """Each connector's directory of provider pages, relative to `docs/`."""
 
 SECTIONS = ["index.md", "data.md", "standardise.md", "catena.md", "reference.md"]

@@ -40,6 +40,7 @@ The [design decisions](https://github.com/NERC-CEH/xharvest/tree/main/docs/adr) 
 ### Standardisation graph
 
 `standardise` runs a Hamilton graph built from `_pipeline.py` and any shared format module, from one input, `paths`, to one output, `dataset`, so a reader can see each thing done to the provider's data.
+A provider whose files hold datasets that share no dimensions, as ICOS ETC archives hold LAI and soil texture, ends instead in one node returning a Dataset for each, names it in `OUTPUT` in `_standardise.py`, and takes the dataset to return as a second argument, `standardise(paths, group)`; `xharvest.icos` does this.
 [ADR 2](https://github.com/NERC-CEH/xharvest/blob/main/docs/adr/0002-standardise-as-hamilton-graph.md) gives the reasons; `xharvest.cosmos` is the simplest example, and `xharvest.fluxnet` shows a graph built with a shared format module.
 
 - One node does one thing, to every site and variable at once: never a node per site or per variable, and no dynamic fan-out.
@@ -108,6 +109,7 @@ Tests must not touch the network or need credentials.
   Where the provider serves only large files, as ICOS serves whole-site archives, `make_fixtures.py` fetches one with the connector and writes a trimmed copy under the same name, keeping the real sidecar.
 - Let `fetch` accept a client (as `cosmos.fetch` takes an `httpx.Client`), and test it against a mock transport serving the fixtures.
 - Add the connector to `CONNECTORS` in `tests/test_contracts.py`, which checks the standardised output against `VARIABLES` and the node contracts against both; a test fails until you do.
+  A connector with several datasets has an entry for each, named `<provider>-<dataset>`, and its `OUTPUT` goes in `OUTPUTS` in `tests/test_graph.py`.
 - Put tests that call the real API in `test_<provider>_live.py`, marked `live`; `just test-live` runs them.
   Where practical, include the checks behind the claims on the provider's `data.md`, so a new release re-checks them.
 

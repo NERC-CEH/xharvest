@@ -2,11 +2,14 @@
 
 Add a connector to ``CONNECTORS`` with its `to_netcdf` function, a fixture of raw
 provider output, its `VARIABLES` contract types, and its node module, if it has one.
+A connector that writes several datasets, as `icos` writes one per group, has an
+entry for each, named `<provider>-<dataset>`.
 The checks run on the netCDF file as read back, since that is what catena reads.
 """
 
 import inspect
 from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
 from types import ModuleType
 from typing import Any
@@ -19,7 +22,7 @@ from hamilton import driver, node
 from hamilton.settings import ENABLE_POWER_USER_MODE
 from xarray_annotated.units import assert_valid_unit, use_cf_units
 
-from xharvest import cosmos, fluxnet
+from xharvest import cosmos, fluxnet, icos
 from xharvest.cosmos import nodes as cosmos_nodes
 from xharvest.provenance import PROVENANCE_ATTRS
 
@@ -32,10 +35,24 @@ class Connector:
     variables: dict[str, Any]
     nodes: ModuleType | None
 
+    @property
+    def provider(self) -> str:
+        return self.name.split("-")[0]
+
 
 CONNECTORS = [
     Connector("cosmos", cosmos.to_netcdf, "cosmos_raw", cosmos.VARIABLES, cosmos_nodes),
     Connector("fluxnet", fluxnet.to_netcdf, "fluxnet_raw", fluxnet.VARIABLES, None),
+    *(
+        Connector(
+            f"icos-{group}",
+            partial(icos.to_netcdf, group=group),
+            "icos_raw",
+            icos.VARIABLES[group],
+            None,
+        )
+        for group in icos.GROUPS
+    ),
 ]
 
 SRC = Path(__file__).parents[1] / "src" / "xharvest"
@@ -44,7 +61,7 @@ SRC = Path(__file__).parents[1] / "src" / "xharvest"
 def test_every_provider_is_in_connectors():
     # A provider missing from CONNECTORS would skip every check below, silently.
     providers = {p.parent.name for p in SRC.glob("*/_fetch.py")}
-    assert {c.name for c in CONNECTORS} == providers
+    assert {c.provider for c in CONNECTORS} == providers
 
 
 @pytest.fixture(params=CONNECTORS, ids=lambda c: c.name)
@@ -167,7 +184,7 @@ def test_node_inputs_match_variables(standardised):
 def test_nodes_follow_the_input_suffix(connector, suffix):
     # Every node and every data input it reads takes the suffix, so a node the
     # module forgot to decorate shows up as a bare name.
-    key = f"{connector.name}_suffix"
+    key = f"{connector.provider}_suffix"
     config = {ENABLE_POWER_USER_MODE: True, key: suffix}
     dr = driver.Builder().with_modules(connector.nodes).with_config(config).build()
     nodes = {
