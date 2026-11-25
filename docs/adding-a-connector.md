@@ -108,6 +108,9 @@ Tests must not touch the network or need credentials.
   Regenerated data files should be byte-identical; if they are not, the provider has revised its data.
   Where the provider serves only large files, as ICOS serves whole-site archives, `make_fixtures.py` fetches one with the connector and writes a trimmed copy under the same name, keeping the real sidecar.
 - Let `fetch` accept a client (as `cosmos.fetch` takes an `httpx.Client`), and test it against a mock transport serving the fixtures.
+- Test anything that must match the provider's own encoding, such as a checksum, against a value the provider published, not only through the mock.
+  A mock that computes its checksums with the function under test agrees with it whatever it does: `fluxnet.fetch` once rejected 259 of 355 archives because its `sha256` wrote URL-safe base64 where the portal writes standard base64, and every test passed.
+  `test_sha256_is_in_the_portals_form` checks a known vector instead.
 - Add the connector to `CONNECTORS` in `tests/test_contracts.py`, which checks the standardised output against `VARIABLES` and the node contracts against both; a test fails until you do.
   A connector with several datasets has an entry for each, named `<provider>-<dataset>`, and its `OUTPUT` goes in `OUTPUTS` in `tests/test_graph.py`.
 - Put tests that call the real API in `test_<provider>_live.py`, marked `live`; `just test-live` runs them.
