@@ -99,12 +99,12 @@ Units are the CF units `standardise` writes; descriptions are the archive's own,
 
 The first implementation takes these shortcuts:
 
-- Records are not combined into `(time, site)` series, and their approaches are not classified: moss cover, for example, is reported as GAI.
-- Biomass in carbon (`gC m-2`, 101 of 17,273 records) is dropped, keeping dry matter only.
-- Biomass organs are free text and are not normalised: `total AG`, `Total AG` and `Total aboveground` are kept as written.
-- Only five groups are read; soil chemistry, litter, roots, tree counts and the rest are not.
-- `time` is the station's local date, not a UTC time.
-- The archive's fluxes, meteorology and FLUXNET files are not read; use [FLUXNET](../fluxnet/index.md).
+- Records are not combined into `(time, site)` series, and their approaches are not classified: moss cover, for example, is reported as GAI ([#18](https://github.com/NERC-CEH/xharvest/issues/18)).
+- Biomass in carbon (`gC m-2`, 101 of 17,273 records) is dropped, keeping dry matter only ([#19](https://github.com/NERC-CEH/xharvest/issues/19)).
+- Biomass organs are free text and are not normalised: `total AG`, `Total AG` and `Total aboveground` are kept as written ([#20](https://github.com/NERC-CEH/xharvest/issues/20)).
+- Only five groups are read; soil chemistry, litter, roots, tree counts and the rest are not ([#21](https://github.com/NERC-CEH/xharvest/issues/21)).
+- `time` is the station's local date, not a UTC time ([#22](https://github.com/NERC-CEH/xharvest/issues/22)).
+- The archive's fluxes, meteorology and FLUXNET files are not read; use [FLUXNET](../fluxnet/index.md) ([#23](https://github.com/NERC-CEH/xharvest/issues/23)).
 
 ## Citing the data
 
